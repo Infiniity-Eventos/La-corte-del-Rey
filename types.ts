@@ -1,12 +1,9 @@
-
 export enum BeatGenre {
   ELECTRO = 'Electrobeat',
   TRAP = 'Trap',
   DRILL = 'Drill',
   BOOM_BAP = 'Boom Bap',
-  REGGAE = 'Reggae',
   DOUBLE_TEMPO = 'Doble Tempo',
-  REGGAETON = 'Reggaeton',
   DANCEHALL = 'Dancehall'
 }
 
@@ -26,7 +23,8 @@ export enum TrainingFormat {
   EIGHT_BY_EIGHT = '8x8',
   TWO_BY_TWO = '2x2',
   MINUTE = 'Minuto y Minuto',
-  KICK_BACK = 'Kick Back'
+  KICK_BACK = 'Kick Back',
+  CALL_FRIEND = 'Llamado a un amigo'
 }
 
 export type TrainingMode = 'themes' | 'free' | 'terminations' | 'characters' | 'questions';

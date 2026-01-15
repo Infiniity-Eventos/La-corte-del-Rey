@@ -19,7 +19,8 @@ const ENTRADAS_RULES: Record<string, string> = {
     [TrainingFormat.EIGHT_BY_EIGHT]: "3 Entradas por MC",
     [TrainingFormat.TWO_BY_TWO]: "10 Entradas por MC",
     [TrainingFormat.MINUTE]: "5 Entradas por MC",
-    [TrainingFormat.KICK_BACK]: "5 Entradas por MC"
+    [TrainingFormat.KICK_BACK]: "5 Entradas por MC",
+    [TrainingFormat.CALL_FRIEND]: "6 Entradas por MC"
 };
 
 interface SpectatorViewProps {
