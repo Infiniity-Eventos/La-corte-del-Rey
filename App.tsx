@@ -108,6 +108,7 @@ const App: React.FC = () => {
     // BROADCAST STATE TO SPECTATOR (VIA FIREBASE)
     useEffect(() => {
         if (isSpectator) return; // Spectator doesn't broadcast
+        if (authStep !== 'app') return; // Don't broadcast until logged in!
 
         // Define payload generator to reuse
         const getPayload = (): import('./types').SpectatorState => ({
@@ -125,7 +126,7 @@ const App: React.FC = () => {
         if (!isFlickering) {
             updateGameState(getPayload());
         }
-    }, [isSpectator, step, rivalA, rivalB, winner, selectedFormat, selectedMode, selectedGenre, preGeneratedTopic, preGeneratedPool, countdown, isReplica, loserImage, showWinnerScreen, tempSlotValues, attempts, isFlickering, updateGameState]);
+    }, [isSpectator, authStep, step, rivalA, rivalB, winner, selectedFormat, selectedMode, selectedGenre, preGeneratedTopic, preGeneratedPool, countdown, isReplica, loserImage, showWinnerScreen, tempSlotValues, attempts, isFlickering, updateGameState]);
 
     // Safety: Ensure transition doesn't get stuck
     useEffect(() => {
