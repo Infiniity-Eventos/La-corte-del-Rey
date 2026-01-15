@@ -962,13 +962,13 @@ const App: React.FC = () => {
                                 <div className={`absolute inset-0 z-[60] flex items-center justify-center animate-fadeIn bg-black/80 backdrop-blur-sm`}>
 
                                     {/* WINNER CARD */}
-                                    <div className={`relative w-full max-w-sm bg-[#1a0b2e] border-4 rounded-3xl p-6 flex flex-col items-center shadow-[0_0_100px_rgba(0,0,0,0.9)] animate-scale-up z-20 overflow-hidden ${winner === 'A' ? 'border-fuchsia-500 shadow-[0_0_50px_rgba(192,38,211,0.5)]' : 'border-cyan-500 shadow-[0_0_50px_rgba(6,182,212,0.5)]'}`}>
-                                        <div className="mb-4 relative">
+                                    <div className={`relative w-[90%] max-w-sm md:max-w-lg bg-[#1a0b2e] border-4 rounded-3xl p-4 md:p-8 flex flex-col items-center shadow-[0_0_100px_rgba(0,0,0,0.9)] animate-scale-up z-20 overflow-hidden ${winner === 'A' ? 'border-fuchsia-500 shadow-[0_0_50px_rgba(192,38,211,0.5)]' : 'border-cyan-500 shadow-[0_0_50px_rgba(6,182,212,0.5)]'}`}>
+                                        <div className="mb-4 md:mb-6 relative">
                                             <div className={`absolute inset-0 blur-[40px] ${winner === 'A' ? 'bg-fuchsia-500' : 'bg-cyan-500'}`}></div>
-                                            <Crown size={60} className={`relative z-10 ${winner === 'A' ? 'text-fuchsia-100' : 'text-cyan-100'}`} fill="currentColor" />
+                                            <Crown size={50} className={`relative z-10 md:w-20 md:h-20 ${winner === 'A' ? 'text-fuchsia-100' : 'text-cyan-100'}`} fill="currentColor" />
                                         </div>
-                                        <h3 className="text-gray-400 font-bold uppercase tracking-[0.3em] text-[10px] mb-2">GANADOR INDISCUTIBLE</h3>
-                                        <h2 className={`text-4xl font-black font-urban text-center uppercase leading-none mb-6 break-words w-full ${winner === 'A' ? 'text-fuchsia-400 drop-shadow-[0_0_15px_rgba(192,38,211,0.8)]' : 'text-cyan-400 drop-shadow-[0_0_15px_rgba(6,182,212,0.8)]'}`}>
+                                        <h3 className="text-gray-400 font-bold uppercase tracking-[0.3em] text-[10px] md:text-xs mb-2 text-center">GANADOR INDISCUTIBLE</h3>
+                                        <h2 className={`text-4xl md:text-6xl font-black font-urban text-center uppercase leading-none mb-6 break-words w-full ${winner === 'A' ? 'text-fuchsia-400 drop-shadow-[0_0_15px_rgba(192,38,211,0.8)]' : 'text-cyan-400 drop-shadow-[0_0_15px_rgba(6,182,212,0.8)]'}`}>
                                             {winner === 'A' ? rivalA : rivalB}
                                         </h2>
                                         <button
@@ -987,19 +987,19 @@ const App: React.FC = () => {
                                     {/* TRUMPETS & CANNON CONFETTI LAYER */}
                                     <div className="absolute inset-0 overflow-visible pointer-events-none z-[80]">
                                         {/* LEFT TRUMPET */}
-                                        <div className="absolute top-[65%] left-4 md:left-10 transform -translate-y-1/2 -rotate-12">
-                                            <div className="text-8xl md:text-9xl filter drop-shadow-[0_0_20px_rgba(234,179,8,0.5)] relative animate-trumpet-beat">
+                                        <div className="absolute top-[65%] left-2 md:left-10 transform -translate-y-1/2 -rotate-12">
+                                            <div className="text-6xl md:text-9xl filter drop-shadow-[0_0_20px_rgba(234,179,8,0.5)] relative animate-trumpet-beat">
                                                 🎺
                                                 <div className="absolute top-2 right-2 w-1 h-1">
                                                     {Array.from({ length: 40 }).map((_, i) => (
                                                         <div
                                                             key={`confetti-l-${i}`}
-                                                            className="absolute w-3 h-3 rounded-sm animate-fountain-flow"
+                                                            className="absolute w-2 h-2 md:w-3 md:h-3 rounded-sm animate-fountain-flow"
                                                             style={{
                                                                 backgroundColor: ['#ef4444', '#3b82f6', '#eab308', '#a855f7', '#ec4899'][i % 5],
                                                                 left: 0, top: 0,
-                                                                '--tx': `${100 + Math.random() * 400}px`,
-                                                                '--ty': `${-200 - Math.random() * 400}px`,
+                                                                '--tx': `${50 + Math.random() * 200}px`,
+                                                                '--ty': `${-100 - Math.random() * 200}px`,
                                                                 '--r': `${Math.random() * 720}deg`,
                                                                 animationDuration: `${1 + Math.random() * 1.5}s`,
                                                                 animationDelay: `${Math.random() * 0.5}s`
@@ -1011,19 +1011,19 @@ const App: React.FC = () => {
                                         </div>
 
                                         {/* RIGHT TRUMPET (Flipped) */}
-                                        <div className="absolute top-[65%] right-4 md:right-10 transform -translate-y-1/2 rotate-12 scale-x-[-1]">
-                                            <div className="text-8xl md:text-9xl filter drop-shadow-[0_0_20px_rgba(234,179,8,0.5)] relative animate-trumpet-beat">
+                                        <div className="absolute top-[65%] right-2 md:right-10 transform -translate-y-1/2 rotate-12 scale-x-[-1]">
+                                            <div className="text-6xl md:text-9xl filter drop-shadow-[0_0_20px_rgba(234,179,8,0.5)] relative animate-trumpet-beat">
                                                 🎺
                                                 <div className="absolute top-2 right-2 w-1 h-1">
                                                     {Array.from({ length: 40 }).map((_, i) => (
                                                         <div
                                                             key={`confetti-r-${i}`}
-                                                            className="absolute w-3 h-3 rounded-sm animate-fountain-flow"
+                                                            className="absolute w-2 h-2 md:w-3 md:h-3 rounded-sm animate-fountain-flow"
                                                             style={{
                                                                 backgroundColor: ['#ef4444', '#3b82f6', '#eab308', '#a855f7', '#ec4899'][i % 5],
                                                                 left: 0, top: 0,
-                                                                '--tx': `${100 + Math.random() * 400}px`,
-                                                                '--ty': `${-200 - Math.random() * 400}px`,
+                                                                '--tx': `${50 + Math.random() * 200}px`,
+                                                                '--ty': `${-100 - Math.random() * 200}px`,
                                                                 '--r': `${Math.random() * 720}deg`,
                                                                 animationDuration: `${1 + Math.random() * 1.5}s`,
                                                                 animationDelay: `${Math.random() * 0.5}s`
