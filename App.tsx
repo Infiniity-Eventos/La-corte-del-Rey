@@ -87,7 +87,7 @@ const App: React.FC = () => {
 
     // Voted Users Set for UI
     const [votedUsers, setVotedUsers] = useState<Set<string>>(new Set());
-    const [voteHistory, setVoteHistory] = useState<string[]>([]);
+    const [voteHistory, setVoteHistory] = useState<any[]>([]);
     const [attempts, setAttempts] = useState(3);
 
     // Voted Users Ref to track unique votes per battle (Synchronous Source of Truth)
@@ -158,6 +158,15 @@ const App: React.FC = () => {
         if (!rivalA.trim()) setRivalA("MC AZUL");
         if (!rivalB.trim()) setRivalB("MC ROJO");
         setAttempts(3); // Reset attempts when starting new
+
+        // Reset Votes for new battle
+        resetVotes();
+        setVotesA(0);
+        setVotesB(0);
+        setVotedUsers(new Set());
+        votedUsersRef.current = new Set();
+        setVoteHistory([]);
+
         changeStepWithTransition('slots');
     };
 
@@ -882,7 +891,10 @@ const App: React.FC = () => {
                                             {voteHistory.length > 0 ? (
                                                 voteHistory.map((v, i) => (
                                                     <span key={i} className={`text-[10px] uppercase font-bold tracking-widest ${i === 0 ? 'text-cyan-400 animate-pulse' : 'text-gray-500'}`}>
-                                                        {v}
+                                                        {typeof v === 'string'
+                                                            ? v
+                                                            : `${v.user} votó por ${v.vote === 'A' ? (rivalA || 'MC AZUL') : (rivalB || 'MC ROJO')}`
+                                                        }
                                                     </span>
                                                 ))
                                             ) : (

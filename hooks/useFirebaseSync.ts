@@ -8,7 +8,7 @@ interface InternalState {
     voteData: {
         votesA: number;
         votesB: number;
-        history: string[];
+        history: any[];
         votedUsers: string[]; // List of user IDs who voted
     };
     animationTrigger: { type: string, payload: any } | null;
@@ -17,7 +17,7 @@ interface InternalState {
 export const useFirebaseSync = (isSpectator: boolean, viewerName: string = 'Anonymous') => {
     // Local State replicate from Firebase
     const [gameState, setGameState] = useState<SpectatorState | null>(null);
-    const [voteData, setVoteData] = useState({ votesA: 0, votesB: 0, history: [] as string[], votedUsers: [] as string[] });
+    const [voteData, setVoteData] = useState({ votesA: 0, votesB: 0, history: [] as any[], votedUsers: [] as string[] });
     const [animationTrigger, setAnimationTrigger] = useState<{ type: string, payload: any } | null>(null);
 
     // Refs to avoid loops
@@ -115,16 +115,13 @@ export const useFirebaseSync = (isSpectator: boolean, viewerName: string = 'Anon
         const unsubscribeVotes = onValue(ref(database, 'votes'), (snapshot) => {
             const data = snapshot.val();
             if (data) {
-                const listHistory = data.history ? Object.values(data.history).map((h: any) => `${h.user} votó por ${h.vote === 'A' ? 'MC AZUL' : 'MC ROJO'}`) : []; // Need to map MC names if possible, but hook doesn't know them. 
-                // We'll return raw data or formatted string? 
-                // App.tsx expects strings like "User votó por RivalA". 
-                // We'll let App.tsx format it or sending generic string here.
-                // Simple generic string for now.
+                const listHistory = data.history ? Object.values(data.history) : [];
 
                 setVoteData({
                     votesA: data.A || 0,
                     votesB: data.B || 0,
-                    history: listHistory.reverse().slice(0, 5), // Keep last 5
+                    // Return raw history objects (user, vote, timestamp) sorted by timestamp desc
+                    history: listHistory.sort((a: any, b: any) => b.timestamp - a.timestamp).slice(0, 5),
                     votedUsers: data.voters ? Object.keys(data.voters) : []
                 });
             } else {
