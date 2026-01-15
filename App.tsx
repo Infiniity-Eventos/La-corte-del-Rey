@@ -776,6 +776,11 @@ const App: React.FC = () => {
                                     initialTopic={preGeneratedTopic}
                                     initialImage={null}
                                     initialPool={preGeneratedPool}
+                                    onGenerate={(newTopic) => {
+                                        setPreGeneratedTopic(newTopic);
+                                        // Update Firebase State immediately
+                                        // The useEffect for broadcast listener should pick this up because preGeneratedTopic is a dependency
+                                    }}
                                 />
 
                                 {/* CONTROLS (Directly under the box) */}

@@ -10,9 +10,10 @@ interface TopicGeneratorProps {
     initialImage?: string | null;
     initialPool?: string[];
     spectator?: boolean;
+    onGenerate?: (topic: string) => void;
 }
 
-export const TopicGenerator: React.FC<TopicGeneratorProps> = ({ mode, initialTopic, initialImage, initialPool, spectator = false }) => {
+export const TopicGenerator: React.FC<TopicGeneratorProps> = ({ mode, initialTopic, initialImage, initialPool, spectator = false, onGenerate }) => {
     const [topics, setTopics] = useState<string[]>(initialPool || []);
     const [displayTopic, setDisplayTopic] = useState<string>("¡Listo!");
     const [currentImage, setCurrentImage] = useState<string | null>(null);
@@ -112,6 +113,11 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({ mode, initialTop
                 // Removed image generation as per request
                 if (mode === 'themes' || mode === 'characters') {
                     // generateRandomImageForTopic(finalTopic);
+                }
+
+                // Notify Parent
+                if (onGenerate) {
+                    onGenerate(finalTopic);
                 }
             }
         }, interval);
@@ -234,17 +240,8 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({ mode, initialTop
                     </button>
                 )}
 
-                {(!spectator && mode !== 'free') && (
-                    <button
-                        onClick={fetchTopics}
-                        disabled={loading || isRolling}
-                        className="self-center flex items-center gap-2 text-xs text-purple-400 hover:text-white transition-colors uppercase tracking-widest"
-                    >
-                        <RefreshCw size={12} className={loading ? 'animate-spin' : ''} />
-                        {loading ? 'Recargando...' : 'Recargar Lista'}
-                    </button>
-                )}
             </div>
+
 
             <style>{`
         @keyframes glitch {
@@ -273,6 +270,6 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({ mode, initialTop
             100% { background-position: 0 100%; }
         }
       `}</style>
-        </div>
+        </div >
     );
 };
