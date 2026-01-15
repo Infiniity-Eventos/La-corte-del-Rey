@@ -7,7 +7,7 @@ import { SpectatorView } from './components/SpectatorView';
 import { TournamentBracket } from './components/TournamentBracket';
 import { AccessScreen } from './components/AccessScreen'; // New Import
 import { Info, Image as ImageIcon, RotateCcw, Youtube, Play, ExternalLink, User, Crown, Trophy, Zap, Swords, BookOpen, X, List, Scale, Timer, Star, Award } from 'lucide-react';
-import { TrainingFormat, TrainingMode, BeatGenre, ALL_TRAINING_MODES, AppStep } from './types';
+import { TrainingFormat, TrainingMode, BeatGenre, ALL_TRAINING_MODES, AppStep, LeagueParticipant } from './types';
 import { generateTopics, generateTerminations, generateCharacterBattles, generateQuestions } from './services/geminiService';
 import { useFirebaseSync } from './hooks/useFirebaseSync';
 
@@ -92,6 +92,98 @@ const App: React.FC = () => {
 
     // Voted Users Ref to track unique votes per battle (Synchronous Source of Truth)
     const votedUsersRef = useRef<Set<string>>(new Set());
+
+    // --- LEAGUE MODE STATE ---
+    const [isLeagueMode, setIsLeagueMode] = useState(false);
+    const [leagueParticipants, setLeagueParticipants] = useState<LeagueParticipant[]>(() => {
+        const saved = localStorage.getItem('league_participants');
+        return saved ? JSON.parse(saved) : [];
+    });
+    const [maxBattlesPerPerson, setMaxBattlesPerPerson] = useState(() => {
+        const saved = localStorage.getItem('league_max_battles');
+        return saved ? parseInt(saved) : 3;
+    });
+    const [showLeagueTable, setShowLeagueTable] = useState(false);
+    const [newParticipantName, setNewParticipantName] = useState('');
+
+    // Persist League Data
+    useEffect(() => {
+        localStorage.setItem('league_participants', JSON.stringify(leagueParticipants));
+    }, [leagueParticipants]);
+
+    useEffect(() => {
+        localStorage.setItem('league_max_battles', maxBattlesPerPerson.toString());
+    }, [maxBattlesPerPerson]);
+
+
+    // LEAGUE LOGIC: Add Participant
+    const addParticipant = () => {
+        if (!newParticipantName.trim()) return;
+        setLeagueParticipants(prev => [
+            ...prev,
+            {
+                id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+                name: newParticipantName.toUpperCase(),
+                points: 0,
+                battles: 0,
+                active: true
+            }
+        ]);
+        setNewParticipantName('');
+    };
+
+    // LEAGUE LOGIC: Remove Participant
+    const removeParticipant = (id: string) => {
+        setLeagueParticipants(prev => prev.filter(p => p.id !== id));
+    };
+
+    // LEAGUE LOGIC: Update Points & Battles
+    const updateLeagueStats = (winnerName: string, loserName: string, isTieBreaker: boolean) => {
+        setLeagueParticipants(prev => prev.map(p => {
+            if (p.name === winnerName) {
+                const pointsToAdd = isTieBreaker ? 2 : 3;
+                const newBattles = p.battles + 1;
+                return {
+                    ...p,
+                    points: p.points + pointsToAdd,
+                    battles: newBattles,
+                    active: isLeagueMode ? (newBattles < maxBattlesPerPerson) : p.active
+                };
+            }
+            if (p.name === loserName) {
+                const pointsToAdd = isTieBreaker ? 1 : 0;
+                const newBattles = p.battles + 1;
+                return {
+                    ...p,
+                    points: p.points + pointsToAdd,
+                    battles: newBattles,
+                    active: isLeagueMode ? (newBattles < maxBattlesPerPerson) : p.active
+                };
+            }
+            return p;
+        }));
+    };
+
+    // LEAGUE LOGIC: Start Random Battle
+    const handleStartLeagueBattle = () => {
+        const eligible = leagueParticipants.filter(p => p.battles < maxBattlesPerPerson);
+
+        if (eligible.length < 2) {
+            alert("¡No hay suficientes participantes disponibles para una batalla! (Todos cumplieron sus batallas o no hay inscritos)");
+            return;
+        }
+
+        // Random Selection
+        const shuffled = [...eligible].sort(() => 0.5 - Math.random());
+        const p1 = shuffled[0];
+        const p2 = shuffled[1];
+
+        setRivalA(p1.name);
+        setRivalB(p2.name);
+
+        // Go to slots with transition
+        handleNamesSubmit();
+    };
 
     // FIREBASE SYNC HOOK
     const { updateGameState, triggerAnimation, voteData, resetVotes } = useFirebaseSync(isSpectator);
@@ -283,6 +375,25 @@ const App: React.FC = () => {
         axeSound.volume = 0.8;
         axeSound.play().catch(e => console.error("Audio play failed", e));
 
+        // LEAGUE UPDATE LOGIC
+        if (isLeagueMode) {
+            // Determine names. rivalA/rivalB should be consistent
+            let winnerName = '';
+            let loserName = '';
+            if (vote === 'A') {
+                winnerName = rivalA;
+                loserName = rivalB;
+            } else {
+                winnerName = rivalB;
+                loserName = rivalA;
+            }
+
+            // Only update if we haven't already shown winner (prevent double points if click multiple times)
+            if (!showWinnerScreen && !winner) {
+                updateLeagueStats(winnerName, loserName, isReplica);
+            }
+        }
+
         // Select Random Loser Image Pool
         let pool: string[] = [];
         if (vote === 'A') {
@@ -457,6 +568,68 @@ const App: React.FC = () => {
                 </button>
             </div>
 
+            {/* LEAGUE TABLE FLOATING BUTTON */}
+            {
+                isLeagueMode && !showLeagueTable && (
+                    <div className="fixed bottom-4 right-4 z-[90]">
+                        <button
+                            onClick={() => setShowLeagueTable(true)}
+                            className="bg-purple-900/90 backdrop-blur-md border md:border-2 border-purple-500 hover:bg-purple-800 text-white p-3 md:p-4 rounded-full shadow-[0_0_20px_rgba(168,85,247,0.4)] transition-all transform hover:scale-105 flex items-center gap-2"
+                        >
+                            <Award size={24} className="text-yellow-400" />
+                            <span className="hidden md:block font-bold uppercase text-xs tracking-widest">Tabla Liga</span>
+                        </button>
+                    </div>
+                )
+            }
+
+            {/* LEAGUE TABLE OVERLAY */}
+            {
+                showLeagueTable && (
+                    <div className="fixed inset-0 z-[180] bg-black/95 backdrop-blur-lg flex items-center justify-center p-4 animate-fadeIn">
+                        <div className="bg-[#1a0b2e] w-full max-w-4xl max-h-[90vh] rounded-2xl border-2 border-yellow-600 shadow-[0_0_50px_rgba(234,179,8,0.2)] overflow-hidden flex flex-col relative">
+                            <div className="p-6 border-b border-purple-800 flex justify-between items-center bg-purple-950/50">
+                                <div className="flex items-center gap-3">
+                                    <Award className="text-yellow-400" size={32} />
+                                    <h2 className="text-2xl font-urban text-white tracking-widest uppercase">POSICIONES DE LA LIGA</h2>
+                                </div>
+                                <button onClick={() => setShowLeagueTable(false)} className="text-gray-400 hover:text-white"><X size={28} /></button>
+                            </div>
+                            <div className="p-0 overflow-y-auto custom-scrollbar flex-1">
+                                <table className="w-full text-left">
+                                    <thead className="bg-purple-900/40 text-purple-200 uppercase text-xs tracking-widest sticky top-0 backdrop-blur-md">
+                                        <tr>
+                                            <th className="p-4">Pos</th>
+                                            <th className="p-4">MC</th>
+                                            <th className="p-4 text-center">Batallas</th>
+                                            <th className="p-4 text-right">Puntos</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="text-gray-200">
+                                        {[...leagueParticipants].sort((a, b) => b.points - a.points || b.battles - a.battles).map((p, idx) => (
+                                            <tr key={p.id} className={`border-b border-purple-800/30 hover:bg-purple-800/20 transition-colors ${!p.active ? 'opacity-50 grayscale' : ''}`}>
+                                                <td className="p-4 font-bold text-gray-500">#{idx + 1}</td>
+                                                <td className="p-4 font-black text-lg uppercase flex items-center gap-2">
+                                                    {idx === 0 && <Crown size={16} className="text-yellow-400" fill="currentColor" />}
+                                                    {p.name}
+                                                    {!p.active && <span className="text-[10px] bg-red-900/50 text-red-300 px-2 py-0.5 rounded border border-red-800 ml-2">COMPLETADO</span>}
+                                                </td>
+                                                <td className="p-4 text-center font-mono text-blue-300">{p.battles} / {maxBattlesPerPerson}</td>
+                                                <td className="p-4 text-right font-black text-xl text-yellow-400">{p.points}</td>
+                                            </tr>
+                                        ))}
+                                        {leagueParticipants.length === 0 && (
+                                            <tr><td colSpan={4} className="p-8 text-center text-gray-500">Aún no hay participantes inscritos.</td></tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+
+
             {/* TOURNAMENT MODAL - Persisted using 'hidden' class to prevent unmount and state loss */}
             <div className={`fixed inset-0 z-[160] bg-black/95 backdrop-blur-lg items-center justify-center p-4 animate-fadeIn ${showTournamentModal ? 'flex' : 'hidden'}`}>
                 <div className="bg-[#1a0b2e] w-full max-w-6xl h-[90vh] rounded-2xl border-2 border-yellow-600 shadow-[0_0_50px_rgba(234,179,8,0.3)] overflow-hidden flex flex-col relative">
@@ -473,95 +646,101 @@ const App: React.FC = () => {
             </div>
 
             {/* INFO MODAL OVERLAY */}
-            {showInfoModal && (
-                <div className="fixed inset-0 z-[150] bg-black/90 backdrop-blur-lg flex items-center justify-center p-4 animate-fadeIn">
-                    <div className="bg-[#1a0b2e] w-full max-w-4xl max-h-[90vh] rounded-2xl border-2 border-purple-500 shadow-[0_0_50px_rgba(168,85,247,0.5)] overflow-hidden flex flex-col relative">
+            {
+                showInfoModal && (
+                    <div className="fixed inset-0 z-[150] bg-black/90 backdrop-blur-lg flex items-center justify-center p-4 animate-fadeIn">
+                        <div className="bg-[#1a0b2e] w-full max-w-4xl max-h-[90vh] rounded-2xl border-2 border-purple-500 shadow-[0_0_50px_rgba(168,85,247,0.5)] overflow-hidden flex flex-col relative">
 
-                        {/* Modal Header */}
-                        <div className="p-6 border-b border-purple-800 flex justify-between items-center bg-purple-950/50">
-                            <div className="flex items-center gap-3">
-                                <BookOpen className="text-green-400" />
-                                <h2 className="text-2xl font-urban text-white tracking-widest uppercase">Manual de Juego</h2>
-                            </div>
-                            <button
-                                onClick={() => setShowInfoModal(false)}
-                                className="text-gray-400 hover:text-white hover:bg-red-500/20 p-2 rounded-full transition-colors"
-                            >
-                                <X size={28} />
-                            </button>
-                        </div>
-
-                        {/* Modal Content */}
-                        <div className="p-6 overflow-y-auto custom-scrollbar grid grid-cols-1 md:grid-cols-3 gap-6">
-
-                            {/* Column 1: Formats */}
-                            <div className="space-y-4">
-                                <h3 className="text-purple-300 font-bold uppercase tracking-widest border-b border-purple-700 pb-2">Formatos</h3>
-                                <div className="space-y-2">
-                                    {Object.values(TrainingFormat).map((fmt) => (
-                                        <div key={fmt} className="bg-purple-900/20 p-3 rounded-lg border border-purple-800/50 text-gray-200 text-sm font-bold flex justify-between">
-                                            <span>{fmt}</span>
-                                            <span className="text-purple-400 text-xs">{ENTRADAS_RULES[fmt]?.replace(' Entradas por MC', 'e')}</span>
-                                        </div>
-                                    ))}
+                            {/* Modal Header */}
+                            <div className="p-6 border-b border-purple-800 flex justify-between items-center bg-purple-950/50">
+                                <div className="flex items-center gap-3">
+                                    <BookOpen className="text-green-400" />
+                                    <h2 className="text-2xl font-urban text-white tracking-widest uppercase">Manual de Juego</h2>
                                 </div>
+                                <button
+                                    onClick={() => setShowInfoModal(false)}
+                                    className="text-gray-400 hover:text-white hover:bg-red-500/20 p-2 rounded-full transition-colors"
+                                >
+                                    <X size={28} />
+                                </button>
                             </div>
 
-                            {/* Column 2: Stimuli */}
-                            <div className="space-y-4">
-                                <h3 className="text-pink-300 font-bold uppercase tracking-widest border-b border-pink-700 pb-2">Estímulos</h3>
-                                <div className="space-y-2">
-                                    {ALL_TRAINING_MODES.map((mode) => (
-                                        <div key={mode} className="bg-pink-900/20 p-3 rounded-lg border border-pink-800/50 text-gray-200 text-sm font-bold capitalize">
-                                            {MODE_TRANSLATIONS[mode] || mode}
-                                        </div>
-                                    ))}
+                            {/* Modal Content */}
+                            <div className="p-6 overflow-y-auto custom-scrollbar grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                                {/* Column 1: Formats */}
+                                <div className="space-y-4">
+                                    <h3 className="text-purple-300 font-bold uppercase tracking-widest border-b border-purple-700 pb-2">Formatos</h3>
+                                    <div className="space-y-2">
+                                        {Object.values(TrainingFormat).map((fmt) => (
+                                            <div key={fmt} className="bg-purple-900/20 p-3 rounded-lg border border-purple-800/50 text-gray-200 text-sm font-bold flex justify-between">
+                                                <span>{fmt}</span>
+                                                <span className="text-purple-400 text-xs">{ENTRADAS_RULES[fmt]?.replace(' Entradas por MC', 'e')}</span>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
 
-                            {/* Column 3: Beats */}
-                            <div className="space-y-4">
-                                <h3 className="text-blue-300 font-bold uppercase tracking-widest border-b border-blue-700 pb-2">Estilos de Beat</h3>
-                                <div className="space-y-2">
-                                    {Object.values(BeatGenre).map((beat) => (
-                                        <div key={beat} className="bg-blue-900/20 p-3 rounded-lg border border-blue-800/50 text-gray-200 text-sm font-bold">
-                                            {beat}
-                                        </div>
-                                    ))}
+                                {/* Column 2: Stimuli */}
+                                <div className="space-y-4">
+                                    <h3 className="text-pink-300 font-bold uppercase tracking-widest border-b border-pink-700 pb-2">Estímulos</h3>
+                                    <div className="space-y-2">
+                                        {ALL_TRAINING_MODES.map((mode) => (
+                                            <div key={mode} className="bg-pink-900/20 p-3 rounded-lg border border-pink-800/50 text-gray-200 text-sm font-bold capitalize">
+                                                {MODE_TRANSLATIONS[mode] || mode}
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
+
+                                {/* Column 3: Beats */}
+                                <div className="space-y-4">
+                                    <h3 className="text-blue-300 font-bold uppercase tracking-widest border-b border-blue-700 pb-2">Estilos de Beat</h3>
+                                    <div className="space-y-2">
+                                        {Object.values(BeatGenre).map((beat) => (
+                                            <div key={beat} className="bg-blue-900/20 p-3 rounded-lg border border-blue-800/50 text-gray-200 text-sm font-bold">
+                                                {beat}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
                             </div>
 
-                        </div>
-
-                        <div className="p-4 bg-purple-950/30 text-center text-xs text-gray-500 border-t border-purple-800">
-                            Todas las opciones tienen la misma probabilidad en la Ruleta del Destino.
+                            <div className="p-4 bg-purple-950/30 text-center text-xs text-gray-500 border-t border-purple-800">
+                                Todas las opciones tienen la misma probabilidad en la Ruleta del Destino.
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Transition Overlay (Lightning Effect) */}
-            {isTransitioning && (
-                <div className="fixed inset-0 z-[200] flex items-center justify-center pointer-events-none">
-                    {/* Flash Background - Full Opacity to hide transition */}
-                    <div className="absolute inset-0 bg-white animate-flash-storm mix-blend-overlay"></div>
-                    <div className={`absolute inset-0 animate-flash-storm ${isReplica ? 'bg-red-600' : 'bg-purple-600'}`}></div>
+            {
+                isTransitioning && (
+                    <div className="fixed inset-0 z-[200] flex items-center justify-center pointer-events-none">
+                        {/* Flash Background - Full Opacity to hide transition */}
+                        <div className="absolute inset-0 bg-white animate-flash-storm mix-blend-overlay"></div>
+                        <div className={`absolute inset-0 animate-flash-storm ${isReplica ? 'bg-red-600' : 'bg-purple-600'}`}></div>
 
-                    {/* Lightning Icon */}
-                    <div className="relative z-10 animate-strike">
-                        <Zap size={250} className={`${isReplica ? 'text-red-500' : 'text-purple-500'} drop-shadow-[0_0_80px_currentColor]`} fill="currentColor" />
+                        {/* Lightning Icon */}
+                        <div className="relative z-10 animate-strike">
+                            <Zap size={250} className={`${isReplica ? 'text-red-500' : 'text-purple-500'} drop-shadow-[0_0_80px_currentColor]`} fill="currentColor" />
+                        </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Countdown Overlay (Main Battle) */}
-            {countdown && (
-                <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center animate-fadeInFast">
-                    <h1 className="text-6xl sm:text-8xl md:text-[10rem] lg:text-[15rem] font-black font-urban text-transparent bg-clip-text bg-gradient-to-br from-purple-400 via-pink-500 to-indigo-600 drop-shadow-[0_10px_20px_rgba(168,85,247,0.5)] animate-scale-up tracking-tighter text-center break-words max-w-full px-4">
-                        {countdown}
-                    </h1>
-                </div>
-            )}
+            {
+                countdown && (
+                    <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center animate-fadeInFast">
+                        <h1 className="text-6xl sm:text-8xl md:text-[10rem] lg:text-[15rem] font-black font-urban text-transparent bg-clip-text bg-gradient-to-br from-purple-400 via-pink-500 to-indigo-600 drop-shadow-[0_10px_20px_rgba(168,85,247,0.5)] animate-scale-up tracking-tighter text-center break-words max-w-full px-4">
+                            {countdown}
+                        </h1>
+                    </div>
+                )
+            }
 
             <div className="max-w-6xl mx-auto w-full flex-1 flex flex-col">
 
@@ -595,68 +774,196 @@ const App: React.FC = () => {
                 {/* Main Content Area */}
                 <main className={`flex-1 flex flex-col justify-center animate-fadeIn relative min-h-0 ${step === 'voting' ? 'p-0' : ''} ${step === 'arena' ? 'justify-start md:justify-center' : ''}`}>
 
-                    {/* STEP 0: NAMES INPUT */}
+                    {/* STEP 0: NAMES INPUT / LEAGUE DASHBOARD */}
                     {step === 'names' && (
-                        <div className="w-full max-w-4xl mx-auto flex flex-col items-center justify-center flex-1 min-h-[50vh]">
-                            <h2 className="text-2xl md:text-3xl font-urban text-white mb-8 text-center drop-shadow-lg tracking-widest uppercase animate-pulse px-4">
-                                ¿QUIÉNES BATALLAN HOY?
-                            </h2>
+                        <div className="w-full max-w-6xl mx-auto flex flex-col items-center justify-center flex-1 min-h-[50vh] p-4">
 
-                            <div className="flex flex-col md:flex-row w-full gap-8 md:gap-4 items-center justify-center mb-10 relative">
-                                {/* Rival A - Blue */}
-                                <div className="w-full max-w-xs md:max-w-sm relative group z-10">
-                                    <div className="absolute inset-0 bg-blue-600/20 rounded-2xl blur-xl group-hover:bg-blue-500/40 transition-all"></div>
-                                    <div className="relative bg-black/80 border-2 border-blue-500 p-6 rounded-2xl shadow-[0_0_20px_rgba(59,130,246,0.3)]">
-                                        <div className="flex items-center gap-2 mb-2 text-blue-400 font-urban text-xl">
-                                            <User size={24} />
-                                            <span>BUFÓN AZUL</span>
-                                        </div>
-                                        <input
-                                            type="text"
-                                            value={rivalA}
-                                            onChange={(e) => setRivalA(e.target.value)}
-                                            placeholder="MC 1"
-                                            className="w-full bg-transparent border-b-2 border-blue-800 focus:border-blue-400 outline-none text-2xl font-bold text-white py-2 placeholder-blue-900/50 uppercase tracking-wide text-center"
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* VS BADGE */}
-                                <div className="relative z-20 md:-mx-6 my-[-10px] md:my-0 flex-shrink-0">
-                                    <div className="w-16 h-16 bg-black border-2 border-purple-500 rotate-45 flex items-center justify-center shadow-[0_0_20px_rgba(168,85,247,0.5)]">
-                                        <span className="-rotate-45 text-2xl font-black text-white italic">VS</span>
-                                    </div>
-                                </div>
-
-                                {/* Rival B - Red */}
-                                <div className="w-full max-w-xs md:max-w-sm relative group z-10">
-                                    <div className="absolute inset-0 bg-red-600/20 rounded-2xl blur-xl group-hover:bg-red-500/40 transition-all"></div>
-                                    <div className="relative bg-black/80 border-2 border-red-500 p-6 rounded-2xl shadow-[0_0_20px_rgba(239,68,68,0.3)]">
-                                        <div className="flex items-center gap-2 mb-2 text-red-400 font-urban text-xl justify-end">
-                                            <span>BUFÓN ROJO</span>
-                                            <User size={24} />
-                                        </div>
-                                        <input
-                                            type="text"
-                                            value={rivalB}
-                                            onChange={(e) => setRivalB(e.target.value)}
-                                            placeholder="MC 2"
-                                            className="w-full bg-transparent border-b-2 border-red-800 focus:border-red-400 outline-none text-2xl font-bold text-white py-2 placeholder-red-900/50 uppercase tracking-wide text-center"
-                                        />
-                                    </div>
-                                </div>
+                            {/* MODE TOGGLE */}
+                            <div className="flex items-center gap-4 mb-8 bg-black/40 p-2 rounded-full border border-purple-500/30">
+                                <button
+                                    onClick={() => { setIsLeagueMode(false); }}
+                                    className={`px-6 py-2 rounded-full font-bold text-xs uppercase tracking-widest transition-all ${!isLeagueMode ? 'bg-purple-600 text-white shadow-[0_0_15px_rgba(168,85,247,0.5)]' : 'text-gray-400 hover:text-white'}`}
+                                >
+                                    Modo Clásico
+                                </button>
+                                <button
+                                    onClick={() => { setIsLeagueMode(true); }}
+                                    className={`px-6 py-2 rounded-full font-bold text-xs uppercase tracking-widest transition-all ${isLeagueMode ? 'bg-yellow-600 text-white shadow-[0_0_15px_rgba(234,179,8,0.5)]' : 'text-gray-400 hover:text-white'}`}
+                                >
+                                    Modo Liga
+                                </button>
                             </div>
 
-                            <button
-                                onClick={handleNamesSubmit}
-                                className="group relative px-10 py-4 bg-gradient-to-r from-blue-600 to-red-600 rounded-xl font-black text-2xl uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-[0_0_30px_rgba(168,85,247,0.4)] overflow-hidden"
-                            >
-                                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 skew-y-12"></div>
-                                <span className="relative z-10 flex items-center gap-3">
-                                    <Swords size={28} />
-                                    CONTINUAR
-                                </span>
-                            </button>
+                            {!isLeagueMode ? (
+                                <>
+                                    <h2 className="text-2xl md:text-3xl font-urban text-white mb-8 text-center drop-shadow-lg tracking-widest uppercase animate-pulse px-4">
+                                        ¿QUIÉNES BATALLAN HOY?
+                                    </h2>
+
+                                    <div className="flex flex-col md:flex-row w-full gap-8 md:gap-4 items-center justify-center mb-10 relative">
+                                        {/* Rival A - Blue */}
+                                        <div className="w-full max-w-xs md:max-w-sm relative group z-10">
+                                            <div className="absolute inset-0 bg-blue-600/20 rounded-2xl blur-xl group-hover:bg-blue-500/40 transition-all"></div>
+                                            <div className="relative bg-black/80 border-2 border-blue-500 p-6 rounded-2xl shadow-[0_0_20px_rgba(59,130,246,0.3)]">
+                                                <div className="flex items-center gap-2 mb-2 text-blue-400 font-urban text-xl">
+                                                    <User size={24} />
+                                                    <span>BUFÓN AZUL</span>
+                                                </div>
+                                                <input
+                                                    type="text"
+                                                    value={rivalA}
+                                                    onChange={(e) => setRivalA(e.target.value)}
+                                                    placeholder="MC 1"
+                                                    className="w-full bg-transparent border-b-2 border-blue-800 focus:border-blue-400 outline-none text-2xl font-bold text-white py-2 placeholder-blue-900/50 uppercase tracking-wide text-center"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* VS BADGE */}
+                                        <div className="relative z-20 md:-mx-6 my-[-10px] md:my-0 flex-shrink-0">
+                                            <div className="w-16 h-16 bg-black border-2 border-purple-500 rotate-45 flex items-center justify-center shadow-[0_0_20px_rgba(168,85,247,0.5)]">
+                                                <span className="-rotate-45 text-2xl font-black text-white italic">VS</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Rival B - Red */}
+                                        <div className="w-full max-w-xs md:max-w-sm relative group z-10">
+                                            <div className="absolute inset-0 bg-red-600/20 rounded-2xl blur-xl group-hover:bg-red-500/40 transition-all"></div>
+                                            <div className="relative bg-black/80 border-2 border-red-500 p-6 rounded-2xl shadow-[0_0_20px_rgba(239,68,68,0.3)]">
+                                                <div className="flex items-center gap-2 mb-2 text-red-400 font-urban text-xl justify-end">
+                                                    <span>BUFÓN ROJO</span>
+                                                    <User size={24} />
+                                                </div>
+                                                <input
+                                                    type="text"
+                                                    value={rivalB}
+                                                    onChange={(e) => setRivalB(e.target.value)}
+                                                    placeholder="MC 2"
+                                                    className="w-full bg-transparent border-b-2 border-red-800 focus:border-red-400 outline-none text-2xl font-bold text-white py-2 placeholder-red-900/50 uppercase tracking-wide text-center"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        onClick={handleNamesSubmit}
+                                        className="group relative px-10 py-4 bg-gradient-to-r from-blue-600 to-red-600 rounded-xl font-black text-2xl uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-[0_0_30px_rgba(168,85,247,0.4)] overflow-hidden"
+                                    >
+                                        <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 skew-y-12"></div>
+                                        <span className="relative z-10 flex items-center gap-3">
+                                            <Swords size={28} />
+                                            CONTINUAR
+                                        </span>
+                                    </button>
+                                </>
+                            ) : (
+                                /* --- LEAGUE DASHBOARD --- */
+                                <div className="w-full flex flex-col items-center animate-fadeIn">
+                                    <h2 className="text-3xl font-urban text-yellow-400 mb-2 text-center drop-shadow-lg tracking-widest uppercase">
+                                        GESTIÓN DE LIGA
+                                    </h2>
+                                    <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                                        {/* LEFT: PARTICIPANTS LIST */}
+                                        <div className="lg:col-span-2 bg-[#120520]/80 border border-purple-500/30 rounded-2xl p-6 h-[500px] flex flex-col">
+                                            <div className="flex justify-between items-center mb-4">
+                                                <h3 className="text-purple-300 font-bold uppercase text-xs tracking-widest">Participantes ({leagueParticipants.length})</h3>
+                                                <div className="flex gap-2">
+                                                    <input
+                                                        type="number"
+                                                        value={maxBattlesPerPerson}
+                                                        onChange={(e) => setMaxBattlesPerPerson(parseInt(e.target.value) || 1)}
+                                                        className="w-12 bg-black/50 border border-purple-600 text-center text-white rounded text-xs p-1"
+                                                        title="Batallas por persona"
+                                                    />
+                                                    <span className="text-[10px] text-gray-500 uppercase self-center">Batallas/Persona</span>
+                                                </div>
+                                            </div>
+
+                                            {/* ADD INPUT */}
+                                            <div className="flex gap-2 mb-4">
+                                                <input
+                                                    type="text"
+                                                    value={newParticipantName}
+                                                    onChange={(e) => setNewParticipantName(e.target.value)}
+                                                    onKeyDown={(e) => e.key === 'Enter' && addParticipant()}
+                                                    placeholder="Nuevo Participante..."
+                                                    className="flex-1 bg-black/40 border border-purple-600 rounded-lg px-4 py-2 text-white placeholder-gray-600 focus:border-yellow-500 outline-none uppercase"
+                                                />
+                                                <button
+                                                    onClick={addParticipant}
+                                                    className="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-lg font-bold uppercase text-xs tracking-widest"
+                                                >
+                                                    Agregar
+                                                </button>
+                                            </div>
+
+                                            {/* LIST */}
+                                            <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-2">
+                                                {leagueParticipants.length === 0 ? (
+                                                    <div className="h-full flex items-center justify-center text-gray-600 text-sm italic">
+                                                        Agrega MCs para comenzar la liga...
+                                                    </div>
+                                                ) : (
+                                                    leagueParticipants.map(p => (
+                                                        <div key={p.id} className={`flex items-center justify-between bg-purple-900/10 border ${p.active ? 'border-purple-500/20' : 'border-red-900/30 bg-red-900/5'} p-3 rounded-lg group hover:bg-purple-900/20 transition-colors`}>
+                                                            <div className="flex items-center gap-3">
+                                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${p.active ? 'bg-purple-800 text-purple-200' : 'bg-gray-800 text-gray-500'}`}>
+                                                                    {p.name.substring(0, 2)}
+                                                                </div>
+                                                                <div>
+                                                                    <p className={`font-bold uppercase ${p.active ? 'text-white' : 'text-gray-500 line-through'}`}>{p.name}</p>
+                                                                    <p className="text-[10px] text-gray-400 flex gap-2">
+                                                                        <span>PTS: {p.points}</span>
+                                                                        <span>BAT: {p.battles}/{maxBattlesPerPerson}</span>
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                            <button
+                                                                onClick={() => removeParticipant(p.id)}
+                                                                className="text-gray-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                            >
+                                                                <X size={16} />
+                                                            </button>
+                                                        </div>
+                                                    ))
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* RIGHT: ACTION PANEL */}
+                                        <div className="flex flex-col gap-4">
+                                            <div className="bg-yellow-900/10 border border-yellow-600/30 rounded-2xl p-6 flex flex-col items-center justify-center text-center gap-4 flex-1">
+                                                <Trophy size={48} className="text-yellow-500 animate-float" />
+                                                <div>
+                                                    <h3 className="text-yellow-200 font-bold uppercase tracking-widest text-lg">Próxima Batalla</h3>
+                                                    <p className="text-xs text-yellow-500/70 mt-1">Sorteo aleatorio entre {leagueParticipants.filter(p => p.active).length} participantes disponibles.</p>
+                                                </div>
+
+                                                <button
+                                                    onClick={handleStartLeagueBattle}
+                                                    disabled={leagueParticipants.filter(p => p.active).length < 2}
+                                                    className="w-full py-4 mt-4 bg-gradient-to-r from-yellow-600 to-orange-600 rounded-xl font-black text-xl uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-[0_0_30px_rgba(234,179,8,0.3)] disabled:opacity-50 disabled:cursor-not-allowed flex flex-col items-center justify-center gap-1"
+                                                >
+                                                    <span className="flex items-center gap-2">
+                                                        <RotateCcw size={20} className={false ? "animate-spin" : ""} />
+                                                        SORTEAR Y BATALLAR
+                                                    </span>
+                                                </button>
+                                            </div>
+
+                                            <button
+                                                onClick={() => setShowLeagueTable(true)}
+                                                className="bg-black/40 border border-purple-500/50 hover:bg-purple-900/30 rounded-xl p-4 text-purple-300 font-bold uppercase tracking-widest text-xs flex items-center justify-center gap-2"
+                                            >
+                                                <List size={16} />
+                                                Ver Tabla Completa
+                                            </button>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
 

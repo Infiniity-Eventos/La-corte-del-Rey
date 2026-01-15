@@ -54,7 +54,7 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
         }
     }, [gameState?.rivalA, gameState?.rivalB, gameState?.step, hasVoted]);
 
-    // ANIMATION TRIGGER EFFECT
+    // ANIMATION TRIGGER EFFECT (Visuals Only)
     useEffect(() => {
         if (animationTrigger && animationTrigger.type === 'WIN_ANIMATION_TRIGGER') {
             const { winner, loserImage } = animationTrigger.payload;
@@ -64,13 +64,7 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
             setIsFlickering(true);
             setGlitchImageOverride(finalPath); // Start visible
 
-            // 2. Play Axe Sound
-            const axeSound = new Audio('/sounds/glitch-axe.mp3');
-            axeSound.currentTime = 1.35;
-            axeSound.volume = 0.8;
-            axeSound.play().catch(e => console.error("Spec Audio error:", e));
-
-            // 3. Strobe Effect & Laugh Sequence
+            // 3. Strobe Effect Sequence
             let flickerCount = 0;
             const totalFlickers = 8;
             const flickerSpeed = 50;
@@ -87,12 +81,6 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
                     clearInterval(interval);
                     setIsFlickering(false);
                     setGlitchImageOverride(null); // Stop overriding
-
-                    // PLAY LAUGH
-                    const laugh = new Audio('/sounds/laugh-evil.mp3');
-                    laugh.volume = 0.6;
-                    laugh.play().catch(e => console.error("Spec Audio error:", e));
-                    laughAudioRef.current = laugh;
                 }
             }, flickerSpeed);
 
@@ -101,28 +89,11 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
                 setIsFlickering(false);
                 setGlitchImageOverride(null);
             }, 600); // Slightly longer than math to be safe
-
         }
     }, [animationTrigger]);
 
-    // NEW EFFECT: Play Trumpet Synchronized with Visual Appearance
-    useEffect(() => {
-        if (gameState?.showWinnerScreen && gameState.winner) {
-            // Stop Laugh if playing
-            if (laughAudioRef.current) {
-                laughAudioRef.current.pause();
-                laughAudioRef.current.currentTime = 0;
-            }
 
-            const trumpet = new Audio('/sounds/victory-trumpet.mp3');
-            trumpet.currentTime = 0.5;
-            trumpet.volume = 0.6;
-            trumpet.play().catch(e => console.error("Spec Audio error:", e));
-        }
-    }, [gameState?.showWinnerScreen, gameState?.winner]);
-
-
-    // Loading State Handling
+    // Derived values
     if (!gameState) {
         return (
             <div className="min-h-screen bg-[#0d001a] flex flex-col items-center justify-center text-purple-500 animate-pulse">

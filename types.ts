@@ -65,3 +65,17 @@ export interface SpectatorState {
   currentSlotValues?: { format: TrainingFormat, mode: TrainingMode, genre: BeatGenre } | null;
   spinAttempts: number;
 }
+
+export interface LeagueParticipant {
+  id: string;
+  name: string;
+  points: number;
+  battles: number;
+  active: boolean; // if false, cannot be selected anymore (e.g. max battles reached)
+}
+
+export interface LeagueSettings {
+  maxBattlesPerPerson: number;
+  participants: LeagueParticipant[];
+  isLeagueMode: boolean;
+}
