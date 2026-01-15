@@ -1,10 +1,9 @@
-```javascript
 import React, { useState, useEffect, useRef } from 'react';
 import { TrainingFormat, BeatGenre, SpectatorState, AppStep } from '../types';
 import { TopicGenerator } from './TopicGenerator';
 import { SlotMachine } from './SlotMachine';
 import { TournamentBracket } from './TournamentBracket'; // In case we want to show it? Maybe later.
-import { Crown, User, Swords, Play, Trophy, Timer, Zap, Skull, Award } from 'lucide-react';
+import { Crown, User, Swords, Play, Trophy, Timer, Zap, Skull, Award, List } from 'lucide-react';
 import { useFirebaseSync } from '../hooks/useFirebaseSync';
 
 const MODE_TRANSLATIONS: Record<string, string> = {
@@ -30,7 +29,7 @@ interface SpectatorViewProps {
 export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
     // Generate a persistent random ID for this spectator if no name provided
     const [randomId] = useState(() => Math.floor(Math.random() * 10000));
-    const effectiveName = viewerName || `Espectador #${ randomId } `;
+    const effectiveName = viewerName || `Espectador #${randomId} `;
 
     // FIREBASE HOOK
     const { gameState, castVote, animationTrigger } = useFirebaseSync(true, effectiveName);
@@ -41,6 +40,9 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
 
     // Voting Interaction State
     const [hasVoted, setHasVoted] = useState(false);
+
+    // Local League Table State
+    const [localShowTable, setLocalShowTable] = useState(false);
 
     // Audio Refs
     const laughAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -124,7 +126,7 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
     // unless user explicitly asked for it. "solo visual" implies visual focus.
 
     return (
-        <div className={`min - h - screen bg - gradient - to - b text - white p - 4 md: p - 6 lg: p - 8 overflow - x - hidden relative flex flex - col ${ isReplica && step === 'slots' ? 'from-red-950 to-black' : 'from-[#1a0b2e] to-[#0d001a]' } `}>
+        <div className={`min-h-screen bg-gradient-to-b text-white p-4 md:p-6 lg:p-8 overflow-x-hidden relative flex flex-col ${isReplica && step === 'slots' ? 'from-red-950 to-black' : 'from-[#1a0b2e] to-[#0d001a]'} `}>
 
             {/* BACKGROUND ANIMATION LAYERS (Keep consistent with App.tsx) */}
 
@@ -140,9 +142,9 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
             {/* HEADER (Simplified) */}
             {step !== 'voting' && step !== 'arena' && (
                 <header className="text-center py-4 relative mb-4 flex flex-col items-center">
-                    <div className={`absolute top - 1 / 2 left - 1 / 2 - translate - x - 1 / 2 - translate - y - 1 / 2 w - [120 %] h - [150 %] blur - [100px] - z - 10 rounded - full pointer - events - none ${ isReplica ? 'bg-red-600/20' : 'bg-purple-600/10' } `}></div>
+                    <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[150%] blur-[100px] -z-10 rounded-full pointer-events-none ${isReplica ? 'bg-red-600/20' : 'bg-purple-600/10'} `}></div>
                     <div className="relative mb-2 animate-float">
-                        <Crown size={48} className={`${ isReplica ? 'text-red-500' : 'text-yellow-400' } drop - shadow - [0_0_15px_rgba(250, 204, 21, 0.6)]`} fill={isReplica ? "rgba(220,38,38,0.2)" : "rgba(250,204,21,0.2)"} />
+                        <Crown size={48} className={`${isReplica ? 'text-red-500' : 'text-yellow-400'} drop-shadow-[0_0_15px_rgba(250,204,21,0.6)]`} fill={isReplica ? "rgba(220,38,38,0.2)" : "rgba(250,204,21,0.2)"} />
                     </div>
                     <h1 className="text-3xl md:text-5xl font-urban font-black tracking-tighter transform -rotate-2 relative z-10 animate-shine-text drop-shadow-xl">
                         LA CORTE DEL REY
@@ -152,7 +154,7 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
                 </header>
             )}
 
-            <main className={`flex - 1 flex flex - col justify - center animate - fadeIn relative min - h - 0 ${ step === 'voting' ? 'p-0' : '' } ${ step === 'arena' ? 'justify-start md:justify-center' : '' } `}>
+            <main className={`flex-1 flex flex-col justify-center animate-fadeIn relative min-h-0 ${step === 'voting' ? 'p-0' : ''} ${step === 'arena' ? 'justify-start md:justify-center' : ''} `}>
 
                 {/* STEP 0: NAMES */}
                 {step === 'names' && (
@@ -196,6 +198,8 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
                             spectator={true}
                             forcedValues={currentSlotValues}
                             attempts={spinAttempts}
+                            rivalA={rivalA}
+                            rivalB={rivalB}
                         />
                     </div>
                 )}
@@ -289,13 +293,13 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
 
             {/* STEP 4: VOTING (NEON JESTER EDITION - BOXED FOR SPECTATOR TOO) */}
             {step === 'voting' && (
-                <div className={`fixed top - 1 / 2 left - 1 / 2 transform - translate - x - 1 / 2 - translate - y - 1 / 2 w - full max - w - 4xl aspect - square max - h - [85vh] flex overflow - hidden bg - black rounded - 3xl border - 4 border - purple - 500 / 30 shadow - 2xl animate - fadeIn z - [200]`}>
+                <div className={`fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl aspect-square max-h-[85vh] flex overflow-hidden bg-black rounded-3xl border-4 border-purple-500/30 shadow-2xl animate-fadeIn z-[200]`}>
                     {/* Background */}
                     <div className="absolute inset-0 z-0">
                         <img
                             src={loserImage || "/vs-bg-final.jpg"}
                             alt="Voting Background"
-                            className={`w - full h - full object - cover object - center ${ isFlickering ? 'animate-glitch duration-0' : 'transition-all duration-500' } `}
+                            className={`w-full h-full object-cover object-center ${isFlickering ? 'animate-glitch duration-0' : 'transition-all duration-500'} `}
                         />
                         <div className="absolute inset-0 bg-black/20"></div>
 
@@ -401,17 +405,17 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
 
                     {/* WINNER SCREEN */}
                     {showWinnerScreen && winner && (
-                        <div className={`fixed inset - 0 z - [100] flex items - center justify - center animate - fadeIn bg - black / 80 backdrop - blur - sm`}>
-                            <div className={`relative w - [90 %] max - w - sm md: max - w - lg bg - [#1a0b2e] border - 4 rounded - 3xl p - 4 md: p - 8 flex flex - col items - center shadow - [0_0_100px_rgba(0, 0, 0, 0.9)] animate - scale - up z - 20 overflow - hidden ${ winner === 'A' ? 'border-fuchsia-500 shadow-[0_0_50px_rgba(192,38,211,0.5)]' : 'border-cyan-500 shadow-[0_0_50px_rgba(6,182,212,0.5)]' } `}>
+                        <div className={`fixed inset-0 z-[100] flex items-center justify-center animate-fadeIn bg-black/80 backdrop-blur-sm`}>
+                            <div className={`relative w-[90%] max-w-sm md:max-w-lg bg-[#1a0b2e] border-4 rounded-3xl p-4 md:p-8 flex flex-col items-center shadow-[0_0_100px_rgba(0,0,0,0.9)] animate-scale-up z-20 overflow-hidden ${winner === 'A' ? 'border-fuchsia-500 shadow-[0_0_50px_rgba(192,38,211,0.5)]' : 'border-cyan-500 shadow-[0_0_50px_rgba(6,182,212,0.5)]'} `}>
                                 {/* Winner Badge */}
                                 <div className="mb-4 md:mb-6 relative">
-                                    <div className={`absolute inset - 0 blur - [40px] ${ winner === 'A' ? 'bg-fuchsia-500' : 'bg-cyan-500' } `}></div>
-                                    <Crown size={50} className={`relative z - 10 md: w - 20 md: h - 20 ${ winner === 'A' ? 'text-fuchsia-100' : 'text-cyan-100' } `} fill="currentColor" />
+                                    <div className={`absolute inset-0 blur-[40px] ${winner === 'A' ? 'bg-fuchsia-500' : 'bg-cyan-500'} `}></div>
+                                    <Crown size={50} className={`relative z-10 md:w-20 md:h-20 ${winner === 'A' ? 'text-fuchsia-100' : 'text-cyan-100'} `} fill="currentColor" />
                                 </div>
 
                                 <h3 className="text-gray-400 font-bold uppercase tracking-[0.3em] text-[10px] md:text-xs mb-2 text-center">GANADOR INDISCUTIBLE</h3>
 
-                                <h2 className={`text - 4xl md: text - 6xl font - black font - urban text - center uppercase leading - none mb - 4 md: mb - 6 break-words w - full ${ winner === 'A' ? 'text-fuchsia-400 drop-shadow-[0_0_15px_rgba(192,38,211,0.8)]' : 'text-cyan-400 drop-shadow-[0_0_15px_rgba(6,182,212,0.8)]' } `}>
+                                <h2 className={`text-4xl md:text-6xl font-black font-urban text-center uppercase leading-none mb-4 md:mb-6 break-words w-full ${winner === 'A' ? 'text-fuchsia-400 drop-shadow-[0_0_15px_rgba(192,38,211,0.8)]' : 'text-cyan-400 drop-shadow-[0_0_15px_rgba(6,182,212,0.8)]'} `}>
                                     {winner === 'A' ? rivalA : rivalB}
                                 </h2>
                             </div>
@@ -425,16 +429,16 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
                                         <div className="absolute top-2 right-2 w-1 h-1">
                                             {Array.from({ length: 40 }).map((_, i) => (
                                                 <div
-                                                    key={`confetti - l - ${ i } `}
+                                                    key={`confetti - l - ${i} `}
                                                     className="absolute w-2 h-2 md:w-3 md:h-3 rounded-sm animate-fountain-flow"
                                                     style={{
                                                         backgroundColor: ['#ef4444', '#3b82f6', '#eab308', '#a855f7', '#ec4899'][i % 5],
                                                         left: 0, top: 0,
-                                                        '--tx': `${ 50 + Math.random() * 200 } px`,
-                                                        '--ty': `${ -100 - Math.random() * 200 } px`,
-                                                        '--r': `${ Math.random() * 720 } deg`,
-                                                        animationDuration: `${ 1 + Math.random() * 1.5 } s`,
-                                                        animationDelay: `${ Math.random() * 0.5 } s`
+                                                        '--tx': `${50 + Math.random() * 200} px`,
+                                                        '--ty': `${-100 - Math.random() * 200} px`,
+                                                        '--r': `${Math.random() * 720} deg`,
+                                                        animationDuration: `${1 + Math.random() * 1.5} s`,
+                                                        animationDelay: `${Math.random() * 0.5} s`
                                                     } as React.CSSProperties}
                                                 ></div>
                                             ))}
@@ -449,16 +453,16 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
                                         <div className="absolute top-2 right-2 w-1 h-1">
                                             {Array.from({ length: 40 }).map((_, i) => (
                                                 <div
-                                                    key={`confetti - r - ${ i } `}
+                                                    key={`confetti - r - ${i} `}
                                                     className="absolute w-2 h-2 md:w-3 md:h-3 rounded-sm animate-fountain-flow"
                                                     style={{
                                                         backgroundColor: ['#ef4444', '#3b82f6', '#eab308', '#a855f7', '#ec4899'][i % 5],
                                                         left: 0, top: 0,
-                                                        '--tx': `${ 50 + Math.random() * 200 } px`,
-                                                        '--ty': `${ -100 - Math.random() * 200 } px`,
-                                                        '--r': `${ Math.random() * 720 } deg`,
-                                                        animationDuration: `${ 1 + Math.random() * 1.5 } s`,
-                                                        animationDelay: `${ Math.random() * 0.5 } s`
+                                                        '--tx': `${50 + Math.random() * 200} px`,
+                                                        '--ty': `${-100 - Math.random() * 200} px`,
+                                                        '--r': `${Math.random() * 720} deg`,
+                                                        animationDuration: `${1 + Math.random() * 1.5} s`,
+                                                        animationDelay: `${Math.random() * 0.5} s`
                                                     } as React.CSSProperties}
                                                 ></div>
                                             ))}
@@ -473,103 +477,117 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
 
             {/* Styles Injection */}
             <style>{`
-@keyframes glitch - anim {
-    0 % { filter: contrast(120 %) saturate(120%) hue - rotate(0deg); clip - path: inset(0 0 0 0); transform: translate(0);
+@keyframes glitch-anim {
+    0% { filter: contrast(120%) saturate(120%) hue-rotate(0deg); clip-path: inset(0 0 0 0); transform: translate(0); }
+    20% { filter: contrast(200%) saturate(0%) hue-rotate(90deg) invert(10%); clip-path: inset(10% 0 30% 0); transform: translate(-5px, 2px); }
+    40% { filter: contrast(150%) saturate(200%) hue-rotate(-90deg); clip-path: inset(50% 0 10% 0); transform: translate(5px, -2px); }
+    60% { filter: contrast(200%) saturate(0%) invert(20%); clip-path: inset(20% 0 60% 0); transform: translate(-5px, 0); }
+    80% { filter: contrast(150%) saturate(150%); clip-path: inset(0 0 0 0); transform: translate(0); }
+    100% { filter: contrast(120%) saturate(120%); clip-path: inset(0 0 0 0); transform: translate(0); }
 }
-20 % { filter: contrast(200 %) saturate(0%) hue - rotate(90deg) invert(10 %); clip - path: inset(10 % 0 30 % 0); transform: translate(-5px, 2px); }
-40 % { filter: contrast(150 %) saturate(200%) hue - rotate(-90deg); clip - path: inset(50 % 0 10 % 0); transform: translate(5px, -2px); }
-60 % { filter: contrast(200 %) saturate(0%) invert(20 %); clip - path: inset(20 % 0 60 % 0); transform: translate(-5px, 0); }
-80 % { filter: contrast(150 %) saturate(150%); clip - path: inset(0 0 0 0); transform: translate(0); }
-100 % { filter: contrast(120 %) saturate(120%); clip - path: inset(0 0 0 0); transform: translate(0); }
-                }
-                .animate - glitch {
-    animation: glitch - anim 0.2s infinite linear;
-}
-
-                .element - text - stroke - purple {
-    -webkit - text - stroke: 2px #a855f7;
-    paint - order: stroke fill;
-}
-                .element - text - stroke - cyan {
-    -webkit - text - stroke: 2px #06b6d4;
-    paint - order: stroke fill;
-}
-@keyframes epic - pulse - purple {
-    0 %, 100 % { filter: drop - shadow(0 0 10px rgba(168, 85, 247, 0.6)) drop- shadow(0 0 20px rgba(168, 85, 247, 0.4)); transform: scale(1) translate(0, 0);
-}
-50 % { filter: drop - shadow(0 0 25px rgba(168, 85, 247, 1)) drop- shadow(0 0 50px rgba(168, 85, 247, 0.6)); transform: scale(1.05) translate(-2px, -2px); opacity: 0.9; }
-                }
-@keyframes epic - pulse - cyan {
-    0 %, 100 % { filter: drop - shadow(0 0 10px rgba(6, 182, 212, 0.6)) drop- shadow(0 0 20px rgba(6, 182, 212, 0.4)); transform: scale(1) translate(0, 0);
-}
-50 % { filter: drop - shadow(0 0 25px rgba(6, 182, 212, 1)) drop- shadow(0 0 50px rgba(6, 182, 212, 0.6)); transform: scale(1.05) translate(2px, 2px); opacity: 0.9; }
-                }
-                .animate - epic - pulse - purple { animation: epic - pulse - purple 3s ease -in -out infinite; }
-                .animate - epic - pulse - cyan { animation: epic - pulse - cyan 3s ease -in -out infinite reverse; }
-
-@keyframes fade - to - gray {
-                    from { opacity: 0; backdrop - filter: grayscale(0 %); }
-                    to { opacity: 1; backdrop - filter: grayscale(100 %); }
-}
-                .animate - fade - to - gray {
-    animation: fade - to - gray 3s forwards;
-    animation - delay: 2.5s;
-}
-@keyframes scale - up {
-    0 % { transform: scale(0.5); opacity: 0; }
-    50 % { transform: scale(1.1); opacity: 1; }
-    100 % { transform: scale(1); opacity: 1; }
+.animate-glitch {
+    animation: glitch-anim 0.2s infinite linear;
 }
 
-@keyframes confetti - fall {
-    0 % { transform: translateY(-10px) rotate(0deg); opacity: 1; }
-    100 % { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+.element-text-stroke-purple {
+    -webkit-text-stroke: 2px #a855f7;
+    paint-order: stroke fill;
 }
-                .animate - confetti - fall {
-    animation - name: confetti - fall;
-    animation - timing - function: linear;
-    animation - iteration - count: infinite;
+.element-text-stroke-cyan {
+    -webkit-text-stroke: 2px #06b6d4;
+    paint-order: stroke fill;
+}
+@keyframes epic-pulse-purple {
+    0%, 100% { filter: drop-shadow(0 0 10px rgba(168, 85, 247, 0.6)) drop-shadow(0 0 20px rgba(168, 85, 247, 0.4)); transform: scale(1) translate(0, 0); }
+    50% { filter: drop-shadow(0 0 25px rgba(168, 85, 247, 1)) drop-shadow(0 0 50px rgba(168, 85, 247, 0.6)); transform: scale(1.05) translate(-2px, -2px); opacity: 0.9; }
+}
+@keyframes epic-pulse-cyan {
+    0%, 100% { filter: drop-shadow(0 0 10px rgba(6, 182, 212, 0.6)) drop-shadow(0 0 20px rgba(6, 182, 212, 0.4)); transform: scale(1) translate(0, 0); }
+    50% { filter: drop-shadow(0 0 25px rgba(6, 182, 212, 1)) drop-shadow(0 0 50px rgba(6, 182, 212, 0.6)); transform: scale(1.05) translate(2px, 2px); opacity: 0.9; }
+}
+.animate-epic-pulse-purple { animation: epic-pulse-purple 3s ease-in-out infinite; }
+.animate-epic-pulse-cyan { animation: epic-pulse-cyan 3s ease-in-out infinite reverse; }
+
+@keyframes fade-to-gray {
+    from { opacity: 0; backdrop-filter: grayscale(0%); }
+    to { opacity: 1; backdrop-filter: grayscale(100%); }
+}
+.animate-fade-to-gray {
+    animation: fade-to-gray 3s forwards;
+    animation-delay: 2.5s;
+}
+@keyframes scale-up {
+    0% { transform: scale(0.5); opacity: 0; }
+    50% { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
 }
 
-@keyframes trumpet - beat {
-    0 %, 100 % { transform: scale(1); }
-    50 % { transform: scale(1.1); }
+@keyframes confetti-fall {
+    0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
 }
-                .animate - trumpet - beat {
-    animation: trumpet - beat 0.6s infinite ease -in -out;
-}
-
-@keyframes fountain - flow {
-    0 % { transform: translate(0, 0) rotate(0deg); opacity: 1; }
-    100 % { transform: translate(var(--tx), var(--ty)) rotate(var(--r)); opacity: 0;
-}
-                }
-                .animate - fountain - flow {
-    animation: fountain - flow 1s ease - out infinite;
+.animate-confetti-fall {
+    animation-name: confetti-fall;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
 }
 
-@keyframes float - trumpet {
-    0 %, 100 % { transform: translateY(0) rotate(- 10deg) scale(1);
+@keyframes trumpet-beat {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
 }
-50 % { transform: translateY(-20px) rotate(10deg) scale(1.1); }
-                }
-                .animate - float - trumpet {
-    animation: float - trumpet 3s ease -in -out infinite;
+.animate-trumpet-beat {
+    animation: trumpet-beat 0.6s infinite ease-in-out;
 }
-                .animate - scale - up {
-    animation: scale - up 0.3s cubic - bezier(0.175, 0.885, 0.32, 1.275) forwards;
+
+@keyframes fountain-flow {
+    0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+    100% { transform: translate(var(--tx), var(--ty)) rotate(var(--r)); opacity: 0; }
 }
-@keyframes bounce - slow {
-    0 %, 100 % { transform: translateY(-5px); }
-    50 % { transform: translateY(5px); }
+.animate-fountain-flow {
+    animation: fountain-flow 1s ease-out infinite;
 }
-                .animate - bounce - slow {
-    animation: bounce - slow 3s infinite ease -in -out;
+
+@keyframes float-trumpet {
+    0%, 100% { transform: translateY(0) rotate(-10deg) scale(1); }
+    50% { transform: translateY(-20px) rotate(10deg) scale(1.1); }
+}
+.animate-float-trumpet {
+    animation: float-trumpet 3s ease-in-out infinite;
+}
+.animate-scale-up {
+    animation: scale-up 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+@keyframes bounce-slow {
+    0%, 100% { transform: translateY(-5px); }
+    50% { transform: translateY(5px); }
+}
+.animate-bounce-slow {
+    animation: bounce-slow 3s infinite ease-in-out;
 }
 `}</style>
+            {/* FLOAT BUTTON FOR LEAGUE TABLE (SPECTATOR) */}
+            {league?.isLeagueMode && !showLeagueTable && !localShowTable && (
+                <div className="fixed bottom-4 right-4 z-[90]">
+                    <button
+                        onClick={() => setLocalShowTable(true)}
+                        className="bg-black/60 border border-yellow-500/50 hover:bg-yellow-900/30 rounded-full p-4 text-yellow-500 shadow-[0_0_20px_rgba(234,179,8,0.2)]"
+                        title="Ver Tabla de Liga"
+                    >
+                        <List size={24} />
+                    </button>
+                </div>
+            )}
+
             {/* LEAGUE TABLE OVERLAY (SPECTATOR) */}
-            {showLeagueTable && league && (
+            {(showLeagueTable || localShowTable) && league && (
                 <div className="fixed inset-0 z-[180] bg-black/95 backdrop-blur-lg flex items-center justify-center p-4 animate-fadeIn">
+                    <button
+                        onClick={() => setLocalShowTable(false)}
+                        className="absolute top-4 right-4 text-white/50 hover:text-white"
+                    >
+                        ✖
+                    </button>
                     <div className="bg-[#1a0b2e] w-full max-w-4xl max-h-[90vh] rounded-2xl border-2 border-yellow-600 shadow-[0_0_50px_rgba(234,179,8,0.2)] overflow-hidden flex flex-col relative">
                         <div className="p-6 border-b border-purple-800 flex justify-between items-center bg-purple-950/50">
                             <div className="flex items-center gap-3">
@@ -589,7 +607,7 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
                                 </thead>
                                 <tbody className="text-gray-200">
                                     {[...league.participants].sort((a, b) => b.points - a.points || b.battles - a.battles).map((p, idx) => (
-                                        <tr key={p.id} className={`border - b border - purple - 800 / 30 ${ !p.active ? 'opacity-50 grayscale' : '' } `}>
+                                        <tr key={p.id} className={`border-b border-purple-800/30 ${!p.active ? 'opacity-50 grayscale' : ''} `}>
                                             <td className="p-4 font-bold text-gray-500">#{idx + 1}</td>
                                             <td className="p-4 font-black text-lg uppercase flex items-center gap-2">
                                                 {idx === 0 && <Crown size={16} className="text-yellow-400" fill="currentColor" />}

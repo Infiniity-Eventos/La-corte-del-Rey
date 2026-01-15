@@ -12,6 +12,8 @@ interface SlotMachineProps {
   spectator?: boolean;
   attempts?: number;
   setAttempts?: React.Dispatch<React.SetStateAction<number>>;
+  rivalA?: string;
+  rivalB?: string;
 }
 
 const MODE_TRANSLATIONS: Record<string, string> = {
@@ -30,7 +32,9 @@ export const SlotMachine: React.FC<SlotMachineProps> = ({
   isReplica = false,
   spectator = false,
   attempts: externalAttempts,
-  setAttempts: setExternalAttempts
+  setAttempts: setExternalAttempts,
+  rivalA,
+  rivalB
 }) => {
   const [spinning, setSpinning] = useState<[boolean, boolean, boolean]>([false, false, false]);
   const [values, setValues] = useState<{
@@ -239,6 +243,14 @@ export const SlotMachine: React.FC<SlotMachineProps> = ({
             <h2 className="text-4xl md:text-5xl font-black font-urban text-red-500 drop-shadow-[0_0_15px_rgba(220,38,38,0.8)] tracking-widest uppercase mb-2">
               ¡RÉPLICA!
             </h2>
+            {/* RIVAL VS RIVAL DISPLAY FOR REPLICA */}
+            {(rivalA || rivalB) && (
+              <div className="flex items-center gap-4 text-2xl md:text-3xl font-black font-urban text-white mb-4 animate-fadeIn">
+                <span className="text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.5)]">{rivalA || 'MC AZUL'}</span>
+                <span className="text-red-500 text-lg">VS</span>
+                <span className="text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]">{rivalB || 'MC ROJO'}</span>
+              </div>
+            )}
             <p className="text-red-200 font-bold tracking-widest uppercase text-sm md:text-lg border-b-2 border-red-600 pb-1">
               EL QUE PIERDA PERDERÁ LA CABEZA
             </p>
@@ -248,6 +260,15 @@ export const SlotMachine: React.FC<SlotMachineProps> = ({
             <h2 className="text-3xl font-urban text-white text-center drop-shadow-lg tracking-widest uppercase animate-pulse mb-2">
               LA RULETA DEL DESTINO
             </h2>
+
+            {/* RIVAL VS RIVAL DISPLAY */}
+            {(rivalA || rivalB) && (
+              <div className="flex items-center gap-4 text-2xl md:text-3xl font-black font-urban text-white mb-4 animate-fadeIn">
+                <span className="text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.5)]">{rivalA || 'MC AZUL'}</span>
+                <span className="text-gray-400 text-lg">VS</span>
+                <span className="text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]">{rivalB || 'MC ROJO'}</span>
+              </div>
+            )}
 
             {/* Lives Counter (Only in normal mode) */}
             <div className="flex items-center gap-2 bg-purple-900/40 px-4 py-2 rounded-full border border-purple-500/30">
