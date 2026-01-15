@@ -64,6 +64,8 @@ export interface SpectatorState {
   votingBg: string | null;
   currentSlotValues?: { format: TrainingFormat, mode: TrainingMode, genre: BeatGenre } | null;
   spinAttempts: number;
+  league?: LeagueSettings;
+  showLeagueTable?: boolean;
 }
 
 export interface LeagueParticipant {

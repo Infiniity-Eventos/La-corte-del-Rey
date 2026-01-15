@@ -236,14 +236,16 @@ const App: React.FC = () => {
             countdown, isReplica, loserImage, showWinnerScreen,
             votingBg: null, // Removed
             currentSlotValues: tempSlotValues,
-            spinAttempts: attempts
+            spinAttempts: attempts,
+            league: { maxBattlesPerPerson, participants: leagueParticipants, isLeagueMode },
+            showLeagueTable
         });
 
         // Broadcast on change
         if (!isFlickering) {
             updateGameState(getPayload());
         }
-    }, [isSpectator, authStep, step, rivalA, rivalB, winner, selectedFormat, selectedMode, selectedGenre, preGeneratedTopic, preGeneratedPool, countdown, isReplica, loserImage, showWinnerScreen, tempSlotValues, attempts, isFlickering, updateGameState]);
+    }, [isSpectator, authStep, step, rivalA, rivalB, winner, selectedFormat, selectedMode, selectedGenre, preGeneratedTopic, preGeneratedPool, countdown, isReplica, loserImage, showWinnerScreen, tempSlotValues, attempts, isFlickering, updateGameState, maxBattlesPerPerson, leagueParticipants, isLeagueMode, showLeagueTable]);
 
     // Safety: Ensure transition doesn't get stuck
     useEffect(() => {
