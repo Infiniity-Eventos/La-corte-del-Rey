@@ -105,6 +105,9 @@ const App: React.FC = () => {
     });
     const [showLeagueTable, setShowLeagueTable] = useState(false);
     const [newParticipantName, setNewParticipantName] = useState('');
+    const [isRouletteSpinning, setIsRouletteSpinning] = useState(false);
+    const [rouletteNames, setRouletteNames] = useState<{ A: string, B: string }>({ A: '?', B: '?' });
+    const [rouletteWinner, setRouletteWinner] = useState<{ A: string, B: string } | null>(null);
 
     // Persist League Data
     useEffect(() => {
@@ -164,7 +167,7 @@ const App: React.FC = () => {
         }));
     };
 
-    // LEAGUE LOGIC: Start Random Battle
+    // LEAGUE LOGIC: Start Random Battle with Roulette
     const handleStartLeagueBattle = () => {
         const eligible = leagueParticipants.filter(p => p.battles < maxBattlesPerPerson);
 
@@ -173,16 +176,38 @@ const App: React.FC = () => {
             return;
         }
 
-        // Random Selection
+        // Random Selection Logic (Pre-calculate result)
         const shuffled = [...eligible].sort(() => 0.5 - Math.random());
-        const p1 = shuffled[0];
-        const p2 = shuffled[1];
+        const resultA = shuffled[0].name;
+        const resultB = shuffled[1].name;
 
-        setRivalA(p1.name);
-        setRivalB(p2.name);
+        setIsRouletteSpinning(true);
+        setRouletteWinner(null);
 
-        // Go to slots with transition
-        handleNamesSubmit();
+        // Roulette Animation
+        let spins = 0;
+        const maxSpins = 20;
+        const interval = setInterval(() => {
+            const randomA = eligible[Math.floor(Math.random() * eligible.length)].name;
+            const randomB = eligible[Math.floor(Math.random() * eligible.length)].name;
+            setRouletteNames({ A: randomA, B: randomB });
+            spins++;
+
+            if (spins >= maxSpins) {
+                clearInterval(interval);
+                setRouletteNames({ A: resultA, B: resultB });
+                setRouletteWinner({ A: resultA, B: resultB });
+
+                // Auto-advance after a brief pause to read the result
+                setTimeout(() => {
+                    setRivalA(resultA);
+                    setRivalB(resultB);
+                    setIsRouletteSpinning(false);
+                    setRouletteWinner(null);
+                    handleNamesSubmit(); // Go to slots
+                }, 2000);
+            }
+        }, 100);
     };
 
     // FIREBASE SYNC HOOK
@@ -567,6 +592,44 @@ const App: React.FC = () => {
                     <List size={24} />
                 </button>
             </div>
+
+
+
+            {/* LEAGUE ROULETTE OVERLAY */}
+            {
+                isRouletteSpinning && (
+                    <div className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center animate-fadeIn">
+                        <h2 className="text-4xl md:text-5xl font-urban text-yellow-400 mb-12 tracking-widest uppercase animate-pulse drop-shadow-[0_0_30px_rgba(234,179,8,0.5)]">
+                            SELECCIONANDO RIVALES...
+                        </h2>
+
+                        <div className="flex flex-col md:flex-row items-center gap-8 md:gap-20">
+                            {/* CARD A */}
+                            <div className={`w-64 h-80 border-4 ${rouletteWinner ? 'border-blue-500 bg-blue-900/20 shadow-[0_0_50px_rgba(59,130,246,0.5)] scale-110' : 'border-gray-700 bg-gray-900/50'} rounded-3xl flex flex-col items-center justify-center p-6 transition-all duration-300 relative overflow-hidden`}>
+                                <div className="text-6xl mb-4 opacity-50"><User size={64} /></div>
+                                <div className={`text-3xl font-black text-center uppercase tracking-wider ${rouletteWinner ? 'text-blue-300' : 'text-gray-500'}`}>
+                                    {rouletteNames.A}
+                                </div>
+                                {rouletteWinner && <div className="absolute inset-0 border-4 border-blue-400 animate-ping rounded-3xl"></div>}
+                            </div>
+
+                            {/* VS */}
+                            <div className="w-20 h-20 bg-black border-2 border-purple-500 rotate-45 flex items-center justify-center shadow-[0_0_30px_rgba(168,85,247,0.6)] animate-spin-slow">
+                                <span className="-rotate-45 text-3xl font-black text-white italic">VS</span>
+                            </div>
+
+                            {/* CARD B */}
+                            <div className={`w-64 h-80 border-4 ${rouletteWinner ? 'border-red-500 bg-red-900/20 shadow-[0_0_50px_rgba(239,68,68,0.5)] scale-110' : 'border-gray-700 bg-gray-900/50'} rounded-3xl flex flex-col items-center justify-center p-6 transition-all duration-300 relative overflow-hidden`}>
+                                <div className="text-6xl mb-4 opacity-50"><User size={64} /></div>
+                                <div className={`text-3xl font-black text-center uppercase tracking-wider ${rouletteWinner ? 'text-red-300' : 'text-gray-500'}`}>
+                                    {rouletteNames.B}
+                                </div>
+                                {rouletteWinner && <div className="absolute inset-0 border-4 border-red-400 animate-ping rounded-3xl"></div>}
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
 
             {/* LEAGUE TABLE FLOATING BUTTON */}
             {
