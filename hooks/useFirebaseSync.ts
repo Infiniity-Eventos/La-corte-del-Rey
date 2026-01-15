@@ -53,7 +53,7 @@ export const useFirebaseSync = (isSpectator: boolean, viewerName: string = 'Anon
 
     // --- SPECTATOR FUNCTIONS (Write Votes) ---
 
-    const castVote = async (vote: 'A' | 'B') => {
+    const castVote = async (vote: 'A' | 'B', rivalA: string, rivalB: string) => {
         if (!isSpectator) return;
 
         // Transaction to ensure atomic increments and prevent double voting (though UI prevents it too)
@@ -70,9 +70,15 @@ export const useFirebaseSync = (isSpectator: boolean, viewerName: string = 'Anon
                 }
                 if (!currentData.voters) currentData.voters = {};
 
-                // If user already voted in this session/round (client check is primary, this is secondary)
-                // NOTE: Since viewers might share IP or have simple names, we trust the client 'hasVoted' state mostly.
-                // But we can record it.
+                // CRITICAL: Prevent double voting (Ghost Votes)
+                if (currentData.voters[viewerName]) {
+                    // User already voted. Do nothing.
+                    return; // Abort transaction (return undefined? or return currentData?)
+                    // If we return undefined, transaction is aborted. 
+                    // However, returning currentData means "no change". 
+                    // Let's return currentData to be safe and just NOT increment.
+                    return currentData;
+                }
 
                 if (vote === 'A') currentData.A = (currentData.A || 0) + 1;
                 if (vote === 'B') currentData.B = (currentData.B || 0) + 1;
@@ -81,6 +87,8 @@ export const useFirebaseSync = (isSpectator: boolean, viewerName: string = 'Anon
                 const newHistoryItem = {
                     user: viewerName,
                     vote,
+                    rivalA: rivalA || 'MC AZUL', // Store context
+                    rivalB: rivalB || 'MC ROJO', // Store context
                     timestamp: Date.now()
                 };
                 if (!currentData.history) currentData.history = {};

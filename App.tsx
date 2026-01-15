@@ -893,7 +893,7 @@ const App: React.FC = () => {
                                                     <span key={i} className={`text-[10px] uppercase font-bold tracking-widest ${i === 0 ? 'text-cyan-400 animate-pulse' : 'text-gray-500'}`}>
                                                         {typeof v === 'string'
                                                             ? v
-                                                            : `${v.user} votó por ${v.vote === 'A' ? (rivalA || 'MC AZUL') : (rivalB || 'MC ROJO')}`
+                                                            : `${v.user} votó por ${v.vote === 'A' ? (v.rivalA || rivalA || 'MC AZUL') : (v.rivalB || rivalB || 'MC ROJO')}`
                                                         }
                                                     </span>
                                                 ))

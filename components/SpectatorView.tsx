@@ -343,7 +343,7 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
                                     onClick={() => {
                                         if (hasVoted) return;
                                         setHasVoted(true);
-                                        castVote('A');
+                                        castVote('A', rivalA || 'MC AZUL', rivalB || 'MC ROJO');
                                     }}
                                     className="absolute top-0 left-0 w-full h-full z-50 cursor-pointer group hover:bg-white/5 transition-all duration-300"
                                     style={{ clipPath: 'polygon(0 0, 95% 0, 5% 100%, 0% 100%)' }}
@@ -356,7 +356,7 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
                                     onClick={() => {
                                         if (hasVoted) return;
                                         setHasVoted(true);
-                                        castVote('B');
+                                        castVote('B', rivalA || 'MC AZUL', rivalB || 'MC ROJO');
                                     }}
                                     className="absolute top-0 left-0 w-full h-full z-50 cursor-pointer group hover:bg-white/5 transition-all duration-300"
                                     style={{ clipPath: 'polygon(95% 0, 100% 0, 100% 100%, 5% 100%)' }}
