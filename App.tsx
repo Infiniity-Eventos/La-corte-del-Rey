@@ -573,233 +573,249 @@ const App: React.FC = () => {
 
     // 3. Main App (Admin)
     return (
-        className = "bg-black/40 backdrop-blur-md border border-yellow-500/50 hover:bg-yellow-900/50 hover:border-yellow-400 text-yellow-200 p-3 rounded-full shadow-[0_0_15px_rgba(234,179,8,0.3)] transition-all transform hover:scale-105"
-                    title = "Modo Torneo"
-        >
-        <Trophy size={24} />
+        <div className={`min-h-screen bg-gradient-to-b text-white p-4 md:p-6 lg:p-8 overflow-x-hidden relative flex flex-col ${isReplica && step === 'slots' ? 'from-red-950 to-black' : 'from-[#1a0b2e] to-[#0d001a]'}`}>
+
+            {/* QR CODE - PERMANENT IN ADMIN VIEW */}
+            <div className="fixed bottom-4 left-4 z-[9999] pointer-events-none opacity-80 mix-blend-screen">
+                <img
+                    src="/qr_scan_me.png"
+                    alt="Scan QR"
+                    className="w-32 md:w-48 transition-all hover:scale-110 shadow-[0_0_20px_rgba(255,255,255,0.2)] rounded-lg bg-white p-2"
+                />
+            </div>
+
+            {/* --- TOP RIGHT BUTTONS --- */}
+            <div className="fixed top-4 right-4 z-[90] flex items-center gap-2">
+                {/* TOURNAMENT BUTTON */}
+                <button
+                    onClick={() => setShowTournamentModal(true)}
+                    className="bg-black/40 backdrop-blur-md border border-yellow-500/50 hover:bg-yellow-900/50 hover:border-yellow-400 text-yellow-200 p-3 rounded-full shadow-[0_0_15px_rgba(234,179,8,0.3)] transition-all transform hover:scale-105"
+                    title="Modo Torneo"
+                >
+                    <Trophy size={24} />
                 </button >
 
-    {/* MANUAL/INFO BUTTON */ }
-    < button
-onClick = {() => setShowInfoModal(true)}
-className = "bg-black/40 backdrop-blur-md border border-purple-500/50 hover:bg-purple-900/50 hover:border-green-400 text-purple-200 p-3 rounded-full shadow-[0_0_15px_rgba(168,85,247,0.3)] transition-all transform hover:scale-105"
-title = "Ver opciones disponibles"
-    >
-    <List size={24} />
+                {/* MANUAL/INFO BUTTON */}
+                < button
+                    onClick={() => setShowInfoModal(true)}
+                    className="bg-black/40 backdrop-blur-md border border-purple-500/50 hover:bg-purple-900/50 hover:border-green-400 text-purple-200 p-3 rounded-full shadow-[0_0_15px_rgba(168,85,247,0.3)] transition-all transform hover:scale-105"
+                    title="Ver opciones disponibles"
+                >
+                    <List size={24} />
                 </button >
             </div >
 
 
 
-    {/* LEAGUE ROULETTE OVERLAY */ }
-{
-    isRouletteSpinning && (
-        <div className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center animate-fadeIn">
-            <h2 className="text-4xl md:text-5xl font-urban text-yellow-400 mb-12 tracking-widest uppercase animate-pulse drop-shadow-[0_0_30px_rgba(234,179,8,0.5)]">
-                SELECCIONANDO RIVALES...
-            </h2>
+            {/* LEAGUE ROULETTE OVERLAY */}
+            {
+                isRouletteSpinning && (
+                    <div className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center animate-fadeIn">
+                        <h2 className="text-4xl md:text-5xl font-urban text-yellow-400 mb-12 tracking-widest uppercase animate-pulse drop-shadow-[0_0_30px_rgba(234,179,8,0.5)]">
+                            SELECCIONANDO RIVALES...
+                        </h2>
 
-            <div className="flex flex-col md:flex-row items-center gap-8 md:gap-20">
-                {/* CARD A */}
-                <div className={`w-64 h-80 border-4 ${rouletteWinner ? 'border-blue-500 bg-blue-900/20 shadow-[0_0_50px_rgba(59,130,246,0.5)] scale-110' : 'border-gray-700 bg-gray-900/50'} rounded-3xl flex flex-col items-center justify-center p-6 transition-all duration-300 relative overflow-hidden`}>
-                    <div className="text-6xl mb-4 opacity-50"><User size={64} /></div>
-                    <div className={`text-3xl font-black text-center uppercase tracking-wider ${rouletteWinner ? 'text-blue-300' : 'text-gray-500'}`}>
-                        {rouletteNames.A}
-                    </div>
-                    {rouletteWinner && <div className="absolute inset-0 border-4 border-blue-400 animate-ping rounded-3xl"></div>}
-                </div>
-
-                {/* VS */}
-                <div className="w-20 h-20 bg-black border-2 border-purple-500 rotate-45 flex items-center justify-center shadow-[0_0_30px_rgba(168,85,247,0.6)] animate-spin-slow">
-                    <span className="-rotate-45 text-3xl font-black text-white italic">VS</span>
-                </div>
-
-                {/* CARD B */}
-                <div className={`w-64 h-80 border-4 ${rouletteWinner ? 'border-red-500 bg-red-900/20 shadow-[0_0_50px_rgba(239,68,68,0.5)] scale-110' : 'border-gray-700 bg-gray-900/50'} rounded-3xl flex flex-col items-center justify-center p-6 transition-all duration-300 relative overflow-hidden`}>
-                    <div className="text-6xl mb-4 opacity-50"><User size={64} /></div>
-                    <div className={`text-3xl font-black text-center uppercase tracking-wider ${rouletteWinner ? 'text-red-300' : 'text-gray-500'}`}>
-                        {rouletteNames.B}
-                    </div>
-                    {rouletteWinner && <div className="absolute inset-0 border-4 border-red-400 animate-ping rounded-3xl"></div>}
-                </div>
-            </div>
-        </div>
-    )
-}
-
-{/* LEAGUE TABLE FLOATING BUTTON */ }
-{
-    isLeagueMode && !showLeagueTable && (
-        <div className="fixed bottom-4 right-4 z-[90]">
-            <button
-                onClick={() => setShowLeagueTable(true)}
-                className="bg-purple-900/90 backdrop-blur-md border md:border-2 border-purple-500 hover:bg-purple-800 text-white p-3 md:p-4 rounded-full shadow-[0_0_20px_rgba(168,85,247,0.4)] transition-all transform hover:scale-105 flex items-center gap-2"
-            >
-                <Award size={24} className="text-yellow-400" />
-                <span className="hidden md:block font-bold uppercase text-xs tracking-widest">Tabla Liga</span>
-            </button>
-        </div>
-    )
-}
-
-{/* LEAGUE TABLE OVERLAY */ }
-{
-    showLeagueTable && (
-        <div className="fixed inset-0 z-[180] bg-black/95 backdrop-blur-lg flex items-center justify-center p-4 animate-fadeIn">
-            <div className="bg-[#1a0b2e] w-full max-w-4xl max-h-[90vh] rounded-2xl border-2 border-yellow-600 shadow-[0_0_50px_rgba(234,179,8,0.2)] overflow-hidden flex flex-col relative">
-                <div className="p-6 border-b border-purple-800 flex justify-between items-center bg-purple-950/50">
-                    <div className="flex items-center gap-3">
-                        <Award className="text-yellow-400" size={32} />
-                        <h2 className="text-2xl font-urban text-white tracking-widest uppercase">POSICIONES DE LA LIGA</h2>
-                    </div>
-                    <button onClick={() => setShowLeagueTable(false)} className="text-gray-400 hover:text-white"><X size={28} /></button>
-                </div>
-                <div className="p-0 overflow-y-auto custom-scrollbar flex-1">
-                    <table className="w-full text-left">
-                        <thead className="bg-purple-900/40 text-purple-200 uppercase text-xs tracking-widest sticky top-0 backdrop-blur-md">
-                            <tr>
-                                <th className="p-4">Pos</th>
-                                <th className="p-4">MC</th>
-                                <th className="p-4 text-center">Batallas</th>
-                                <th className="p-4 text-right">Puntos</th>
-                            </tr>
-                        </thead>
-                        <tbody className="text-gray-200">
-                            {[...leagueParticipants].sort((a, b) => b.points - a.points || b.battles - a.battles).map((p, idx) => (
-                                <tr key={p.id} className={`border-b border-purple-800/30 hover:bg-purple-800/20 transition-colors ${!p.active ? 'opacity-50 grayscale' : ''}`}>
-                                    <td className="p-4 font-bold text-gray-500">#{idx + 1}</td>
-                                    <td className="p-4 font-black text-lg uppercase flex items-center gap-2">
-                                        {idx === 0 && <Crown size={16} className="text-yellow-400" fill="currentColor" />}
-                                        {p.name}
-                                        {!p.active && <span className="text-[10px] bg-red-900/50 text-red-300 px-2 py-0.5 rounded border border-red-800 ml-2">COMPLETADO</span>}
-                                    </td>
-                                    <td className="p-4 text-center font-mono text-blue-300">{p.battles} / {maxBattlesPerPerson}</td>
-                                    <td className="p-4 text-right font-black text-xl text-yellow-400">{p.points}</td>
-                                </tr>
-                            ))}
-                            {leagueParticipants.length === 0 && (
-                                <tr><td colSpan={4} className="p-8 text-center text-gray-500">Aún no hay participantes inscritos.</td></tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    )
-}
-
-
-{/* TOURNAMENT MODAL - Persisted using 'hidden' class to prevent unmount and state loss */ }
-<div className={`fixed inset-0 z-[160] bg-black/95 backdrop-blur-lg items-center justify-center p-4 animate-fadeIn ${showTournamentModal ? 'flex' : 'hidden'}`}>
-    <div className="bg-[#1a0b2e] w-full max-w-6xl h-[90vh] rounded-2xl border-2 border-yellow-600 shadow-[0_0_50px_rgba(234,179,8,0.3)] overflow-hidden flex flex-col relative">
-        <div className="absolute top-4 right-4 z-50">
-            <button
-                onClick={() => setShowTournamentModal(false)}
-                className="text-gray-400 hover:text-white hover:bg-red-500/20 p-2 rounded-full transition-colors"
-            >
-                <X size={28} />
-            </button>
-        </div>
-        <TournamentBracket />
-    </div>
-</div>
-
-{/* INFO MODAL OVERLAY */ }
-{
-    showInfoModal && (
-        <div className="fixed inset-0 z-[150] bg-black/90 backdrop-blur-lg flex items-center justify-center p-4 animate-fadeIn">
-            <div className="bg-[#1a0b2e] w-full max-w-4xl max-h-[90vh] rounded-2xl border-2 border-purple-500 shadow-[0_0_50px_rgba(168,85,247,0.5)] overflow-hidden flex flex-col relative">
-
-                {/* Modal Header */}
-                <div className="p-6 border-b border-purple-800 flex justify-between items-center bg-purple-950/50">
-                    <div className="flex items-center gap-3">
-                        <BookOpen className="text-green-400" />
-                        <h2 className="text-2xl font-urban text-white tracking-widest uppercase">Manual de Juego</h2>
-                    </div>
-                    <button
-                        onClick={() => setShowInfoModal(false)}
-                        className="text-gray-400 hover:text-white hover:bg-red-500/20 p-2 rounded-full transition-colors"
-                    >
-                        <X size={28} />
-                    </button>
-                </div>
-
-                {/* Modal Content */}
-                <div className="p-6 overflow-y-auto custom-scrollbar grid grid-cols-1 md:grid-cols-3 gap-6">
-
-                    {/* Column 1: Formats */}
-                    <div className="space-y-4">
-                        <h3 className="text-purple-300 font-bold uppercase tracking-widest border-b border-purple-700 pb-2">Formatos</h3>
-                        <div className="space-y-2">
-                            {Object.values(TrainingFormat).map((fmt) => (
-                                <div key={fmt} className="bg-purple-900/20 p-3 rounded-lg border border-purple-800/50 text-gray-200 text-sm font-bold flex justify-between">
-                                    <span>{fmt}</span>
-                                    <span className="text-purple-400 text-xs">{ENTRADAS_RULES[fmt]?.replace(' Entradas por MC', 'e')}</span>
+                        <div className="flex flex-col md:flex-row items-center gap-8 md:gap-20">
+                            {/* CARD A */}
+                            <div className={`w-64 h-80 border-4 ${rouletteWinner ? 'border-blue-500 bg-blue-900/20 shadow-[0_0_50px_rgba(59,130,246,0.5)] scale-110' : 'border-gray-700 bg-gray-900/50'} rounded-3xl flex flex-col items-center justify-center p-6 transition-all duration-300 relative overflow-hidden`}>
+                                <div className="text-6xl mb-4 opacity-50"><User size={64} /></div>
+                                <div className={`text-3xl font-black text-center uppercase tracking-wider ${rouletteWinner ? 'text-blue-300' : 'text-gray-500'}`}>
+                                    {rouletteNames.A}
                                 </div>
-                            ))}
+                                {rouletteWinner && <div className="absolute inset-0 border-4 border-blue-400 animate-ping rounded-3xl"></div>}
+                            </div>
+
+                            {/* VS */}
+                            <div className="w-20 h-20 bg-black border-2 border-purple-500 rotate-45 flex items-center justify-center shadow-[0_0_30px_rgba(168,85,247,0.6)] animate-spin-slow">
+                                <span className="-rotate-45 text-3xl font-black text-white italic">VS</span>
+                            </div>
+
+                            {/* CARD B */}
+                            <div className={`w-64 h-80 border-4 ${rouletteWinner ? 'border-red-500 bg-red-900/20 shadow-[0_0_50px_rgba(239,68,68,0.5)] scale-110' : 'border-gray-700 bg-gray-900/50'} rounded-3xl flex flex-col items-center justify-center p-6 transition-all duration-300 relative overflow-hidden`}>
+                                <div className="text-6xl mb-4 opacity-50"><User size={64} /></div>
+                                <div className={`text-3xl font-black text-center uppercase tracking-wider ${rouletteWinner ? 'text-red-300' : 'text-gray-500'}`}>
+                                    {rouletteNames.B}
+                                </div>
+                                {rouletteWinner && <div className="absolute inset-0 border-4 border-red-400 animate-ping rounded-3xl"></div>}
+                            </div>
                         </div>
                     </div>
+                )
+            }
 
-                    {/* Column 2: Stimuli */}
-                    <div className="space-y-4">
-                        <h3 className="text-pink-300 font-bold uppercase tracking-widest border-b border-pink-700 pb-2">Estímulos</h3>
-                        <div className="space-y-2">
-                            {ALL_TRAINING_MODES.map((mode) => (
-                                <div key={mode} className="bg-pink-900/20 p-3 rounded-lg border border-pink-800/50 text-gray-200 text-sm font-bold capitalize">
-                                    {MODE_TRANSLATIONS[mode] || mode}
+            {/* LEAGUE TABLE FLOATING BUTTON */}
+            {
+                isLeagueMode && !showLeagueTable && (
+                    <div className="fixed bottom-4 right-4 z-[90]">
+                        <button
+                            onClick={() => setShowLeagueTable(true)}
+                            className="bg-purple-900/90 backdrop-blur-md border md:border-2 border-purple-500 hover:bg-purple-800 text-white p-3 md:p-4 rounded-full shadow-[0_0_20px_rgba(168,85,247,0.4)] transition-all transform hover:scale-105 flex items-center gap-2"
+                        >
+                            <Award size={24} className="text-yellow-400" />
+                            <span className="hidden md:block font-bold uppercase text-xs tracking-widest">Tabla Liga</span>
+                        </button>
+                    </div>
+                )
+            }
+
+            {/* LEAGUE TABLE OVERLAY */}
+            {
+                showLeagueTable && (
+                    <div className="fixed inset-0 z-[180] bg-black/95 backdrop-blur-lg flex items-center justify-center p-4 animate-fadeIn">
+                        <div className="bg-[#1a0b2e] w-full max-w-4xl max-h-[90vh] rounded-2xl border-2 border-yellow-600 shadow-[0_0_50px_rgba(234,179,8,0.2)] overflow-hidden flex flex-col relative">
+                            <div className="p-6 border-b border-purple-800 flex justify-between items-center bg-purple-950/50">
+                                <div className="flex items-center gap-3">
+                                    <Award className="text-yellow-400" size={32} />
+                                    <h2 className="text-2xl font-urban text-white tracking-widest uppercase">POSICIONES DE LA LIGA</h2>
                                 </div>
-                            ))}
+                                <button onClick={() => setShowLeagueTable(false)} className="text-gray-400 hover:text-white"><X size={28} /></button>
+                            </div>
+                            <div className="p-0 overflow-y-auto custom-scrollbar flex-1">
+                                <table className="w-full text-left">
+                                    <thead className="bg-purple-900/40 text-purple-200 uppercase text-xs tracking-widest sticky top-0 backdrop-blur-md">
+                                        <tr>
+                                            <th className="p-4">Pos</th>
+                                            <th className="p-4">MC</th>
+                                            <th className="p-4 text-center">Batallas</th>
+                                            <th className="p-4 text-right">Puntos</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="text-gray-200">
+                                        {[...leagueParticipants].sort((a, b) => b.points - a.points || b.battles - a.battles).map((p, idx) => (
+                                            <tr key={p.id} className={`border-b border-purple-800/30 hover:bg-purple-800/20 transition-colors ${!p.active ? 'opacity-50 grayscale' : ''}`}>
+                                                <td className="p-4 font-bold text-gray-500">#{idx + 1}</td>
+                                                <td className="p-4 font-black text-lg uppercase flex items-center gap-2">
+                                                    {idx === 0 && <Crown size={16} className="text-yellow-400" fill="currentColor" />}
+                                                    {p.name}
+                                                    {!p.active && <span className="text-[10px] bg-red-900/50 text-red-300 px-2 py-0.5 rounded border border-red-800 ml-2">COMPLETADO</span>}
+                                                </td>
+                                                <td className="p-4 text-center font-mono text-blue-300">{p.battles} / {maxBattlesPerPerson}</td>
+                                                <td className="p-4 text-right font-black text-xl text-yellow-400">{p.points}</td>
+                                            </tr>
+                                        ))}
+                                        {leagueParticipants.length === 0 && (
+                                            <tr><td colSpan={4} className="p-8 text-center text-gray-500">Aún no hay participantes inscritos.</td></tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
+                )
+            }
 
-                    {/* Column 3: Beats */}
-                    <div className="space-y-4">
-                        <h3 className="text-blue-300 font-bold uppercase tracking-widest border-b border-blue-700 pb-2">Estilos de Beat</h3>
-                        <div className="space-y-2">
-                            {Object.values(BeatGenre).map((beat) => (
-                                <div key={beat} className="bg-blue-900/20 p-3 rounded-lg border border-blue-800/50 text-gray-200 text-sm font-bold">
-                                    {beat}
+
+            {/* TOURNAMENT MODAL - Persisted using 'hidden' class to prevent unmount and state loss */}
+            <div className={`fixed inset-0 z-[160] bg-black/95 backdrop-blur-lg items-center justify-center p-4 animate-fadeIn ${showTournamentModal ? 'flex' : 'hidden'}`}>
+                <div className="bg-[#1a0b2e] w-full max-w-6xl h-[90vh] rounded-2xl border-2 border-yellow-600 shadow-[0_0_50px_rgba(234,179,8,0.3)] overflow-hidden flex flex-col relative">
+                    <div className="absolute top-4 right-4 z-50">
+                        <button
+                            onClick={() => setShowTournamentModal(false)}
+                            className="text-gray-400 hover:text-white hover:bg-red-500/20 p-2 rounded-full transition-colors"
+                        >
+                            <X size={28} />
+                        </button>
+                    </div>
+                    <TournamentBracket />
+                </div>
+            </div>
+
+            {/* INFO MODAL OVERLAY */}
+            {
+                showInfoModal && (
+                    <div className="fixed inset-0 z-[150] bg-black/90 backdrop-blur-lg flex items-center justify-center p-4 animate-fadeIn">
+                        <div className="bg-[#1a0b2e] w-full max-w-4xl max-h-[90vh] rounded-2xl border-2 border-purple-500 shadow-[0_0_50px_rgba(168,85,247,0.5)] overflow-hidden flex flex-col relative">
+
+                            {/* Modal Header */}
+                            <div className="p-6 border-b border-purple-800 flex justify-between items-center bg-purple-950/50">
+                                <div className="flex items-center gap-3">
+                                    <BookOpen className="text-green-400" />
+                                    <h2 className="text-2xl font-urban text-white tracking-widest uppercase">Manual de Juego</h2>
                                 </div>
-                            ))}
+                                <button
+                                    onClick={() => setShowInfoModal(false)}
+                                    className="text-gray-400 hover:text-white hover:bg-red-500/20 p-2 rounded-full transition-colors"
+                                >
+                                    <X size={28} />
+                                </button>
+                            </div>
+
+                            {/* Modal Content */}
+                            <div className="p-6 overflow-y-auto custom-scrollbar grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                                {/* Column 1: Formats */}
+                                <div className="space-y-4">
+                                    <h3 className="text-purple-300 font-bold uppercase tracking-widest border-b border-purple-700 pb-2">Formatos</h3>
+                                    <div className="space-y-2">
+                                        {Object.values(TrainingFormat).map((fmt) => (
+                                            <div key={fmt} className="bg-purple-900/20 p-3 rounded-lg border border-purple-800/50 text-gray-200 text-sm font-bold flex justify-between">
+                                                <span>{fmt}</span>
+                                                <span className="text-purple-400 text-xs">{ENTRADAS_RULES[fmt]?.replace(' Entradas por MC', 'e')}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Column 2: Stimuli */}
+                                <div className="space-y-4">
+                                    <h3 className="text-pink-300 font-bold uppercase tracking-widest border-b border-pink-700 pb-2">Estímulos</h3>
+                                    <div className="space-y-2">
+                                        {ALL_TRAINING_MODES.map((mode) => (
+                                            <div key={mode} className="bg-pink-900/20 p-3 rounded-lg border border-pink-800/50 text-gray-200 text-sm font-bold capitalize">
+                                                {MODE_TRANSLATIONS[mode] || mode}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Column 3: Beats */}
+                                <div className="space-y-4">
+                                    <h3 className="text-blue-300 font-bold uppercase tracking-widest border-b border-blue-700 pb-2">Estilos de Beat</h3>
+                                    <div className="space-y-2">
+                                        {Object.values(BeatGenre).map((beat) => (
+                                            <div key={beat} className="bg-blue-900/20 p-3 rounded-lg border border-blue-800/50 text-gray-200 text-sm font-bold">
+                                                {beat}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <div className="p-4 bg-purple-950/30 text-center text-xs text-gray-500 border-t border-purple-800">
+                                Todas las opciones tienen la misma probabilidad en la Ruleta del Destino.
+                            </div>
                         </div>
                     </div>
+                )
+            }
 
-                </div>
+            {/* Transition Overlay (Lightning Effect) */}
+            {
+                isTransitioning && (
+                    <div className="fixed inset-0 z-[200] flex items-center justify-center pointer-events-none">
+                        {/* Flash Background - Full Opacity to hide transition */}
+                        <div className="absolute inset-0 bg-white animate-flash-storm mix-blend-overlay"></div>
+                        <div className={`absolute inset-0 animate-flash-storm ${isReplica ? 'bg-red-600' : 'bg-purple-600'}`}></div>
 
-                <div className="p-4 bg-purple-950/30 text-center text-xs text-gray-500 border-t border-purple-800">
-                    Todas las opciones tienen la misma probabilidad en la Ruleta del Destino.
-                </div>
-            </div>
-        </div>
-    )
-}
+                        {/* Lightning Icon */}
+                        <div className="relative z-10 animate-strike">
+                            <Zap size={250} className={`${isReplica ? 'text-red-500' : 'text-purple-500'} drop-shadow-[0_0_80px_currentColor]`} fill="currentColor" />
+                        </div>
+                    </div>
+                )
+            }
 
-{/* Transition Overlay (Lightning Effect) */ }
-{
-    isTransitioning && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center pointer-events-none">
-            {/* Flash Background - Full Opacity to hide transition */}
-            <div className="absolute inset-0 bg-white animate-flash-storm mix-blend-overlay"></div>
-            <div className={`absolute inset-0 animate-flash-storm ${isReplica ? 'bg-red-600' : 'bg-purple-600'}`}></div>
-
-            {/* Lightning Icon */}
-            <div className="relative z-10 animate-strike">
-                <Zap size={250} className={`${isReplica ? 'text-red-500' : 'text-purple-500'} drop-shadow-[0_0_80px_currentColor]`} fill="currentColor" />
-            </div>
-        </div>
-    )
-}
-
-{/* Countdown Overlay (Main Battle) */ }
-{
-    countdown && (
-        <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center animate-fadeInFast">
-            <h1 className="text-6xl sm:text-8xl md:text-[10rem] lg:text-[15rem] font-black font-urban text-transparent bg-clip-text bg-gradient-to-br from-purple-400 via-pink-500 to-indigo-600 drop-shadow-[0_10px_20px_rgba(168,85,247,0.5)] animate-scale-up tracking-tighter text-center break-words max-w-full px-4">
-                {countdown}
-            </h1>
-        </div>
-    )
-}
+            {/* Countdown Overlay (Main Battle) */}
+            {
+                countdown && (
+                    <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center animate-fadeInFast">
+                        <h1 className="text-6xl sm:text-8xl md:text-[10rem] lg:text-[15rem] font-black font-urban text-transparent bg-clip-text bg-gradient-to-br from-purple-400 via-pink-500 to-indigo-600 drop-shadow-[0_10px_20px_rgba(168,85,247,0.5)] animate-scale-up tracking-tighter text-center break-words max-w-full px-4">
+                            {countdown}
+                        </h1>
+                    </div>
+                )
+            }
 
             <div className="max-w-6xl mx-auto w-full flex-1 flex flex-col">
 
