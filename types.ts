@@ -1,0 +1,67 @@
+
+export enum BeatGenre {
+  ELECTRO = 'Electrobeat',
+  TRAP = 'Trap',
+  DRILL = 'Drill',
+  BOOM_BAP = 'Boom Bap',
+  REGGAE = 'Reggae',
+  DOUBLE_TEMPO = 'Doble Tempo',
+  REGGAETON = 'Reggaeton',
+  DANCEHALL = 'Dancehall'
+}
+
+export interface Beat {
+  genre: BeatGenre;
+  videoId: string; // YouTube Video ID
+  title: string;
+}
+
+export enum AppMode {
+  TRAINING = 'Entrenamiento',
+  VISUALS = 'Visuales',
+}
+
+export enum TrainingFormat {
+  FOUR_BY_FOUR = '4x4',
+  EIGHT_BY_EIGHT = '8x8',
+  TWO_BY_TWO = '2x2',
+  MINUTE = 'Minuto y Minuto',
+  KICK_BACK = 'Kick Back'
+}
+
+export type TrainingMode = 'themes' | 'free' | 'terminations' | 'characters' | 'questions';
+
+export const ALL_TRAINING_MODES: TrainingMode[] = [
+  'themes',
+  'terminations',
+  'characters',
+  'questions',
+  'free'
+];
+
+export interface GeneratedImage {
+  imageUrl: string;
+  prompt: string;
+}
+
+export type AppStep = 'names' | 'slots' | 'summary' | 'arena' | 'voting';
+
+export interface SpectatorState {
+  step: AppStep;
+  rivalA: string;
+  rivalB: string;
+  winner: 'A' | 'B' | null;
+  selectedFormat: TrainingFormat | null;
+  selectedMode: TrainingMode | null;
+  selectedGenre: BeatGenre | null;
+  preGeneratedTopic: string | null;
+  preGeneratedImage: string | null;
+  preGeneratedPool: string[];
+  countdown: string | null;
+  isReplica: boolean;
+  loserImage: string | null;
+  showWinnerScreen: boolean;
+  votingBg: string | null;
+  currentSlotValues?: { format: TrainingFormat, mode: TrainingMode, genre: BeatGenre } | null;
+  spinAttempts: number;
+}

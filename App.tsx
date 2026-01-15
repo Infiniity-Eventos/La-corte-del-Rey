@@ -1,0 +1,1145 @@
+
+
+import React, { useState, useEffect, useRef } from 'react';
+import { TopicGenerator } from './components/TopicGenerator';
+import { SlotMachine } from './components/SlotMachine';
+import { SpectatorView } from './components/SpectatorView';
+import { TournamentBracket } from './components/TournamentBracket';
+import { AccessScreen } from './components/AccessScreen'; // New Import
+import { Info, Image as ImageIcon, RotateCcw, Youtube, Play, ExternalLink, User, Crown, Trophy, Zap, Swords, BookOpen, X, List, Scale, Timer, Star, Award } from 'lucide-react';
+import { TrainingFormat, TrainingMode, BeatGenre, ALL_TRAINING_MODES, AppStep } from './types';
+import { generateTopics, generateTerminations, generateCharacterBattles, generateQuestions } from './services/geminiService';
+import { useFirebaseSync } from './hooks/useFirebaseSync';
+
+// Updated steps: replaced format/mode/beat with 'slots'
+// AppStep moved to types.ts
+
+const MODE_TRANSLATIONS: Record<string, string> = {
+    themes: 'TEMÁTICAS',
+    free: 'SANGRE',
+    terminations: 'TERMINACIONES',
+    characters: 'PERSONAJES',
+    questions: 'PREGUNTAS'
+};
+
+const ENTRADAS_RULES: Record<string, string> = {
+    [TrainingFormat.FOUR_BY_FOUR]: "5 Entradas por MC",
+    [TrainingFormat.EIGHT_BY_EIGHT]: "3 Entradas por MC",
+    [TrainingFormat.TWO_BY_TWO]: "10 Entradas por MC",
+    [TrainingFormat.MINUTE]: "5 Entradas por MC",
+    [TrainingFormat.KICK_BACK]: "5 Entradas por MC"
+};
+
+const App: React.FC = () => {
+    const [authStep, setAuthStep] = useState<'login' | 'app'>('login');
+    const [viewerName, setViewerName] = useState('');
+
+    // Check for Spectator Mode Route
+    const [isSpectator, setIsSpectator] = useState(() => window.location.pathname === '/modoespectador');
+
+    useEffect(() => {
+        // Handle navigation if needed provided we aren't using a router
+        if (window.location.pathname === '/modoespectador') {
+            setIsSpectator(true);
+        }
+    }, []);
+
+    const [step, setStep] = useState<AppStep>('names'); // Start at names
+    const [rivalA, setRivalA] = useState('MC AZUL');
+    const [rivalB, setRivalB] = useState('MC ROJO');
+    const [winner, setWinner] = useState<'A' | 'B' | null>(null);
+    const [showWinnerScreen, setShowWinnerScreen] = useState(false);
+
+    // Replica (Tie) State
+    const [isReplica, setIsReplica] = useState(false);
+
+    const [selectedFormat, setSelectedFormat] = useState<TrainingFormat | null>(null);
+    const [selectedMode, setSelectedMode] = useState<TrainingMode>('themes');
+    const [selectedGenre, setSelectedGenre] = useState<BeatGenre | null>(null);
+    const [countdown, setCountdown] = useState<string | null>(null);
+
+    // Transition State
+    const [isTransitioning, setIsTransitioning] = useState(false);
+
+    // Pre-generated Content State
+    const [preGeneratedTopic, setPreGeneratedTopic] = useState<string | null>(null);
+    const [preGeneratedPool, setPreGeneratedPool] = useState<string[]>([]);
+    const [isPreGenerating, setIsPreGenerating] = useState(false);
+
+    // Slot Machine Temp State (for Spectator Sync)
+    const [tempSlotValues, setTempSlotValues] = useState<{ format: TrainingFormat, mode: TrainingMode, genre: BeatGenre } | null>(null);
+
+    // Audio Ref for Fade Control
+    const laughAudioRef = useRef<HTMLAudioElement | null>(null);
+
+    // Info Modal State
+    const [showInfoModal, setShowInfoModal] = useState(false);
+    const [showTournamentModal, setShowTournamentModal] = useState(false);
+
+    // Loser Image State
+    const [loserImage, setLoserImage] = useState<string | null>(null);
+    const [isFlickering, setIsFlickering] = useState(false);
+    const [pulseRed, setPulseRed] = useState(false);
+
+    // Voting Counts
+    const [votesA, setVotesA] = useState(0);
+    const [votesB, setVotesB] = useState(0);
+
+    // Voted Users Set for UI
+    const [votedUsers, setVotedUsers] = useState<Set<string>>(new Set());
+    const [voteHistory, setVoteHistory] = useState<string[]>([]);
+    const [attempts, setAttempts] = useState(3);
+
+    // Voted Users Ref to track unique votes per battle (Synchronous Source of Truth)
+    const votedUsersRef = useRef<Set<string>>(new Set());
+
+    // FIREBASE SYNC HOOK
+    const { updateGameState, triggerAnimation, voteData, resetVotes } = useFirebaseSync(isSpectator);
+
+    // Sync remote votes to local state (Source of Truth is now Firebase)
+    useEffect(() => {
+        if (isSpectator) return;
+        setVotesA(voteData.votesA);
+        setVotesB(voteData.votesB);
+        setVoteHistory(voteData.history);
+        setVotedUsers(new Set(voteData.votedUsers));
+    }, [voteData, isSpectator]);
+
+    // BROADCAST STATE TO SPECTATOR (VIA FIREBASE)
+    useEffect(() => {
+        if (isSpectator) return; // Spectator doesn't broadcast
+
+        // Define payload generator to reuse
+        const getPayload = (): import('./types').SpectatorState => ({
+            step, rivalA, rivalB, winner,
+            selectedFormat, selectedMode, selectedGenre,
+            preGeneratedTopic, preGeneratedImage: null, // Removed
+            preGeneratedPool,
+            countdown, isReplica, loserImage, showWinnerScreen,
+            votingBg: null, // Removed
+            currentSlotValues: tempSlotValues,
+            spinAttempts: attempts
+        });
+
+        // Broadcast on change
+        if (!isFlickering) {
+            updateGameState(getPayload());
+        }
+    }, [isSpectator, step, rivalA, rivalB, winner, selectedFormat, selectedMode, selectedGenre, preGeneratedTopic, preGeneratedPool, countdown, isReplica, loserImage, showWinnerScreen, tempSlotValues, attempts, isFlickering, updateGameState]);
+
+    // Safety: Ensure transition doesn't get stuck
+    useEffect(() => {
+        if (isTransitioning) {
+            const timer = setTimeout(() => {
+                setIsTransitioning(false);
+            }, 2000); // Force off after 2s max
+            return () => clearTimeout(timer);
+        }
+    }, [isTransitioning]);
+
+    // Centralized Navigation with Lightning Effect
+    const changeStepWithTransition = (nextStep: AppStep) => {
+        setIsTransitioning(true);
+
+        // Change content MID-ANIMATION (while screen is flashed white) to hide the swap
+        setTimeout(() => {
+            setStep(nextStep);
+        }, 350);
+
+        // Remove overlay after animation completes
+        setTimeout(() => {
+            setIsTransitioning(false);
+        }, 850);
+    };
+
+    const handleNamesSubmit = () => {
+        // Set defaults if empty
+        if (!rivalA.trim()) setRivalA("MC AZUL");
+        if (!rivalB.trim()) setRivalB("MC ROJO");
+        setAttempts(3); // Reset attempts when starting new
+        changeStepWithTransition('slots');
+    };
+
+    const handleRouletteComplete = (format: TrainingFormat, mode: TrainingMode, genre: BeatGenre) => {
+        setSelectedFormat(format);
+        setSelectedMode(mode);
+        setSelectedGenre(genre);
+        // Wait a tiny bit to see the result then move
+        setTimeout(() => {
+            changeStepWithTransition('summary');
+        }, 500);
+    };
+
+    // Pre-generate content when entering Summary step
+    useEffect(() => {
+        if (step === 'summary') {
+            const prepareContent = async () => {
+                setIsPreGenerating(true);
+                setPreGeneratedTopic(null);
+                setPreGeneratedPool([]);
+
+                if (selectedMode === 'themes') {
+                    // Generate topics, pick one
+                    const topics = await generateTopics(40);
+                    setPreGeneratedPool(topics);
+                    const randomTopic = topics[Math.floor(Math.random() * topics.length)];
+                    setPreGeneratedTopic(randomTopic);
+
+                } else if (selectedMode === 'terminations') {
+                    const terms = await generateTerminations(40);
+                    setPreGeneratedPool(terms); // Save full list
+                    const randomTerm = terms[Math.floor(Math.random() * terms.length)];
+                    setPreGeneratedTopic(randomTerm);
+
+                } else if (selectedMode === 'questions') {
+                    const questions = await generateQuestions(20);
+                    setPreGeneratedPool(questions);
+                    const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
+                    setPreGeneratedTopic(randomQuestion);
+
+                } else if (selectedMode === 'characters') {
+                    const battles = await generateCharacterBattles(20);
+                    setPreGeneratedPool(battles);
+                    const randomBattle = battles[Math.floor(Math.random() * battles.length)];
+                    setPreGeneratedTopic(randomBattle);
+                }
+                setIsPreGenerating(false);
+            };
+            prepareContent();
+        }
+    }, [step, selectedMode]);
+
+    const resetApp = () => {
+        setStep('names');
+        setSelectedFormat(null);
+        setSelectedGenre(null);
+        setPreGeneratedTopic(null);
+        setPreGeneratedPool([]);
+        setTempSlotValues(null); // Clear temp values
+        setWinner(null);
+        setShowWinnerScreen(false);
+        setRivalA('');
+        setRivalB('');
+
+        if (laughAudioRef.current) {
+            laughAudioRef.current.pause();
+            laughAudioRef.current.currentTime = 0;
+        }
+        setLoserImage(null);
+        setIsReplica(false);
+        setPulseRed(false);
+        // Reset votes
+        setVotesA(0);
+        setVotesB(0);
+        setVotedUsers(new Set()); // Reset unique voters
+        votedUsersRef.current = new Set(); // Reset Ref also
+        setVoteHistory([]); // Clear visual history
+    };
+
+    const openYoutubeBeat = () => {
+        if (!selectedGenre) return;
+        // Updated search query format
+        const query = encodeURIComponent(`${selectedGenre} instrumental freestyle`);
+        const url = `https://www.youtube.com/results?search_query=${query}`;
+
+        // Open in a small popup window (Mini Pestaña)
+        const width = 500;
+        const height = 600;
+        const left = (window.screen.width - width) / 2;
+        const top = (window.screen.height - height) / 2;
+
+        window.open(
+            url,
+            'YoutubeBeatWindow',
+            `width=${width},height=${height},top=${top},left=${left},toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes`
+        );
+    };
+
+    const handleStartBattle = () => {
+        triggerCountdown();
+    };
+
+    const handleFinishBattle = () => {
+        changeStepWithTransition('voting');
+    };
+
+    const handleVote = (vote: 'A' | 'B') => {
+        setWinner(vote);
+        setIsFlickering(true);
+
+        // Play Glitch Axe Sound (Seek to 2nd chop at ~1.5s to be safe and catch the impact at 2s)
+        const axeSound = new Audio('/sounds/glitch-axe.mp3');
+        axeSound.currentTime = 1.35; // Fine tuned to skip first chop (~1s) but catch the swing of the second
+        axeSound.volume = 0.8;
+        axeSound.play().catch(e => console.error("Audio play failed", e));
+
+        // Select Random Loser Image Pool
+        let pool: string[] = [];
+        if (vote === 'A') {
+            // A wins, B Loses (AZUL)
+            pool = ['AZUL PIERDE 1.png', 'AZUL PIERDE 2.png', 'AZUL PIERDE 3.png'];
+        } else {
+            // B wins, A Loses (MORADO)
+            pool = ['MORADO PIERDE 1.png', 'MORADO PIERDE 2.png', 'MORADO PIERDE 3.png'];
+        }
+
+        // Select Final Loser Image
+        const randomImg = pool[Math.floor(Math.random() * pool.length)];
+        const finalPath = `/loser-images/${encodeURIComponent(randomImg)}`;
+
+        // BROADCAST TRIGGER for Spectator Synchronization
+        triggerAnimation('WIN_ANIMATION_TRIGGER', { winner: vote, loserImage: finalPath });
+        setLoserImage(finalPath); // Start with Loser
+
+        let flickerCount = 0;
+        const totalFlickers = 8; // More glitch duration (8 * 50ms = 400ms + overhead)
+        const flickerSpeed = 50; // Ultra fast strobe
+
+        const interval = setInterval(() => {
+            // Toggle Logic
+            flickerCount++;
+
+            if (flickerCount % 2 !== 0) {
+                setLoserImage(null);
+            } else if (flickerCount >= totalFlickers) {
+                clearInterval(interval);
+                setIsFlickering(false); // Stop flickering
+
+                // Set FINAL image
+                // Set FINAL image
+                setLoserImage(finalPath);
+
+                // Play Evil Laugh with Fade In/Out
+                if (laughAudioRef.current) {
+                    laughAudioRef.current.pause();
+                    laughAudioRef.current.currentTime = 0;
+                }
+                const audio = new Audio('/sounds/evil-laugh.mp3');
+                laughAudioRef.current = audio;
+                audio.volume = 0;
+                audio.play().catch(e => console.error("Laugh audio fail", e));
+
+                // Fade In (0 -> 1 over 1.5s)
+                let vol = 0;
+                const fadeIn = setInterval(() => {
+                    vol = Math.min(1, vol + 0.1);
+                    if (laughAudioRef.current) laughAudioRef.current.volume = vol;
+                    if (vol >= 1) clearInterval(fadeIn);
+                }, 150);
+
+                // Schedule Fade Out (Start at 2.5s, go 1 -> 0 over 1.5s)
+                setTimeout(() => {
+                    const fadeOut = setInterval(() => {
+                        if (laughAudioRef.current) {
+                            laughAudioRef.current.volume = Math.max(0, laughAudioRef.current.volume - 0.1);
+                            if (laughAudioRef.current.volume <= 0) clearInterval(fadeOut);
+                        } else {
+                            clearInterval(fadeOut);
+                        }
+                    }, 150);
+                }, 2500);
+
+                // Trigger Red Pulse Border
+                setPulseRed(true);
+            }
+        }, flickerSpeed);
+
+        // Wait for execution animation to finish before showing the winner screen
+        // Total time reduced slightly as requested
+        setTimeout(() => {
+            if (laughAudioRef.current) {
+                laughAudioRef.current.pause();
+                laughAudioRef.current.currentTime = 0;
+            }
+            setShowWinnerScreen(true);
+
+            // Play Victory Trumpet (Seek to 0.5s where sound likely starts)
+            const trumpet = new Audio('/sounds/victory-trumpet.mp3');
+            trumpet.currentTime = 0.5;
+            trumpet.play().catch(e => console.error("Trumpet play failed", e));
+        }, 4500);
+    };
+
+    const handleReplica = () => {
+        setIsReplica(true);
+        // RESET VOTES FOR REPLICA
+        resetVotes();
+        setVotesA(0);
+        setVotesB(0);
+        setVotedUsers(new Set()); // Allow re-voting
+        votedUsersRef.current = new Set(); // Reset Ref for Replica
+        setVoteHistory([]); // Clear visual history
+
+        changeStepWithTransition('slots'); // Go back to slots, but now in Replica mode
+    };
+
+    const triggerCountdown = () => {
+        if (countdown) return;
+
+        let count = 3;
+        setCountdown(count.toString());
+
+        // Faster countdown (400ms instead of 600ms)
+        const interval = setInterval(() => {
+            count--;
+            if (count > 0) {
+                setCountdown(count.toString());
+            } else if (count === 0) {
+                setCountdown("¡TIEMPO!");
+            } else {
+                clearInterval(interval);
+                setTimeout(() => {
+                    setCountdown(null);
+                    setStep('arena'); // Switch to Arena AFTER countdown
+                }, 400);
+            }
+        }, 400);
+    };
+
+    // Determine background to use (Generated or Fallback)
+    const bgToUse = "https://images.unsplash.com/photo-1533174072545-e8d4aa97edf9?q=80&w=1920&auto=format&fit=crop";
+
+    // --- CONDITIONAL RENDERING (Placed at end to respect Hooks Rule) ---
+
+    // 1. Login Screen
+    if (authStep === 'login') {
+        return (
+            <AccessScreen
+                onAdminLogin={() => {
+                    setIsSpectator(false);
+                    setAuthStep('app');
+                }}
+                onSpectatorLogin={(name) => {
+                    setIsSpectator(true);
+                    setViewerName(name);
+                    setAuthStep('app');
+                }}
+            />
+        );
+    }
+
+    // 2. Spectator View
+    if (isSpectator) {
+        return <SpectatorView viewerName={viewerName} />;
+    }
+
+    // 3. Main App (Admin)
+    return (
+        <div className={`min-h-screen bg-gradient-to-b text-white p-4 md:p-6 lg:p-8 overflow-x-hidden relative flex flex-col ${isReplica && step === 'slots' ? 'from-red-950 to-black' : 'from-[#1a0b2e] to-[#0d001a]'}`}>
+            {/* --- TOP RIGHT BUTTONS --- */}
+            <div className="fixed top-4 right-4 z-[90] flex items-center gap-2">
+                {/* TOURNAMENT BUTTON */}
+                <button
+                    onClick={() => setShowTournamentModal(true)}
+                    className="bg-black/40 backdrop-blur-md border border-yellow-500/50 hover:bg-yellow-900/50 hover:border-yellow-400 text-yellow-200 p-3 rounded-full shadow-[0_0_15px_rgba(234,179,8,0.3)] transition-all transform hover:scale-105"
+                    title="Modo Torneo"
+                >
+                    <Trophy size={24} />
+                </button>
+
+                {/* MANUAL/INFO BUTTON */}
+                <button
+                    onClick={() => setShowInfoModal(true)}
+                    className="bg-black/40 backdrop-blur-md border border-purple-500/50 hover:bg-purple-900/50 hover:border-green-400 text-purple-200 p-3 rounded-full shadow-[0_0_15px_rgba(168,85,247,0.3)] transition-all transform hover:scale-105"
+                    title="Ver opciones disponibles"
+                >
+                    <List size={24} />
+                </button>
+            </div>
+
+            {/* TOURNAMENT MODAL - Persisted using 'hidden' class to prevent unmount and state loss */}
+            <div className={`fixed inset-0 z-[160] bg-black/95 backdrop-blur-lg items-center justify-center p-4 animate-fadeIn ${showTournamentModal ? 'flex' : 'hidden'}`}>
+                <div className="bg-[#1a0b2e] w-full max-w-6xl h-[90vh] rounded-2xl border-2 border-yellow-600 shadow-[0_0_50px_rgba(234,179,8,0.3)] overflow-hidden flex flex-col relative">
+                    <div className="absolute top-4 right-4 z-50">
+                        <button
+                            onClick={() => setShowTournamentModal(false)}
+                            className="text-gray-400 hover:text-white hover:bg-red-500/20 p-2 rounded-full transition-colors"
+                        >
+                            <X size={28} />
+                        </button>
+                    </div>
+                    <TournamentBracket />
+                </div>
+            </div>
+
+            {/* INFO MODAL OVERLAY */}
+            {showInfoModal && (
+                <div className="fixed inset-0 z-[150] bg-black/90 backdrop-blur-lg flex items-center justify-center p-4 animate-fadeIn">
+                    <div className="bg-[#1a0b2e] w-full max-w-4xl max-h-[90vh] rounded-2xl border-2 border-purple-500 shadow-[0_0_50px_rgba(168,85,247,0.5)] overflow-hidden flex flex-col relative">
+
+                        {/* Modal Header */}
+                        <div className="p-6 border-b border-purple-800 flex justify-between items-center bg-purple-950/50">
+                            <div className="flex items-center gap-3">
+                                <BookOpen className="text-green-400" />
+                                <h2 className="text-2xl font-urban text-white tracking-widest uppercase">Manual de Juego</h2>
+                            </div>
+                            <button
+                                onClick={() => setShowInfoModal(false)}
+                                className="text-gray-400 hover:text-white hover:bg-red-500/20 p-2 rounded-full transition-colors"
+                            >
+                                <X size={28} />
+                            </button>
+                        </div>
+
+                        {/* Modal Content */}
+                        <div className="p-6 overflow-y-auto custom-scrollbar grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                            {/* Column 1: Formats */}
+                            <div className="space-y-4">
+                                <h3 className="text-purple-300 font-bold uppercase tracking-widest border-b border-purple-700 pb-2">Formatos</h3>
+                                <div className="space-y-2">
+                                    {Object.values(TrainingFormat).map((fmt) => (
+                                        <div key={fmt} className="bg-purple-900/20 p-3 rounded-lg border border-purple-800/50 text-gray-200 text-sm font-bold flex justify-between">
+                                            <span>{fmt}</span>
+                                            <span className="text-purple-400 text-xs">{ENTRADAS_RULES[fmt]?.replace(' Entradas por MC', 'e')}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Column 2: Stimuli */}
+                            <div className="space-y-4">
+                                <h3 className="text-pink-300 font-bold uppercase tracking-widest border-b border-pink-700 pb-2">Estímulos</h3>
+                                <div className="space-y-2">
+                                    {ALL_TRAINING_MODES.map((mode) => (
+                                        <div key={mode} className="bg-pink-900/20 p-3 rounded-lg border border-pink-800/50 text-gray-200 text-sm font-bold capitalize">
+                                            {MODE_TRANSLATIONS[mode] || mode}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Column 3: Beats */}
+                            <div className="space-y-4">
+                                <h3 className="text-blue-300 font-bold uppercase tracking-widest border-b border-blue-700 pb-2">Estilos de Beat</h3>
+                                <div className="space-y-2">
+                                    {Object.values(BeatGenre).map((beat) => (
+                                        <div key={beat} className="bg-blue-900/20 p-3 rounded-lg border border-blue-800/50 text-gray-200 text-sm font-bold">
+                                            {beat}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div className="p-4 bg-purple-950/30 text-center text-xs text-gray-500 border-t border-purple-800">
+                            Todas las opciones tienen la misma probabilidad en la Ruleta del Destino.
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Transition Overlay (Lightning Effect) */}
+            {isTransitioning && (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center pointer-events-none">
+                    {/* Flash Background - Full Opacity to hide transition */}
+                    <div className="absolute inset-0 bg-white animate-flash-storm mix-blend-overlay"></div>
+                    <div className={`absolute inset-0 animate-flash-storm ${isReplica ? 'bg-red-600' : 'bg-purple-600'}`}></div>
+
+                    {/* Lightning Icon */}
+                    <div className="relative z-10 animate-strike">
+                        <Zap size={250} className={`${isReplica ? 'text-red-500' : 'text-purple-500'} drop-shadow-[0_0_80px_currentColor]`} fill="currentColor" />
+                    </div>
+                </div>
+            )}
+
+            {/* Countdown Overlay (Main Battle) */}
+            {countdown && (
+                <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center animate-fadeInFast">
+                    <h1 className="text-6xl sm:text-8xl md:text-[10rem] lg:text-[15rem] font-black font-urban text-transparent bg-clip-text bg-gradient-to-br from-purple-400 via-pink-500 to-indigo-600 drop-shadow-[0_10px_20px_rgba(168,85,247,0.5)] animate-scale-up tracking-tighter text-center break-words max-w-full px-4">
+                        {countdown}
+                    </h1>
+                </div>
+            )}
+
+            <div className="max-w-6xl mx-auto w-full flex-1 flex flex-col">
+
+                {/* Header - Hide during voting AND Arena to clean up UI */}
+                {step !== 'voting' && step !== 'arena' && (
+                    <header className="text-center py-4 relative mb-4 flex flex-col items-center">
+                        <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[150%] blur-[100px] -z-10 rounded-full pointer-events-none ${isReplica ? 'bg-red-600/20' : 'bg-purple-600/10'}`}></div>
+
+                        {/* Crown Logo */}
+                        <div className="relative mb-2 animate-float">
+                            <Crown size={48} className={`${isReplica ? 'text-red-500' : 'text-yellow-400'} drop-shadow-[0_0_15px_rgba(250,204,21,0.6)]`} fill={isReplica ? "rgba(220,38,38,0.2)" : "rgba(250,204,21,0.2)"} />
+                        </div>
+
+                        <h1 className="text-3xl md:text-5xl font-urban font-black tracking-tighter transform -rotate-2 relative z-10 animate-shine-text drop-shadow-xl">
+                            LA CORTE DEL REY
+                        </h1>
+
+                        {/* Simple Breadcrumb (Hidden on Names Step) */}
+                        {step !== 'names' && step !== 'slots' && selectedFormat && (
+                            <div className="inline-block mt-2 bg-purple-900/80 border border-purple-500 rounded-full px-4 py-1">
+                                <p className="text-xs uppercase tracking-widest text-purple-200 font-bold">
+                                    {selectedFormat}
+                                    {selectedMode && ` • ${MODE_TRANSLATIONS[selectedMode]}`}
+                                    {selectedGenre && ` • ${selectedGenre}`}
+                                </p>
+                            </div>
+                        )}
+                    </header>
+                )}
+
+                {/* Main Content Area */}
+                <main className={`flex-1 flex flex-col justify-center animate-fadeIn relative min-h-0 ${step === 'voting' ? 'p-0' : ''} ${step === 'arena' ? 'justify-start md:justify-center' : ''}`}>
+
+                    {/* STEP 0: NAMES INPUT */}
+                    {step === 'names' && (
+                        <div className="w-full max-w-4xl mx-auto flex flex-col items-center justify-center flex-1 min-h-[50vh]">
+                            <h2 className="text-2xl md:text-3xl font-urban text-white mb-8 text-center drop-shadow-lg tracking-widest uppercase animate-pulse px-4">
+                                ¿QUIÉNES BATALLAN HOY?
+                            </h2>
+
+                            <div className="flex flex-col md:flex-row w-full gap-8 md:gap-4 items-center justify-center mb-10 relative">
+                                {/* Rival A - Blue */}
+                                <div className="w-full max-w-xs md:max-w-sm relative group z-10">
+                                    <div className="absolute inset-0 bg-blue-600/20 rounded-2xl blur-xl group-hover:bg-blue-500/40 transition-all"></div>
+                                    <div className="relative bg-black/80 border-2 border-blue-500 p-6 rounded-2xl shadow-[0_0_20px_rgba(59,130,246,0.3)]">
+                                        <div className="flex items-center gap-2 mb-2 text-blue-400 font-urban text-xl">
+                                            <User size={24} />
+                                            <span>BUFÓN AZUL</span>
+                                        </div>
+                                        <input
+                                            type="text"
+                                            value={rivalA}
+                                            onChange={(e) => setRivalA(e.target.value)}
+                                            placeholder="MC 1"
+                                            className="w-full bg-transparent border-b-2 border-blue-800 focus:border-blue-400 outline-none text-2xl font-bold text-white py-2 placeholder-blue-900/50 uppercase tracking-wide text-center"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* VS BADGE */}
+                                <div className="relative z-20 md:-mx-6 my-[-10px] md:my-0 flex-shrink-0">
+                                    <div className="w-16 h-16 bg-black border-2 border-purple-500 rotate-45 flex items-center justify-center shadow-[0_0_20px_rgba(168,85,247,0.5)]">
+                                        <span className="-rotate-45 text-2xl font-black text-white italic">VS</span>
+                                    </div>
+                                </div>
+
+                                {/* Rival B - Red */}
+                                <div className="w-full max-w-xs md:max-w-sm relative group z-10">
+                                    <div className="absolute inset-0 bg-red-600/20 rounded-2xl blur-xl group-hover:bg-red-500/40 transition-all"></div>
+                                    <div className="relative bg-black/80 border-2 border-red-500 p-6 rounded-2xl shadow-[0_0_20px_rgba(239,68,68,0.3)]">
+                                        <div className="flex items-center gap-2 mb-2 text-red-400 font-urban text-xl justify-end">
+                                            <span>BUFÓN ROJO</span>
+                                            <User size={24} />
+                                        </div>
+                                        <input
+                                            type="text"
+                                            value={rivalB}
+                                            onChange={(e) => setRivalB(e.target.value)}
+                                            placeholder="MC 2"
+                                            className="w-full bg-transparent border-b-2 border-red-800 focus:border-red-400 outline-none text-2xl font-bold text-white py-2 placeholder-red-900/50 uppercase tracking-wide text-center"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={handleNamesSubmit}
+                                className="group relative px-10 py-4 bg-gradient-to-r from-blue-600 to-red-600 rounded-xl font-black text-2xl uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-[0_0_30px_rgba(168,85,247,0.4)] overflow-hidden"
+                            >
+                                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 skew-y-12"></div>
+                                <span className="relative z-10 flex items-center gap-3">
+                                    <Swords size={28} />
+                                    CONTINUAR
+                                </span>
+                            </button>
+                        </div>
+                    )}
+
+                    {/* STEP 1 (NEW): ROULETTE / SLOTS */}
+                    {step === 'slots' && (
+                        <div className="w-full flex flex-col justify-center min-h-[60vh]">
+                            {!isReplica && (
+                                <button onClick={() => changeStepWithTransition('names')} className="mb-6 text-sm text-purple-400 hover:text-white uppercase font-bold tracking-widest flex items-center gap-1 mx-auto">← Volver</button>
+                            )}
+                            <SlotMachine
+                                onComplete={handleRouletteComplete}
+                                onSpinFinish={setTempSlotValues}
+                                onSpinStart={() => setTempSlotValues(null)}
+                                isReplica={isReplica}
+                                attempts={attempts}
+                                setAttempts={setAttempts}
+                            />
+                        </div>
+                    )}
+
+                    {/* STEP 2: PRE-BATTLE SUMMARY */}
+                    {step === 'summary' && (
+                        <div className="w-full max-w-2xl mx-auto flex flex-col items-center justify-center animate-fadeIn">
+                            <h2 className="text-4xl font-urban text-white mb-8 text-center drop-shadow-lg">¿LISTO PARA LA BATALLA?</h2>
+
+                            <div className="w-full bg-purple-900/20 border border-purple-600/50 rounded-2xl p-6 mb-8 backdrop-blur-sm">
+                                <h3 className="text-purple-300 uppercase text-xs font-bold tracking-widest mb-4">Resumen</h3>
+                                <div className="grid grid-cols-2 gap-4 text-center">
+                                    <div className="bg-black/40 p-3 rounded-lg">
+                                        <p className="text-xs text-gray-400">Formato</p>
+                                        <p className="font-bold text-lg text-green-400">{selectedFormat}</p>
+                                    </div>
+                                    <div className="bg-black/40 p-3 rounded-lg">
+                                        <p className="text-xs text-gray-400">Estímulo</p>
+                                        <p className="font-bold text-lg text-pink-400">{MODE_TRANSLATIONS[selectedMode] || selectedMode}</p>
+                                    </div>
+                                    <div className="col-span-2 bg-black/40 p-3 rounded-lg border border-purple-500/30">
+                                        <p className="text-xs text-gray-400">Beat Style</p>
+                                        <p className="font-bold text-xl text-yellow-400">{selectedGenre}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col gap-4 w-full">
+                                {/* 1. Open Beat */}
+                                <button
+                                    onClick={openYoutubeBeat}
+                                    className="w-full py-4 bg-black border-2 border-red-600 text-red-500 hover:bg-red-600 hover:text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-[0_0_20px_rgba(220,38,38,0.2)] hover:shadow-[0_0_30px_rgba(220,38,38,0.5)]"
+                                >
+                                    <Youtube size={24} />
+                                    ABRIR BEAT (MINI VENTANA)
+                                    <ExternalLink size={16} className="opacity-70" />
+                                </button>
+
+                                <p className="text-center text-xs text-gray-400">Abre el beat y regresa para empezar</p>
+
+                                {/* 2. Start Battle */}
+                                <button
+                                    onClick={handleStartBattle}
+                                    disabled={isPreGenerating}
+                                    className={`w-full py-8 mt-4 rounded-xl font-black text-3xl font-urban tracking-wider flex items-center justify-center gap-3 transition-all transform active:scale-95 ${isPreGenerating
+                                        ? 'bg-gray-800 text-gray-500 cursor-wait border-2 border-gray-700'
+                                        : 'bg-gradient-to-r from-blue-600 to-red-600 text-white shadow-[0_0_30px_rgba(37,99,235,0.4)] border-b-8 border-purple-900 hover:scale-[1.02]'
+                                        }`}
+                                >
+                                    {isPreGenerating ? (
+                                        <>
+                                            <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-gray-500"></div>
+                                            {selectedMode === 'themes' ? 'BUSCANDO TEMÁTICA...' : selectedMode === 'terminations' ? 'BUSCANDO RIMAS...' : selectedMode === 'characters' ? 'PREPARANDO DUELO...' : selectedMode === 'questions' ? 'PENSANDO PREGUNTA...' : 'BUSCANDO CONCEPTOS...'}
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Play size={32} fill="white" />
+                                            ¡INICIAR BATALLA!
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+
+                            {!isReplica && (
+                                <button
+                                    onClick={() => changeStepWithTransition('slots')}
+                                    className="mt-6 text-purple-400 hover:text-white underline text-sm"
+                                >
+                                    Tirar Ruleta de Nuevo
+                                </button>
+                            )}
+                        </div>
+                    )}
+
+                    {/* STEP 5: ARENA (RE-DESIGNED LAYOUT) */}
+                    {step === 'arena' && (
+                        <div className="w-full h-full flex flex-col md:flex-row items-center md:items-stretch justify-center gap-4 md:gap-6 animate-fadeIn">
+
+                            {/* LEFT COLUMN: RIVAL A */}
+                            <div className="w-full md:w-1/4 flex md:flex-col justify-between md:justify-center items-center order-2 md:order-1 gap-2 bg-blue-900/10 border border-blue-500/20 rounded-xl p-2 md:p-4">
+                                <div className="flex flex-col items-center">
+                                    <User size={32} className="text-blue-500 mb-1" />
+                                    <h2 className="text-2xl md:text-4xl font-black font-urban text-blue-400 text-center uppercase leading-none break-words">
+                                        {rivalA || "MC AZUL"}
+                                    </h2>
+                                </div>
+                                <div className="hidden md:block w-1 h-16 bg-blue-500/50 rounded-full my-4"></div>
+                                <div className="text-xs text-blue-300 font-bold uppercase tracking-widest rotate-0 md:-rotate-90 whitespace-nowrap">RIVAL 1</div>
+                            </div>
+
+                            {/* MIDDLE COLUMN: GENERATOR + CONTROLS */}
+                            <div className="w-full md:w-1/2 flex flex-col gap-4 order-1 md:order-2 h-full justify-center">
+
+                                {/* Battle Info Header */}
+                                <div className="bg-black/60 border-l-4 border-yellow-500 rounded-r-lg p-3 flex justify-between items-center shadow-lg">
+                                    <div className="flex flex-col">
+                                        <span className="text-gray-400 text-xs font-bold uppercase tracking-wider">Formato</span>
+                                        <span className="text-yellow-400 font-urban text-lg leading-none">{selectedFormat}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 bg-yellow-500/10 px-3 py-1 rounded-full border border-yellow-500/30">
+                                        <Timer size={16} className="text-yellow-400" />
+                                        <span className="text-white font-bold uppercase text-sm tracking-wide">
+                                            {selectedFormat ? ENTRADAS_RULES[selectedFormat] : "5 Entradas"}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <TopicGenerator
+                                    mode={selectedMode || 'themes'}
+                                    initialTopic={preGeneratedTopic}
+                                    initialImage={null}
+                                    initialPool={preGeneratedPool}
+                                />
+
+                                {/* CONTROLS (Directly under the box) */}
+                                <div className="flex flex-col gap-2 w-full mt-2">
+                                    <button
+                                        onClick={handleFinishBattle}
+                                        className="w-full py-4 rounded-xl font-black text-xl uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-[0_0_20px_rgba(37,99,235,0.4)] border-b-4 border-purple-900 bg-gradient-to-r from-blue-600 to-red-600 text-white hover:scale-105 active:scale-95"
+                                    >
+                                        <Trophy size={24} />
+                                        TERMINAR BATALLA
+                                    </button>
+
+                                    <button
+                                        onClick={resetApp}
+                                        className="text-purple-500 hover:text-white transition-colors flex items-center justify-center gap-2 text-xs uppercase font-bold tracking-widest opacity-60 hover:opacity-100 py-2"
+                                    >
+                                        <RotateCcw size={14} />
+                                        Terminar
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* RIGHT COLUMN: RIVAL B */}
+                            <div className="w-full md:w-1/4 flex md:flex-col justify-between md:justify-center items-center order-3 md:order-3 gap-2 bg-red-900/10 border border-red-500/20 rounded-xl p-2 md:p-4">
+                                <div className="flex flex-col items-center">
+                                    <User size={32} className="text-red-500 mb-1" />
+                                    <h2 className="text-2xl md:text-4xl font-black font-urban text-red-400 text-center uppercase leading-none break-words">
+                                        {rivalB || "MC ROJO"}
+                                    </h2>
+                                </div>
+                                <div className="hidden md:block w-1 h-16 bg-red-500/50 rounded-full my-4"></div>
+                                <div className="text-xs text-red-300 font-bold uppercase tracking-widest rotate-0 md:rotate-90 whitespace-nowrap">RIVAL 2</div>
+                            </div>
+
+                        </div>
+                    )}
+
+
+
+
+
+                    {/* STEP 6: VOTING (NEON JESTER EDITION - BOXED FOR ADMIN) */}
+                    {step === 'voting' && (
+                        <div className={`relative w-full max-w-4xl aspect-square max-h-[85vh] flex overflow-hidden bg-black rounded-3xl border-4 border-purple-500/30 shadow-2xl animate-fadeIn ${pulseRed ? 'animate-pulse-red-border' : ''} mx-auto my-auto`}>
+
+                            {/* MAIN BACKGROUND IMAGE */}
+                            <div className="absolute inset-0 z-0">
+                                <img
+                                    src={loserImage || "/vs-bg-final.jpg"}
+                                    alt="Voting Background"
+                                    className={`w-full h-full object-cover object-center ${isFlickering ? 'animate-glitch duration-0' : 'transition-all duration-500'}`}
+                                />
+                                <div className="absolute inset-0 bg-black/20"></div>
+
+                                {/* LOSER GRAYSCALE TRANSITION OVERLAY */}
+                                {winner && !showWinnerScreen && (
+                                    <div
+                                        className="absolute inset-0 z-10 pointer-events-none"
+                                        style={{
+                                            clipPath: winner === 'A'
+                                                ? 'polygon(95% 0, 100% 0, 100% 100%, 5% 100%)' // B Lost (Right)
+                                                : 'polygon(0 0, 95% 0, 5% 100%, 0% 100%)'     // A Lost (Left)
+                                        }}
+                                    >
+                                        <div className="w-full h-full bg-black/70 backdrop-grayscale animate-fade-to-gray opacity-0"></div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* CENTRAL VOTING DASHBOARD (Admin Only) */}
+                            {!winner && (
+                                <div className="absolute inset-0 z-40 flex flex-col items-center justify-center pointer-events-none">
+                                    <div className="bg-black/60 backdrop-blur-md p-6 rounded-3xl border border-white/20 shadow-2xl pointer-events-auto flex flex-col items-center gap-6 mt-0">
+                                        <h3 className="text-white font-urban uppercase tracking-widest text-xl animate-pulse">Panel de Votación</h3>
+                                        <div className="flex items-center gap-8 md:gap-16">
+                                            <div className="flex flex-col items-center gap-2">
+                                                <div className="text-6xl font-black font-urban text-white element-text-stroke-purple">{votesA}</div>
+                                                <span className="text-xs text-purple-400 font-bold tracking-widest">VOTOS</span>
+                                            </div>
+                                            <div className="flex flex-col items-center gap-2"><span className="text-gray-400 font-bold">VS</span></div>
+                                            <div className="flex flex-col items-center gap-2">
+                                                <div className="text-6xl font-black font-urban text-white element-text-stroke-cyan">{votesB}</div>
+                                                <span className="text-xs text-cyan-400 font-bold tracking-widest">VOTOS</span>
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-4 w-full">
+                                            <button
+                                                onClick={() => {
+                                                    if (votesA > votesB) handleVote('A');
+                                                    else if (votesB > votesA) handleVote('B');
+                                                    else handleReplica(); // AUTOMATIC REPLICA
+                                                }}
+                                                className="w-full py-3 bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl font-black uppercase tracking-widest text-shadow-sm shadow-lg hover:scale-105 transition-transform"
+                                            >
+                                                TERMINAR Y REVELAR
+                                            </button>
+                                        </div>
+                                        <div className="flex flex-col gap-1 w-full max-h-[60px] overflow-y-auto items-center">
+                                            {voteHistory.length > 0 ? (
+                                                voteHistory.map((v, i) => (
+                                                    <span key={i} className={`text-[10px] uppercase font-bold tracking-widest ${i === 0 ? 'text-cyan-400 animate-pulse' : 'text-gray-500'}`}>
+                                                        {v}
+                                                    </span>
+                                                ))
+                                            ) : (
+                                                <span className="text-[10px] text-gray-400 uppercase tracking-widest opacity-60">
+                                                    Esperando votos de la audiencia...
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* RIVAL NAMES OVERLAY (Restored inside Boxed Layout) */}
+                            <div className="absolute top-[10%] left-[5%] z-30 pointer-events-none transform -rotate-3 max-w-[40%]">
+                                <h2 className="text-3xl md:text-5xl font-black font-urban text-white uppercase leading-[0.9] element-text-stroke-purple animate-epic-pulse-purple break-words">
+                                    {rivalA}
+                                </h2>
+                            </div>
+                            <div className="absolute bottom-[10%] right-[5%] z-30 pointer-events-none transform -rotate-3 text-right max-w-[40%] flex flex-col items-end">
+                                <h2 className="text-3xl md:text-5xl font-black font-urban text-white uppercase leading-[0.9] element-text-stroke-cyan animate-epic-pulse-cyan break-words">
+                                    {rivalB}
+                                </h2>
+                            </div>
+
+                            {/* Text Stroke & Animation Styles Injection */}
+                            <style>{`
+                                .element-text-stroke-purple { -webkit-text-stroke: 2px #a855f7; paint-order: stroke fill; }
+                                .element-text-stroke-cyan { -webkit-text-stroke: 2px #06b6d4; paint-order: stroke fill; }
+                                @keyframes epic-pulse-purple {
+                                    0%, 100% { filter: drop-shadow(0 0 10px rgba(168, 85, 247, 0.6)); transform: scale(1); }
+                                    50% { filter: drop-shadow(0 0 25px rgba(168, 85, 247, 1)); transform: scale(1.05); opacity: 0.9; }
+                                }
+                                @keyframes epic-pulse-cyan {
+                                    0%, 100% { filter: drop-shadow(0 0 10px rgba(6, 182, 212, 0.6)); transform: scale(1); }
+                                    50% { filter: drop-shadow(0 0 25px rgba(6, 182, 212, 1)); transform: scale(1.05); opacity: 0.9; }
+                                }
+                                .animate-epic-pulse-purple { animation: epic-pulse-purple 3s ease-in-out infinite; }
+                                .animate-epic-pulse-cyan { animation: epic-pulse-cyan 3s ease-in-out infinite reverse; }
+                                @keyframes fade-to-gray { from { opacity: 0; backdrop-filter: grayscale(0%); } to { opacity: 1; backdrop-filter: grayscale(100%); } }
+                                .animate-fade-to-gray { animation: fade-to-gray 3s forwards; animation-delay: 2.5s; }
+                                @keyframes glitch-anim {
+                                  0% { filter: contrast(120%) saturate(120%) hue-rotate(0deg); clip-path: inset(0 0 0 0); transform: translate(0); }
+                                  20% { filter: contrast(200%) saturate(0%) hue-rotate(90deg) invert(10%); clip-path: inset(10% 0 30% 0); transform: translate(-5px, 2px); }
+                                  40% { filter: contrast(150%) saturate(200%) hue-rotate(-90deg); clip-path: inset(50% 0 10% 0); transform: translate(5px, -2px); }
+                                  60% { filter: contrast(200%) saturate(0%) invert(20%); clip-path: inset(20% 0 60% 0); transform: translate(-5px, 0); }
+                                  80% { filter: contrast(150%) saturate(150%); clip-path: inset(0 0 0 0); transform: translate(0); }
+                                  100% { filter: contrast(120%) saturate(120%); clip-path: inset(0 0 0 0); transform: translate(0); }
+                                }
+                                .animate-glitch { animation: glitch-anim 0.2s infinite linear; }
+                                @keyframes pulse-red-border { 0%, 100% { box-shadow: inset 0 0 20px rgba(139, 0, 0, 0); } 50% { box-shadow: inset 0 0 100px rgba(255, 0, 0, 0.8); } }
+                                .animate-pulse-red-border { animation: pulse-red-border 1.5s infinite ease-in-out; z-index: 100; pointer-events: none; }
+                                @keyframes confetti-fall { 0% { transform: translateY(-10px) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
+                                .animate-confetti-fall { animation-name: confetti-fall; animation-timing-function: linear; animation-iteration-count: infinite; }
+                                @keyframes trumpet-beat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+                                .animate-trumpet-beat { animation: trumpet-beat 0.6s infinite ease-in-out; }
+                                @keyframes fountain-flow { 0% { transform: translate(0, 0) rotate(0deg); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)) rotate(var(--r)); opacity: 0; } }
+                                .animate-fountain-flow { animation: fountain-flow 1s ease-out infinite; }
+                                @keyframes float-trumpet { 0%, 100% { transform: translateY(0) rotate(-10deg) scale(1); } 50% { transform: translateY(-20px) rotate(10deg) scale(1.1); } }
+                                .animate-float-trumpet { animation: float-trumpet 3s ease-in-out infinite; }
+                                @media (max-width: 768px) { .element-text-stroke-purple, .element-text-stroke-cyan { -webkit-text-stroke: 1px; } }
+                            `}</style>
+
+                            {/* REDESIGNED WINNER OVERLAY (CARD STYLE) - Updated Colors */}
+                            {showWinnerScreen && winner && (
+                                <div className={`absolute inset-0 z-[60] flex items-center justify-center animate-fadeIn bg-black/80 backdrop-blur-sm`}>
+
+                                    {/* WINNER CARD */}
+                                    <div className={`relative w-full max-w-sm bg-[#1a0b2e] border-4 rounded-3xl p-6 flex flex-col items-center shadow-[0_0_100px_rgba(0,0,0,0.9)] animate-scale-up z-20 overflow-hidden ${winner === 'A' ? 'border-fuchsia-500 shadow-[0_0_50px_rgba(192,38,211,0.5)]' : 'border-cyan-500 shadow-[0_0_50px_rgba(6,182,212,0.5)]'}`}>
+                                        <div className="mb-4 relative">
+                                            <div className={`absolute inset-0 blur-[40px] ${winner === 'A' ? 'bg-fuchsia-500' : 'bg-cyan-500'}`}></div>
+                                            <Crown size={60} className={`relative z-10 ${winner === 'A' ? 'text-fuchsia-100' : 'text-cyan-100'}`} fill="currentColor" />
+                                        </div>
+                                        <h3 className="text-gray-400 font-bold uppercase tracking-[0.3em] text-[10px] mb-2">GANADOR INDISCUTIBLE</h3>
+                                        <h2 className={`text-4xl font-black font-urban text-center uppercase leading-none mb-6 break-words w-full ${winner === 'A' ? 'text-fuchsia-400 drop-shadow-[0_0_15px_rgba(192,38,211,0.8)]' : 'text-cyan-400 drop-shadow-[0_0_15px_rgba(6,182,212,0.8)]'}`}>
+                                            {winner === 'A' ? rivalA : rivalB}
+                                        </h2>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                resetApp();
+                                            }}
+                                            className={`w-full py-3 rounded-xl font-bold uppercase tracking-widest text-[#1a0b2e] transition-all transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2 cursor-pointer relative z-[100] pointer-events-auto ${winner === 'A' ? 'bg-fuchsia-500 hover:bg-fuchsia-400' : 'bg-cyan-500 hover:bg-cyan-400'}`}
+                                        >
+                                            <RotateCcw size={18} />
+                                            NUEVA BATALLA
+                                        </button>
+                                    </div>
+
+
+                                    {/* TRUMPETS & CANNON CONFETTI LAYER */}
+                                    <div className="absolute inset-0 overflow-visible pointer-events-none z-[80]">
+                                        {/* LEFT TRUMPET */}
+                                        <div className="absolute top-[65%] left-4 md:left-10 transform -translate-y-1/2 -rotate-12">
+                                            <div className="text-8xl md:text-9xl filter drop-shadow-[0_0_20px_rgba(234,179,8,0.5)] relative animate-trumpet-beat">
+                                                🎺
+                                                <div className="absolute top-2 right-2 w-1 h-1">
+                                                    {Array.from({ length: 40 }).map((_, i) => (
+                                                        <div
+                                                            key={`confetti-l-${i}`}
+                                                            className="absolute w-3 h-3 rounded-sm animate-fountain-flow"
+                                                            style={{
+                                                                backgroundColor: ['#ef4444', '#3b82f6', '#eab308', '#a855f7', '#ec4899'][i % 5],
+                                                                left: 0, top: 0,
+                                                                '--tx': `${100 + Math.random() * 400}px`,
+                                                                '--ty': `${-200 - Math.random() * 400}px`,
+                                                                '--r': `${Math.random() * 720}deg`,
+                                                                animationDuration: `${1 + Math.random() * 1.5}s`,
+                                                                animationDelay: `${Math.random() * 0.5}s`
+                                                            } as React.CSSProperties}
+                                                        ></div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* RIGHT TRUMPET (Flipped) */}
+                                        <div className="absolute top-[65%] right-4 md:right-10 transform -translate-y-1/2 rotate-12 scale-x-[-1]">
+                                            <div className="text-8xl md:text-9xl filter drop-shadow-[0_0_20px_rgba(234,179,8,0.5)] relative animate-trumpet-beat">
+                                                🎺
+                                                <div className="absolute top-2 right-2 w-1 h-1">
+                                                    {Array.from({ length: 40 }).map((_, i) => (
+                                                        <div
+                                                            key={`confetti-r-${i}`}
+                                                            className="absolute w-3 h-3 rounded-sm animate-fountain-flow"
+                                                            style={{
+                                                                backgroundColor: ['#ef4444', '#3b82f6', '#eab308', '#a855f7', '#ec4899'][i % 5],
+                                                                left: 0, top: 0,
+                                                                '--tx': `${100 + Math.random() * 400}px`,
+                                                                '--ty': `${-200 - Math.random() * 400}px`,
+                                                                '--r': `${Math.random() * 720}deg`,
+                                                                animationDuration: `${1 + Math.random() * 1.5}s`,
+                                                                animationDelay: `${Math.random() * 0.5}s`
+                                                            } as React.CSSProperties}
+                                                        ></div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </main >
+
+                {/* Footer - Hide in Voting */}
+                {
+                    step !== 'voting' && (
+                        <footer className="text-center text-purple-500/60 text-xs py-8 flex flex-col items-center gap-2 mt-auto">
+                            <div className="flex items-center gap-2 bg-purple-950/30 px-4 py-2 rounded-full border border-purple-900/50">
+                                <Info size={12} />
+                                <p>Potenciado por Google Gemini 2.5 Flash & Flash Image</p>
+                            </div>
+                            <p>© 2024 La Corte del Rey. Diseñado para improvisadores.</p>
+                        </footer>
+                    )
+                }
+            </div >
+
+
+
+
+            <style>{`
+        /* ANIMATED SHINE TEXT - BLUE TO RED with MOVING WHITE SHINE */
+        .animate-shine-text {
+            background: linear-gradient(
+                110deg,
+                #2563eb 0%,   /* Blue */
+                #2563eb 40%,  /* Blue */
+                #ffffff 50%,  /* Shine */
+                #dc2626 60%,  /* Red */
+                #dc2626 100%  /* Red */
+            );
+            background-size: 200% auto;
+            color: transparent;
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shine 4s linear infinite;
+        }
+
+        @keyframes shine {
+            to {
+                background-position: 200% center;
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeIn {
+            animation: fadeIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+        @keyframes fadeInFast {
+            animation: fadeIn 0.2s ease-out forwards;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes scale-up {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-scale-up {
+            animation: scale-up 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes flash-storm {
+            0% { opacity: 0; }
+            20% { opacity: 1; } /* SOLID OPACITY AT PEAK */
+            40% { opacity: 1; } /* HOLD OPACITY */
+            100% { opacity: 0; }
+        }
+        .animate-flash-storm {
+            animation: flash-storm 0.8s ease-out forwards;
+        }
+        @keyframes strike {
+            0% { transform: scale(0.5) rotate(-10deg); opacity: 0; }
+            20% { opacity: 1; transform: scale(1.2) rotate(5deg); }
+            40% { transform: scale(1) rotate(0deg); }
+            100% { transform: scale(1.5) rotate(10deg); opacity: 0; }
+        }
+        .animate-strike {
+            animation: strike 0.6s ease-out forwards;
+        }
+        @keyframes execution {
+            0% { transform: translateY(0); opacity: 1; filter: grayscale(100%); }
+            15% { transform: translate(5px, 0) rotate(1deg); filter: grayscale(100%) brightness(1.5); } /* Flash shock */
+            30% { transform: translate(-5px, 0) rotate(-1deg); filter: grayscale(100%) brightness(0.8) sepia(1) hue-rotate(-50deg) saturate(3); } /* Turn Red/Bleed */
+            40% { transform: translateY(10px) scale(0.98); } /* Anticipate drop */
+            100% { transform: translateY(200%) rotate(5deg); opacity: 0; filter: grayscale(100%) brightness(0); } /* Drop to abyss */
+        }
+        .animate-execution {
+            animation: execution 2.5s cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards;
+        }
+        .bg-noise {
+            background-image: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 1px,
+                #fff 1px,
+                #fff 2px
+            );
+            background-size: 100% 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.3);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #a855f7;
+            border-radius: 4px;
+        }
+      `}</style>
+        </div >
+    );
+};
+
+export default App;
