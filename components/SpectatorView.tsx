@@ -3,7 +3,7 @@ import { TrainingFormat, BeatGenre, SpectatorState, AppStep } from '../types';
 import { TopicGenerator } from './TopicGenerator';
 import { SlotMachine } from './SlotMachine';
 import { TournamentBracket } from './TournamentBracket'; // In case we want to show it? Maybe later.
-import { Crown, User, Swords, Play, Trophy, Timer, Zap, Skull, Award, List } from 'lucide-react';
+import { Crown, User, Swords, Play, Trophy, Timer, Zap, Skull, Award, List, MessageCircle } from 'lucide-react';
 import { useFirebaseSync } from '../hooks/useFirebaseSync';
 
 const MODE_TRANSLATIONS: Record<string, string> = {
@@ -567,18 +567,30 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
     animation: bounce-slow 3s infinite ease-in-out;
 }
 `}</style>
-            {/* FLOAT BUTTON FOR LEAGUE TABLE (SPECTATOR) */}
-            {league?.isLeagueMode && !showLeagueTable && !localShowTable && (
-                <div className="fixed bottom-4 right-4 z-[90]">
+            {/* FLOATING BUTTONS (SPECTATOR) */}
+            <div className="fixed bottom-4 right-4 z-[90] flex flex-col gap-3">
+                {/* WHATSAPP BUTTON */}
+                <a
+                    href="https://chat.whatsapp.com/IHGEd8MfriO2O52UFAHRUk"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-green-600/80 border border-green-400/50 hover:bg-green-500 rounded-full p-4 text-white shadow-[0_0_20px_rgba(34,197,94,0.4)] transition-all hover:scale-110 flex items-center justify-center animate-bounce-slow"
+                    title="Unirse al Grupo de WhatsApp"
+                >
+                    <MessageCircle size={24} fill="currentColor" />
+                </a>
+
+                {/* LEAGUE TABLE BUTTON */}
+                {league?.isLeagueMode && !showLeagueTable && !localShowTable && (
                     <button
                         onClick={() => setLocalShowTable(true)}
-                        className="bg-black/60 border border-yellow-500/50 hover:bg-yellow-900/30 rounded-full p-4 text-yellow-500 shadow-[0_0_20px_rgba(234,179,8,0.2)]"
+                        className="bg-black/60 border border-yellow-500/50 hover:bg-yellow-900/30 rounded-full p-4 text-yellow-500 shadow-[0_0_20px_rgba(234,179,8,0.2)] transition-all hover:scale-110"
                         title="Ver Tabla de Liga"
                     >
                         <List size={24} />
                     </button>
-                </div>
-            )}
+                )}
+            </div>
 
             {/* LEAGUE TABLE OVERLAY (SPECTATOR) */}
             {(showLeagueTable || localShowTable) && league && (
