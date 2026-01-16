@@ -321,30 +321,43 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
                         {/* INTERACTIVE VOTING ZONES (Spectator) */}
                         {!winner && !hasVoted && (
                             <>
-                                {/* ZONE A: Click to Vote A */}
+                                {/* ZONE A: Click to Vote A (Left Half) */}
                                 <div
                                     onClick={() => {
                                         if (hasVoted) return;
                                         setHasVoted(true);
                                         castVote('A', rivalA || 'MC AZUL', rivalB || 'MC ROJO');
                                     }}
-                                    className="absolute top-0 left-0 w-full h-full z-50 cursor-pointer group hover:bg-white/5 transition-all duration-300"
-                                    style={{ clipPath: 'polygon(0 0, 95% 0, 5% 100%, 0% 100%)' }}
+                                    className="absolute top-0 left-0 w-1/2 h-full z-40 cursor-pointer group hover:bg-white/5 transition-all duration-300"
                                 >
                                     <div className="absolute inset-0 opacity-0 group-hover:opacity-30 bg-purple-600 blur-3xl transition-opacity duration-300"></div>
                                 </div>
 
-                                {/* ZONE B: Click to Vote B */}
+                                {/* ZONE B: Click to Vote B (Right Half) */}
                                 <div
                                     onClick={() => {
                                         if (hasVoted) return;
                                         setHasVoted(true);
                                         castVote('B', rivalA || 'MC AZUL', rivalB || 'MC ROJO');
                                     }}
-                                    className="absolute top-0 left-0 w-full h-full z-50 cursor-pointer group hover:bg-white/5 transition-all duration-300"
-                                    style={{ clipPath: 'polygon(95% 0, 100% 0, 100% 100%, 5% 100%)' }}
+                                    className="absolute top-0 right-0 w-1/2 h-full z-40 cursor-pointer group hover:bg-white/5 transition-all duration-300"
                                 >
                                     <div className="absolute inset-0 opacity-0 group-hover:opacity-30 bg-cyan-600 blur-3xl transition-opacity duration-300"></div>
+                                </div>
+
+                                {/* ZONE REPLICA: Central Bottom Button */}
+                                <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2 z-50 w-full flex justify-center pointer-events-none">
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation(); // Prevent clicking zones below
+                                            if (hasVoted) return;
+                                            setHasVoted(true);
+                                            castVote('Replica', rivalA || 'MC AZUL', rivalB || 'MC ROJO');
+                                        }}
+                                        className="pointer-events-auto bg-gray-800/80 border-2 border-white/30 hover:bg-gray-700 text-white font-black uppercase tracking-widest px-8 py-4 rounded-xl shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:scale-105 transition-all animate-pulse"
+                                    >
+                                        VOTAR RÉPLICA
+                                    </button>
                                 </div>
                             </>
                         )}

@@ -85,6 +85,7 @@ const App: React.FC = () => {
     // Voting Counts
     const [votesA, setVotesA] = useState(0);
     const [votesB, setVotesB] = useState(0);
+    const [votesReplica, setVotesReplica] = useState(0);
 
     // Voted Users Set for UI
     const [votedUsers, setVotedUsers] = useState<Set<string>>(new Set());
@@ -224,6 +225,7 @@ const App: React.FC = () => {
         if (isSpectator) return;
         setVotesA(voteData.votesA);
         setVotesB(voteData.votesB);
+        setVotesReplica(voteData.votesReplica);
         setVoteHistory(voteData.history);
         setVotedUsers(new Set(voteData.votedUsers));
     }, [voteData, isSpectator]);
@@ -288,6 +290,7 @@ const App: React.FC = () => {
         resetVotes();
         setVotesA(0);
         setVotesB(0);
+        setVotesReplica(0);
         setVotedUsers(new Set());
         votedUsersRef.current = new Set();
         setVoteHistory([]);
@@ -366,6 +369,7 @@ const App: React.FC = () => {
         // Reset votes
         setVotesA(0);
         setVotesB(0);
+        setVotesReplica(0);
         setVotedUsers(new Set()); // Reset unique voters
         votedUsersRef.current = new Set(); // Reset Ref also
         setVoteHistory([]); // Clear visual history
@@ -1265,6 +1269,10 @@ const App: React.FC = () => {
                                                 <span className="text-xs text-cyan-400 font-bold tracking-widest">VOTOS</span>
                                             </div>
                                         </div>
+                                        <div className="flex flex-col items-center justify-center -mt-4 mb-4">
+                                            <div className="text-4xl font-black font-urban text-white text-shadow-sm">{votesReplica}</div>
+                                            <span className="text-[10px] text-gray-300 font-bold tracking-widest uppercase">RÉPLICA</span>
+                                        </div>
                                         <div className="flex gap-4 w-full">
                                             <button
                                                 onClick={() => {
@@ -1279,19 +1287,30 @@ const App: React.FC = () => {
                                         </div>
                                         <div className="flex flex-col gap-1 w-full max-h-[60px] overflow-y-auto items-center">
                                             {voteHistory.length > 0 ? (
-                                                voteHistory.map((v, i) => (
-                                                    <span key={i} className={`text-[10px] uppercase font-bold tracking-widest ${i === 0 ? 'text-cyan-400 animate-pulse' : 'text-gray-500'}`}>
-                                                        {typeof v === 'string'
-                                                            ? v
-                                                            : `${v.user} votó por ${v.vote === 'A' ? (v.rivalA || rivalA || 'MC AZUL') : (v.rivalB || rivalB || 'MC ROJO')}`
-                                                        }
-                                                    </span>
-                                                ))
+                                                voteHistory.map((v, i) => {
+                                                    let text = '';
+                                                    if (typeof v === 'string') {
+                                                        text = v;
+                                                    } else {
+                                                        const voteTarget = v.vote === 'A'
+                                                            ? (v.rivalA || rivalA || 'MC AZUL')
+                                                            : v.vote === 'B'
+                                                                ? (v.rivalB || rivalB || 'MC ROJO')
+                                                                : 'RÉPLICA';
+                                                        text = `${v.user} votó por ${voteTarget}`;
+                                                    }
+                                                    return (
+                                                        <span key={i} className={`text-[10px] uppercase font-bold tracking-widest ${i === 0 ? 'text-cyan-400 animate-pulse' : 'text-gray-500'}`}>
+                                                            {text}
+                                                        </span>
+                                                    );
+                                                })
                                             ) : (
                                                 <span className="text-[10px] text-gray-400 uppercase tracking-widest opacity-60">
                                                     Esperando votos de la audiencia...
                                                 </span>
                                             )}
+
                                         </div>
                                     </div>
                                 </div>

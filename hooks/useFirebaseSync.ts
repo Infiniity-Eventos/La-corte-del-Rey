@@ -8,6 +8,7 @@ interface InternalState {
     voteData: {
         votesA: number;
         votesB: number;
+        votesReplica: number;
         history: any[];
         votedUsers: string[]; // List of user IDs who voted
     };
@@ -17,7 +18,7 @@ interface InternalState {
 export const useFirebaseSync = (isSpectator: boolean, viewerName: string = 'Anonymous') => {
     // Local State replicate from Firebase
     const [gameState, setGameState] = useState<SpectatorState | null>(null);
-    const [voteData, setVoteData] = useState({ votesA: 0, votesB: 0, history: [] as any[], votedUsers: [] as string[] });
+    const [voteData, setVoteData] = useState({ votesA: 0, votesB: 0, votesReplica: 0, history: [] as any[], votedUsers: [] as string[] });
     const [animationTrigger, setAnimationTrigger] = useState<{ type: string, payload: any } | null>(null);
 
     // Refs to avoid loops
@@ -46,6 +47,7 @@ export const useFirebaseSync = (isSpectator: boolean, viewerName: string = 'Anon
         set(ref(database, 'votes'), {
             A: 0,
             B: 0,
+            Replica: 0,
             history: {},
             voters: {}
         });
@@ -53,7 +55,7 @@ export const useFirebaseSync = (isSpectator: boolean, viewerName: string = 'Anon
 
     // --- SPECTATOR FUNCTIONS (Write Votes) ---
 
-    const castVote = async (vote: 'A' | 'B', rivalA: string, rivalB: string) => {
+    const castVote = async (vote: 'A' | 'B' | 'Replica', rivalA: string, rivalB: string) => {
         if (!isSpectator) return;
 
         // Transaction to ensure atomic increments and prevent double voting (though UI prevents it too)
@@ -82,6 +84,7 @@ export const useFirebaseSync = (isSpectator: boolean, viewerName: string = 'Anon
 
                 if (vote === 'A') currentData.A = (currentData.A || 0) + 1;
                 if (vote === 'B') currentData.B = (currentData.B || 0) + 1;
+                if (vote === 'Replica') currentData.Replica = (currentData.Replica || 0) + 1;
 
                 // Add History
                 const newHistoryItem = {
@@ -128,12 +131,13 @@ export const useFirebaseSync = (isSpectator: boolean, viewerName: string = 'Anon
                 setVoteData({
                     votesA: data.A || 0,
                     votesB: data.B || 0,
+                    votesReplica: data.Replica || 0,
                     // Return raw history objects (user, vote, timestamp) sorted by timestamp desc
                     history: listHistory.sort((a: any, b: any) => b.timestamp - a.timestamp).slice(0, 5),
                     votedUsers: data.voters ? Object.keys(data.voters) : []
                 });
             } else {
-                setVoteData({ votesA: 0, votesB: 0, history: [], votedUsers: [] });
+                setVoteData({ votesA: 0, votesB: 0, votesReplica: 0, history: [], votedUsers: [] });
             }
         });
 
