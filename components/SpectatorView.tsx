@@ -45,6 +45,25 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
     // Local League Table State
     const [localShowTable, setLocalShowTable] = useState(false);
 
+    // WhatsApp Tooltip State
+    const [showWhatsappTooltip, setShowWhatsappTooltip] = useState(false);
+
+    useEffect(() => {
+        // Show tooltip every 20 seconds for 6 seconds
+        const interval = setInterval(() => {
+            setShowWhatsappTooltip(true);
+            setTimeout(() => setShowWhatsappTooltip(false), 6000);
+        }, 20000);
+
+        // Initial show after 3 seconds
+        setTimeout(() => {
+            setShowWhatsappTooltip(true);
+            setTimeout(() => setShowWhatsappTooltip(false), 6000);
+        }, 3000);
+
+        return () => clearInterval(interval);
+    }, []);
+
     // Audio Refs
     const laughAudioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -582,16 +601,24 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
 `}</style>
             {/* FLOATING BUTTONS (SPECTATOR) */}
             <div className="fixed bottom-4 right-4 z-[90] flex flex-col gap-3">
-                {/* WHATSAPP BUTTON */}
-                <a
-                    href="https://chat.whatsapp.com/IHGEd8MfriO2O52UFAHRUk"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="bg-green-600/80 border border-green-400/50 hover:bg-green-500 rounded-full p-4 text-white shadow-[0_0_20px_rgba(34,197,94,0.4)] transition-all hover:scale-110 flex items-center justify-center animate-bounce-slow"
-                    title="Unirse al Grupo de WhatsApp"
-                >
-                    <MessageCircle size={24} fill="currentColor" />
-                </a>
+                {/* WHATSAPP BUTTON WITH TOOLTIP */}
+                <div className="relative group">
+                    {(showWhatsappTooltip) && (
+                        <div className="absolute right-full mr-4 top-1/2 -translate-y-1/2 bg-white text-black px-4 py-2 rounded-xl shadow-[0_0_15px_rgba(255,255,255,0.5)] whitespace-nowrap font-black uppercase text-xs tracking-wider animate-bounce-horizontal flex items-center z-50">
+                            ¡ÚNETE AL GRUPO!
+                            <div className="absolute top-1/2 -right-2 -translate-y-1/2 border-8 border-transparent border-l-white"></div>
+                        </div>
+                    )}
+                    <a
+                        href="https://chat.whatsapp.com/IHGEd8MfriO2O52UFAHRUk"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-green-600/80 border border-green-400/50 hover:bg-green-500 rounded-full p-4 text-white shadow-[0_0_20px_rgba(34,197,94,0.4)] transition-all hover:scale-110 flex items-center justify-center animate-bounce-slow relative z-40"
+                        title="Unirse al Grupo de WhatsApp"
+                    >
+                        <MessageCircle size={24} fill="currentColor" />
+                    </a>
+                </div>
 
                 {/* LEAGUE TABLE BUTTON */}
                 {league?.isLeagueMode && !showLeagueTable && !localShowTable && (
