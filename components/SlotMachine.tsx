@@ -163,9 +163,10 @@ export const SlotMachine: React.FC<SlotMachineProps> = ({
       if (intervals.current[1]) clearInterval(intervals.current[1]!);
 
       // If Replica, FORCE SANGRE (free).
+      // If Format is KICK_BACK, also FORCE SANGRE (free).
       setValues(prev => ({
         ...prev,
-        mode: isReplica ? 'free' : prev.mode
+        mode: (isReplica || prev.format === TrainingFormat.KICK_BACK) ? 'free' : prev.mode
       }));
 
       setSpinning(prev => [false, false, prev[2]]);
