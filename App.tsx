@@ -632,7 +632,7 @@ const App: React.FC = () => {
             </div>
 
             {/* --- TOP RIGHT BUTTONS --- */}
-            <div className="fixed top-4 right-4 z-[90] flex items-center gap-2">
+            <div className={`fixed top-4 right-4 z-[90] flex items-center gap-2 transition-all duration-300 ${isBeatPlayerOpen ? 'translate-x-[-340px] md:translate-x-[-460px]' : ''}`}>
                 {/* TOURNAMENT BUTTON */}
                 <button
                     onClick={() => setShowTournamentModal(true)}
@@ -868,7 +868,7 @@ const App: React.FC = () => {
 
                 {/* Header - Hide during voting AND Arena to clean up UI */}
                 {step !== 'voting' && step !== 'arena' && (
-                    <header className="text-center py-4 relative mb-4 flex flex-col items-center">
+                    <header className="text-center py-2 relative mb-0 flex flex-col items-center">
                         <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[150%] blur-[100px] -z-10 rounded-full pointer-events-none ${isReplica ? 'bg-red-600/20' : 'bg-purple-600/10'}`}></div>
 
                         {/* Crown Logo */}
@@ -876,7 +876,7 @@ const App: React.FC = () => {
                             <Crown size={48} className={`${isReplica ? 'text-red-500' : 'text-yellow-400'} drop-shadow-[0_0_15px_rgba(250,204,21,0.6)]`} fill={isReplica ? "rgba(220,38,38,0.2)" : "rgba(250,204,21,0.2)"} />
                         </div>
 
-                        <h1 className="text-3xl md:text-5xl font-urban font-black tracking-tighter transform -rotate-2 relative z-10 animate-shine-text drop-shadow-xl text-transparent bg-clip-text bg-gradient-to-r from-purple-500 via-indigo-400 to-blue-500">
+                        <h1 className="text-4xl md:text-6xl font-urban font-black tracking-widest relative z-10 drop-shadow-[0_0_25px_rgba(168,85,247,0.5)] text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-300 to-purple-400 animate-pulse">
                             LA CORTE DEL REY
                         </h1>
 
@@ -1091,7 +1091,7 @@ const App: React.FC = () => {
 
                     {/* STEP 1 (NEW): ROULETTE / SLOTS */}
                     {step === 'slots' && (
-                        <div className="w-full flex flex-col justify-center min-h-[60vh]">
+                        <div className="w-full flex flex-col justify-around flex-1 min-h-[70vh] py-4 gap-4">
                             {!isReplica && (
                                 <button onClick={() => changeStepWithTransition('names')} className="mb-8 text-xs text-white/50 hover:text-white uppercase font-bold tracking-[0.2em] flex items-center justify-center gap-2 mx-auto bg-purple-900/30 hover:bg-purple-800/50 px-6 py-2 rounded-full transition-all border border-purple-500/20 hover:border-purple-400/50">
                                     <span>⬅️</span> VOLVER
@@ -1194,7 +1194,7 @@ const App: React.FC = () => {
                             <div className="w-full md:w-1/4 flex md:flex-col justify-between md:justify-center items-center order-2 md:order-1 gap-2 bg-purple-900/10 border border-purple-500/20 rounded-xl p-2 md:p-4">
                                 <div className="flex flex-col items-center">
                                     <User size={32} className="text-purple-500 mb-1" />
-                                    <h2 className="text-2xl md:text-4xl font-black font-urban text-purple-400 text-center uppercase leading-none break-words">
+                                    <h2 className="text-xl md:text-3xl font-black font-urban text-purple-400 text-center uppercase leading-tight break-words max-w-[150px] md:max-w-xs">
                                         {rivalA || "BUFÓN MORADO"}
                                     </h2>
                                 </div>
@@ -1255,7 +1255,7 @@ const App: React.FC = () => {
                             <div className="w-full md:w-1/4 flex md:flex-col justify-between md:justify-center items-center order-3 md:order-3 gap-2 bg-blue-900/10 border border-blue-500/20 rounded-xl p-2 md:p-4">
                                 <div className="flex flex-col items-center">
                                     <User size={32} className="text-blue-500 mb-1" />
-                                    <h2 className="text-2xl md:text-4xl font-black font-urban text-blue-400 text-center uppercase leading-none break-words">
+                                    <h2 className="text-xl md:text-3xl font-black font-urban text-blue-400 text-center uppercase leading-tight break-words max-w-[150px] md:max-w-xs">
                                         {rivalB || "BUFÓN AZUL"}
                                     </h2>
                                 </div>
@@ -1508,7 +1508,7 @@ const App: React.FC = () => {
                                 <Info size={12} />
                                 <p>Potenciado por Google Gemini 2.5 Flash & Flash Image</p>
                             </div>
-                            <p>© 2024 La Corte del Rey. Diseñado para improvisadores.</p>
+                            <p>© 2026 La Corte del Rey. Diseñado para improvisadores.</p>
                         </footer>
                     )
                 }
