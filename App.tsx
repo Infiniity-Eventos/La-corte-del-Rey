@@ -633,6 +633,16 @@ const App: React.FC = () => {
 
             {/* --- TOP RIGHT BUTTONS --- */}
             <div className={`fixed top-4 right-4 z-[90] flex items-center gap-2 transition-all duration-300 ${isBeatPlayerOpen ? 'translate-x-[-340px] md:translate-x-[-460px]' : ''}`}>
+                {/* VOLVER BUTTON - Only show in Slots */}
+                {step === 'slots' && !isReplica && (
+                    <button
+                        onClick={() => changeStepWithTransition('names')}
+                        className="bg-black/40 backdrop-blur-md border border-purple-500/50 hover:bg-purple-900/50 hover:border-purple-400 text-white p-3 rounded-full shadow-[0_0_15px_rgba(168,85,247,0.3)] transition-all transform hover:scale-105"
+                        title="Volver"
+                    >
+                        <RotateCcw size={24} className="-rotate-90" />
+                    </button>
+                )}
                 {/* TOURNAMENT BUTTON */}
                 <button
                     onClick={() => setShowTournamentModal(true)}
@@ -1092,15 +1102,8 @@ const App: React.FC = () => {
                     {/* STEP 1 (NEW): ROULETTE / SLOTS */}
                     {step === 'slots' && (
                         <div className="w-full flex flex-col justify-center items-center flex-1 min-h-[60vh] py-0 gap-8 relative">
-                            {!isReplica && (
-                                <button
-                                    onClick={() => changeStepWithTransition('names')}
-                                    className={`fixed top-4 right-[120px] z-[90] bg-black/40 backdrop-blur-md border border-purple-500/50 hover:bg-purple-900/50 hover:border-purple-400 text-white p-3 rounded-full shadow-[0_0_15px_rgba(168,85,247,0.3)] transition-all transform hover:scale-105 duration-300 ${isBeatPlayerOpen ? 'translate-x-[-340px] md:translate-x-[-460px]' : ''}`}
-                                    title="Volver"
-                                >
-                                    <RotateCcw size={24} className="-rotate-90" />
-                                </button>
-                            )}
+
+
                             <SlotMachine
                                 onComplete={handleRouletteComplete}
                                 onSpinFinish={setTempSlotValues}
