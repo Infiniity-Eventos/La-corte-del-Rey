@@ -125,6 +125,7 @@ const App: React.FC = () => {
     const [showWildcard, setShowWildcard] = useState(false);
     const [wildcardPool, setWildcardPool] = useState<LeagueParticipant[]>([]);
     const [wildcardPending, setWildcardPending] = useState<LeagueParticipant | null>(null);
+    const [currentWildcardOpponent, setCurrentWildcardOpponent] = useState<string | null>(null); // Track who is the wildcard
 
     // Persist League Data
     useEffect(() => {
@@ -160,8 +161,15 @@ const App: React.FC = () => {
     // LEAGUE LOGIC: Update Points & Battles
     const updateLeagueStats = (winnerName: string, loserName: string, isTieBreaker: boolean) => {
         setLeagueParticipants(prev => prev.map(p => {
+            // CHECK IF THIS PLAYER IS THE WILDCARD OPPONENT
+            const isWildcard = (p.name === currentWildcardOpponent);
+
             if (p.name === winnerName) {
                 const pointsToAdd = isTieBreaker ? 2 : 3;
+                // If Wildcard: DO NOT increment battles. DO NOT add points (Ghost battle for them).
+                // User said "no cuenta para el que ya batallo", implies no stats change effectively.
+                if (isWildcard) return p;
+
                 const newBattles = p.battles + 1;
                 return {
                     ...p,
@@ -172,6 +180,9 @@ const App: React.FC = () => {
             }
             if (p.name === loserName) {
                 const pointsToAdd = isTieBreaker ? 1 : 0;
+                // If Wildcard: DO NOT increment battles.
+                if (isWildcard) return p;
+
                 const newBattles = p.battles + 1;
                 return {
                     ...p,
@@ -271,6 +282,7 @@ const App: React.FC = () => {
 
         setRivalA(wildcardPending.name);
         setRivalB(opponent.name);
+        setCurrentWildcardOpponent(opponent.name); // MARK AS WILDCARD
         handleNamesSubmit(wildcardPending.name, opponent.name);
 
         // Reset
@@ -462,6 +474,7 @@ const App: React.FC = () => {
         setShowWinnerScreen(false);
         setRivalA('');
         setRivalB('');
+        setCurrentWildcardOpponent(null); // Reset flag
 
         if (laughAudioRef.current) {
             laughAudioRef.current.pause();
