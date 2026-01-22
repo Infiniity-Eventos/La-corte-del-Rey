@@ -212,12 +212,19 @@ const App: React.FC = () => {
     const handleStartLeagueBattle = () => {
         const active = leagueParticipants.filter(p => p.active);
 
+        // Allow if at least 2 active OR 1 active (who needs a wildcard from inactives)
+        // If only 1 active, we check if there are ANY other participants (even inactive) to serve as wildcard.
         if (active.length < 2) {
-            alert("Necesitas al menos 2 participantes activos para iniciar una liga.");
-            return;
+            const canTriggerWildcard = active.length === 1 && leagueParticipants.length > 1;
+
+            if (!canTriggerWildcard) {
+                alert("Necesitas al menos 2 participantes para iniciar, o 1 activo y otros disponibles para comodín.");
+                return;
+            }
         }
 
-        // 1. FAIRNESS LOGIC: Filter by Minimum Battles Played (Round Robinish)
+        // 1. FAIRNESS LOGIC: Filter by Minimum Battles Played
+        // If we are here with only 1 active, minBattles will be theirs.
         const minBattles = Math.min(...active.map(p => p.battles));
         const candidates = active.filter(p => p.battles === minBattles);
 
@@ -236,10 +243,11 @@ const App: React.FC = () => {
             const pending = candidates[0];
 
             // Pool: Everyone else who has played more (active players excluding pending)
-            const opponentsPool = active.filter(p => p.id !== pending.id);
+            // Basically anyone who is NOT the pending player is a valid wildcard candidate (including inactive players who finished)
+            const opponentsPool = leagueParticipants.filter(p => p.id !== pending.id);
 
             if (opponentsPool.length === 0) {
-                alert("Error: Estado de liga inválido.");
+                alert("Error: No hay nadie disponible para ser comodín.");
                 return;
             }
 
@@ -1154,8 +1162,8 @@ const App: React.FC = () => {
 
                                                 <button
                                                     onClick={handleStartLeagueBattle}
-                                                    disabled={leagueParticipants.filter(p => p.active).length < 2}
-                                                    className={`w-full py-6 mt-4 rounded-xl font-black text-2xl uppercase tracking-widest transition-all shadow-[0_0_30px_rgba(234,179,8,0.3)] disabled:opacity-50 disabled:cursor-not-allowed flex flex-col items-center justify-center gap-2 group relative overflow-hidden ${leagueParticipants.filter(p => p.active).length < 2 ? 'bg-gray-800' : 'bg-[#eab308] hover:scale-[1.02] active:scale-[0.98]'}`}
+                                                    disabled={leagueParticipants.filter(p => p.active).length === 0 || (leagueParticipants.filter(p => p.active).length === 1 && leagueParticipants.length === 1)}
+                                                    className={`w-full py-6 mt-4 rounded-xl font-black text-2xl uppercase tracking-widest transition-all shadow-[0_0_30px_rgba(234,179,8,0.3)] disabled:opacity-50 disabled:cursor-not-allowed flex flex-col items-center justify-center gap-2 group relative overflow-hidden ${(leagueParticipants.filter(p => p.active).length === 0 || (leagueParticipants.filter(p => p.active).length === 1 && leagueParticipants.length === 1)) ? 'bg-gray-800' : 'bg-[#eab308] hover:scale-[1.02] active:scale-[0.98]'}`}
                                                 >
 
                                                     <div className="absolute inset-0 bg-gradient-to-r from-yellow-600 via-yellow-500 to-yellow-600 animate-shine opacity-90 group-hover:opacity-100"></div>
