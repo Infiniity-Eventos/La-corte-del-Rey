@@ -1091,9 +1091,12 @@ const App: React.FC = () => {
 
                     {/* STEP 1 (NEW): ROULETTE / SLOTS */}
                     {step === 'slots' && (
-                        <div className="w-full flex flex-col justify-around flex-1 min-h-[70vh] py-4 gap-4">
+                        <div className="w-full flex flex-col justify-center items-center flex-1 min-h-[60vh] py-0 gap-8 relative">
                             {!isReplica && (
-                                <button onClick={() => changeStepWithTransition('names')} className="mb-8 text-xs text-white/50 hover:text-white uppercase font-bold tracking-[0.2em] flex items-center justify-center gap-2 mx-auto bg-purple-900/30 hover:bg-purple-800/50 px-6 py-2 rounded-full transition-all border border-purple-500/20 hover:border-purple-400/50">
+                                <button
+                                    onClick={() => changeStepWithTransition('names')}
+                                    className="absolute top-0 left-0 md:left-4 z-50 text-xs text-white/50 hover:text-white uppercase font-bold tracking-[0.2em] flex items-center gap-2 bg-purple-900/30 hover:bg-purple-800/50 px-4 py-2 rounded-full transition-all border border-purple-500/20 hover:border-purple-400/50"
+                                >
                                     <span>⬅️</span> VOLVER
                                 </button>
                             )}
@@ -1518,7 +1521,7 @@ const App: React.FC = () => {
             <BeatPlayer
                 isOpen={isBeatPlayerOpen}
                 onClose={() => setIsBeatPlayerOpen(false)}
-                initialQuery={selectedGenre ? `${selectedGenre} instrumental freestyle` : ''}
+                initialQuery={selectedGenre === BeatGenre.ELECTRO ? 'Electrobeat instrumental' : selectedGenre ? `${selectedGenre} instrumental freestyle` : ''}
                 onVideoSelect={() => setIsBeatSelected(true)}
             />
 
