@@ -211,8 +211,8 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
 
                 {/* STEP 1: SLOTS (Shared Visuals) */}
                 {step === 'slots' && (
-                    <div className="w-full h-screen flex flex-col justify-center items-center p-0 md:p-4 overflow-hidden animate-fadeIn">
-                        <div className="scale-[0.6] md:scale-90 transform-origin-center">
+                    <div className="w-full h-full flex flex-col justify-start items-center p-0 md:p-4 overflow-hidden animate-fadeIn mt-4 md:mt-0">
+                        <div className="scale-[0.6] md:scale-90 origin-top">
                             <SlotMachine
                                 onComplete={() => { }} // No handling needed in spectator
                                 isReplica={isReplica}
