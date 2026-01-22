@@ -7,6 +7,7 @@ import { SpectatorView } from './components/SpectatorView';
 import { TournamentBracket } from './components/TournamentBracket';
 import { AccessScreen } from './components/AccessScreen'; // New Import
 import { BeatPlayer } from './components/BeatPlayer';
+import { ComodinSelector } from './components/ComodinSelector'; // New Import
 import { Info, Image as ImageIcon, RotateCcw, Youtube, Play, ExternalLink, User, Crown, Trophy, Zap, Swords, BookOpen, X, List, Scale, Timer, Star, Award } from 'lucide-react';
 import { TrainingFormat, TrainingMode, BeatGenre, ALL_TRAINING_MODES, AppStep, LeagueParticipant } from './types';
 import { generateTopics, generateTerminations, generateCharacterBattles, generateQuestions } from './services/geminiService';
@@ -120,6 +121,11 @@ const App: React.FC = () => {
     const [isBeatPlayerOpen, setIsBeatPlayerOpen] = useState(false);
     const [isBeatSelected, setIsBeatSelected] = useState(false);
 
+    // --- LEAGUE WILDCARD STATE ---
+    const [showWildcard, setShowWildcard] = useState(false);
+    const [wildcardPool, setWildcardPool] = useState<LeagueParticipant[]>([]);
+    const [wildcardPending, setWildcardPending] = useState<LeagueParticipant | null>(null);
+
     // Persist League Data
     useEffect(() => {
         localStorage.setItem('league_participants', JSON.stringify(leagueParticipants));
@@ -178,25 +184,53 @@ const App: React.FC = () => {
         }));
     };
 
-    // LEAGUE LOGIC: Start Random Battle with Roulette
+    // LEAGUE LOGIC: Start Battle (Standard or Wildcard)
     const handleStartLeagueBattle = () => {
-        const eligible = leagueParticipants.filter(p => p.battles < maxBattlesPerPerson);
+        const active = leagueParticipants.filter(p => p.active);
 
-        if (eligible.length < 2) {
-            alert("¡No hay suficientes participantes disponibles para una batalla! (Todos cumplieron sus batallas o no hay inscritos)");
+        if (active.length < 2) {
+            alert("Necesitas al menos 2 participantes activos para iniciar una liga.");
             return;
         }
 
-        // Random Selection Logic (Fisher-Yates Shuffle for true randomness)
-        const shuffled = [...eligible];
-        for (let i = shuffled.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        // 1. FAIRNESS LOGIC: Filter by Minimum Battles Played (Round Robinish)
+        const minBattles = Math.min(...active.map(p => p.battles));
+        const candidates = active.filter(p => p.battles === minBattles);
+
+        // SCENARIO A: Standard Pair available in current round
+        if (candidates.length >= 2) {
+            // Random Pair from Candidates
+            const shuffled = [...candidates];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            startRouletteSequence(shuffled[0].name, shuffled[1].name, candidates);
         }
+        // SCENARIO B: Odd one out (Needs Comodín from upper rounds)
+        else if (candidates.length === 1) {
+            const pending = candidates[0];
 
-        const resultA = shuffled[0].name;
-        const resultB = shuffled[1].name;
+            // Pool: Everyone else who has played more (active players excluding pending)
+            const opponentsPool = active.filter(p => p.id !== pending.id);
 
+            if (opponentsPool.length === 0) {
+                alert("Error: Estado de liga inválido.");
+                return;
+            }
+
+            // Logic: Prioritize those with Lowest Points
+            const minPoints = Math.min(...opponentsPool.map(p => p.points));
+            const bestOpponents = opponentsPool.filter(p => p.points === minPoints);
+
+            // Trigger Visual Sorteo
+            setWildcardPending(pending);
+            setWildcardPool(bestOpponents);
+            setShowWildcard(true);
+        }
+    };
+
+    const startRouletteSequence = (nameA: string, nameB: string, animationPool: LeagueParticipant[]) => {
         setIsRouletteSpinning(true);
         setRouletteWinner(null);
 
@@ -204,26 +238,46 @@ const App: React.FC = () => {
         let spins = 0;
         const maxSpins = 20;
         const interval = setInterval(() => {
-            const randomA = eligible[Math.floor(Math.random() * eligible.length)].name;
-            const randomB = eligible[Math.floor(Math.random() * eligible.length)].name;
+            // Visual noise: pick random names from the pool for effect
+            const randomA = animationPool[Math.floor(Math.random() * animationPool.length)].name;
+            const randomB = animationPool[Math.floor(Math.random() * animationPool.length)].name;
             setRouletteNames({ A: randomA, B: randomB });
             spins++;
 
             if (spins >= maxSpins) {
                 clearInterval(interval);
-                setRouletteNames({ A: resultA, B: resultB });
-                setRouletteWinner({ A: resultA, B: resultB });
+                setRouletteNames({ A: nameA, B: nameB }); // Land on result
+                setRouletteWinner({ A: nameA, B: nameB });
 
-                // Auto-advance after a brief pause to read the result
+                // Auto-advance
                 setTimeout(() => {
-                    setRivalA(resultA);
-                    setRivalB(resultB);
+                    setRivalA(nameA);
+                    setRivalB(nameB);
                     setIsRouletteSpinning(false);
                     setRouletteWinner(null);
-                    handleNamesSubmit(resultA, resultB); // Go to slots with EXPLICIT names
+                    handleNamesSubmit(nameA, nameB);
                 }, 2000);
             }
         }, 100);
+    };
+
+    const handleWildcardSelect = (opponent: LeagueParticipant) => {
+        if (!wildcardPending) return;
+
+        setShowWildcard(false);
+        // Start battle directly (or with short roulette logic if preferred, but direct is smoother after the raffle)
+        // Let's use the roulette sequence but with length 1 to just "show" them, or just set them.
+        // Actually, just setting them is fine, the hype was the Comodin Selector.
+
+        setRivalA(wildcardPending.name);
+        setRivalB(opponent.name);
+        handleNamesSubmit(wildcardPending.name, opponent.name);
+
+        // Reset
+        setTimeout(() => {
+            setWildcardPending(null);
+            setWildcardPool([]);
+        }, 500);
     };
 
     // FIREBASE SYNC HOOK
@@ -1075,11 +1129,18 @@ const App: React.FC = () => {
                                                 <button
                                                     onClick={handleStartLeagueBattle}
                                                     disabled={leagueParticipants.filter(p => p.active).length < 2}
-                                                    className="w-full py-4 mt-4 bg-gradient-to-r from-yellow-600 to-orange-600 rounded-xl font-black text-xl uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-[0_0_30px_rgba(234,179,8,0.3)] disabled:opacity-50 disabled:cursor-not-allowed flex flex-col items-center justify-center gap-1"
+                                                    className={`w-full py-6 mt-4 rounded-xl font-black text-2xl uppercase tracking-widest transition-all shadow-[0_0_30px_rgba(234,179,8,0.3)] disabled:opacity-50 disabled:cursor-not-allowed flex flex-col items-center justify-center gap-2 group relative overflow-hidden ${leagueParticipants.filter(p => p.active).length < 2 ? 'bg-gray-800' : 'bg-[#eab308] hover:scale-[1.02] active:scale-[0.98]'}`}
                                                 >
-                                                    <span className="flex items-center gap-2">
-                                                        <RotateCcw size={20} className={false ? "animate-spin" : ""} />
-                                                        SORTEAR Y BATALLAR
+
+                                                    <div className="absolute inset-0 bg-gradient-to-r from-yellow-600 via-yellow-500 to-yellow-600 animate-shine opacity-90 group-hover:opacity-100"></div>
+                                                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 mix-blend-overlay"></div>
+
+                                                    <span className="relative z-10 flex items-center gap-3 drop-shadow-md text-black">
+                                                        <Trophy size={28} className="animate-bounce-slow" strokeWidth={2.5} />
+                                                        SORTEAR & BATALLAR
+                                                    </span>
+                                                    <span className="relative z-10 text-[10px] bg-black/20 px-3 py-1 rounded-full text-black/80 font-bold uppercase tracking-[0.2em]">
+                                                        Generar Enfrentamiento
                                                     </span>
                                                 </button>
                                             </div>
@@ -1521,6 +1582,15 @@ const App: React.FC = () => {
                 }
             </div >
 
+            {/* COMODIN SELECTOR OVERLAY */}
+            <ComodinSelector
+                isOpen={showWildcard}
+                pool={wildcardPool}
+                pendingPlayer={wildcardPending}
+                onSelect={handleWildcardSelect}
+                onClose={() => setShowWildcard(false)}
+            />
+
             {/* Persistent Beat Player */}
             <BeatPlayer
                 isOpen={isBeatPlayerOpen}
@@ -1528,6 +1598,8 @@ const App: React.FC = () => {
                 initialQuery={selectedGenre === BeatGenre.ELECTRO ? 'Electrobeat instrumental' : selectedGenre ? `${selectedGenre} instrumental freestyle` : ''}
                 onVideoSelect={() => setIsBeatSelected(true)}
             />
+
+
 
 
 
