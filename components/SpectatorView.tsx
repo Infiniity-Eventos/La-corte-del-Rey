@@ -501,27 +501,31 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
                 </div>
             )}
 
-            {/* RIVAL NAMES OVERLAY (DESKTOP ONLY) */}
-            <div className="hidden md:block absolute top-[10%] left-[8%] z-30 pointer-events-none transform -rotate-3 max-w-[40%]">
-                <h2 className="text-7xl font-black font-urban text-white uppercase leading-[0.9] element-text-stroke-purple animate-epic-pulse-purple break-words">
-                    {rivalA}
-                </h2>
-                {!winner && (
-                    <div className="mt-2 text-white font-bold tracking-[0.3em] uppercase opacity-90 text-lg animate-pulse shadow-black drop-shadow-md">
-                        ¡VOTA AQUÍ!
+            {/* RIVAL NAMES OVERLAY (DESKTOP ONLY) - Hide on early steps */}
+            {step === 'voting' && (
+                <>
+                    <div className="hidden md:block absolute top-[10%] left-[8%] z-30 pointer-events-none transform -rotate-3 max-w-[40%]">
+                        <h2 className="text-7xl font-black font-urban text-white uppercase leading-[0.9] element-text-stroke-purple animate-epic-pulse-purple break-words">
+                            {rivalA}
+                        </h2>
+                        {!winner && (
+                            <div className="mt-2 text-white font-bold tracking-[0.3em] uppercase opacity-90 text-lg animate-pulse shadow-black drop-shadow-md">
+                                ¡VOTA AQUÍ!
+                            </div>
+                        )}
                     </div>
-                )}
-            </div>
-            <div className="hidden md:block absolute bottom-[10%] right-[8%] z-30 pointer-events-none transform -rotate-3 text-right max-w-[40%] flex flex-col items-end">
-                <h2 className="text-7xl font-black font-urban text-white uppercase leading-[0.9] element-text-stroke-cyan animate-epic-pulse-cyan break-words">
-                    {rivalB}
-                </h2>
-                {!winner && (
-                    <div className="mt-2 text-white font-bold tracking-[0.3em] uppercase opacity-90 text-lg animate-pulse shadow-black drop-shadow-md">
-                        ¡VOTA AQUÍ!
+                    <div className="hidden md:block absolute bottom-[10%] right-[8%] z-30 pointer-events-none transform -rotate-3 text-right max-w-[40%] flex flex-col items-end">
+                        <h2 className="text-7xl font-black font-urban text-white uppercase leading-[0.9] element-text-stroke-cyan animate-epic-pulse-cyan break-words">
+                            {rivalB}
+                        </h2>
+                        {!winner && (
+                            <div className="mt-2 text-white font-bold tracking-[0.3em] uppercase opacity-90 text-lg animate-pulse shadow-black drop-shadow-md">
+                                ¡VOTA AQUÍ!
+                            </div>
+                        )}
                     </div>
-                )}
-            </div>
+                </>
+            )}
 
             {/* WINNER SCREEN */}
             {showWinnerScreen && winner && (
