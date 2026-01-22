@@ -185,9 +185,9 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
                         <div className="flex flex-col md:flex-row w-full gap-8 md:gap-4 items-center justify-center mb-10 relative">
                             {/* Rival A */}
                             <div className="w-full max-w-xs md:max-w-sm relative group z-10">
-                                <div className="absolute inset-0 bg-blue-600/20 rounded-2xl blur-xl transition-all"></div>
-                                <div className="relative bg-black/80 border-2 border-blue-500 p-6 rounded-2xl shadow-[0_0_20px_rgba(59,130,246,0.3)] text-center">
-                                    <div className="flex justify-center mb-4 text-blue-400"><User size={48} /></div>
+                                <div className="absolute inset-0 bg-purple-600/20 rounded-2xl blur-xl transition-all"></div>
+                                <div className="relative bg-black/80 border-2 border-purple-500 p-6 rounded-2xl shadow-[0_0_20px_rgba(168,85,247,0.3)] text-center">
+                                    <div className="flex justify-center mb-4 text-purple-400"><User size={48} /></div>
                                     <div className="text-3xl font-black font-urban text-white uppercase tracking-wider">{rivalA || "MC AZUL"}</div>
                                 </div>
                             </div>
@@ -199,9 +199,9 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
                             </div>
                             {/* Rival B */}
                             <div className="w-full max-w-xs md:max-w-sm relative group z-10">
-                                <div className="absolute inset-0 bg-red-600/20 rounded-2xl blur-xl transition-all"></div>
-                                <div className="relative bg-black/80 border-2 border-red-500 p-6 rounded-2xl shadow-[0_0_20px_rgba(239,68,68,0.3)] text-center">
-                                    <div className="flex justify-center mb-4 text-red-400"><User size={48} /></div>
+                                <div className="absolute inset-0 bg-blue-600/20 rounded-2xl blur-xl transition-all"></div>
+                                <div className="relative bg-black/80 border-2 border-blue-500 p-6 rounded-2xl shadow-[0_0_20px_rgba(59,130,246,0.3)] text-center">
+                                    <div className="flex justify-center mb-4 text-blue-400"><User size={48} /></div>
                                     <div className="text-3xl font-black font-urban text-white uppercase tracking-wider">{rivalB || "MC ROJO"}</div>
                                 </div>
                             </div>
@@ -211,16 +211,18 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
 
                 {/* STEP 1: SLOTS (Shared Visuals) */}
                 {step === 'slots' && (
-                    <div className="w-full flex flex-col justify-center items-center min-h-[60vh] animate-fadeIn">
-                        <SlotMachine
-                            onComplete={() => { }} // No handling needed in spectator
-                            isReplica={isReplica}
-                            spectator={true}
-                            forcedValues={currentSlotValues}
-                            attempts={spinAttempts}
-                            rivalA={rivalA}
-                            rivalB={rivalB}
-                        />
+                    <div className="w-full h-screen flex flex-col justify-center items-center p-0 md:p-4 overflow-hidden animate-fadeIn">
+                        <div className="scale-[0.6] md:scale-90 transform-origin-center">
+                            <SlotMachine
+                                onComplete={() => { }} // No handling needed in spectator
+                                isReplica={isReplica}
+                                spectator={true}
+                                forcedValues={currentSlotValues}
+                                attempts={spinAttempts}
+                                rivalA={rivalA}
+                                rivalB={rivalB}
+                            />
+                        </div>
                     </div>
                 )}
 
