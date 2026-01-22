@@ -1095,9 +1095,10 @@ const App: React.FC = () => {
                             {!isReplica && (
                                 <button
                                     onClick={() => changeStepWithTransition('names')}
-                                    className="absolute top-0 left-0 md:left-4 z-50 text-xs text-white/50 hover:text-white uppercase font-bold tracking-[0.2em] flex items-center gap-2 bg-purple-900/30 hover:bg-purple-800/50 px-4 py-2 rounded-full transition-all border border-purple-500/20 hover:border-purple-400/50"
+                                    className={`fixed top-4 right-[120px] z-[90] bg-black/40 backdrop-blur-md border border-purple-500/50 hover:bg-purple-900/50 hover:border-purple-400 text-white p-3 rounded-full shadow-[0_0_15px_rgba(168,85,247,0.3)] transition-all transform hover:scale-105 duration-300 ${isBeatPlayerOpen ? 'translate-x-[-340px] md:translate-x-[-460px]' : ''}`}
+                                    title="Volver"
                                 >
-                                    <span>⬅️</span> VOLVER
+                                    <RotateCcw size={24} className="-rotate-90" />
                                 </button>
                             )}
                             <SlotMachine
