@@ -6,9 +6,11 @@ import { SlotMachine } from './components/SlotMachine';
 import { SpectatorView } from './components/SpectatorView';
 import { TournamentBracket } from './components/TournamentBracket';
 import { AccessScreen } from './components/AccessScreen'; // New Import
+import { BeatPlayer } from './components/BeatPlayer';
 import { Info, Image as ImageIcon, RotateCcw, Youtube, Play, ExternalLink, User, Crown, Trophy, Zap, Swords, BookOpen, X, List, Scale, Timer, Star, Award } from 'lucide-react';
 import { TrainingFormat, TrainingMode, BeatGenre, ALL_TRAINING_MODES, AppStep, LeagueParticipant } from './types';
 import { generateTopics, generateTerminations, generateCharacterBattles, generateQuestions } from './services/geminiService';
+import { ROLES } from './data/roles';
 import { useFirebaseSync } from './hooks/useFirebaseSync';
 
 // Updated steps: replaced format/mode/beat with 'slots'
@@ -19,7 +21,10 @@ const MODE_TRANSLATIONS: Record<string, string> = {
     free: 'SANGRE',
     terminations: 'TERMINACIONES',
     characters: 'PERSONAJES',
-    questions: 'PREGUNTAS'
+    questions: 'PREGUNTAS',
+    role_play: 'JUEGO DE ROLES',
+    structure_easy: 'ESTRUCTURA EASY',
+    structure_hard: 'ESTRUCTURA HARD'
 };
 
 const ENTRADAS_RULES: Record<string, string> = {
@@ -46,8 +51,8 @@ const App: React.FC = () => {
     }, []);
 
     const [step, setStep] = useState<AppStep>('names'); // Start at names
-    const [rivalA, setRivalA] = useState('MC AZUL');
-    const [rivalB, setRivalB] = useState('MC ROJO');
+    const [rivalA, setRivalA] = useState('BUFÓN MORADO');
+    const [rivalB, setRivalB] = useState('BUFÓN AZUL');
     const [winner, setWinner] = useState<'A' | 'B' | null>(null);
     const [showWinnerScreen, setShowWinnerScreen] = useState(false);
 
@@ -110,6 +115,10 @@ const App: React.FC = () => {
     const [isRouletteSpinning, setIsRouletteSpinning] = useState(false);
     const [rouletteNames, setRouletteNames] = useState<{ A: string, B: string }>({ A: '?', B: '?' });
     const [rouletteWinner, setRouletteWinner] = useState<{ A: string, B: string } | null>(null);
+
+    // Beat Player State
+    const [isBeatPlayerOpen, setIsBeatPlayerOpen] = useState(false);
+    const [isBeatSelected, setIsBeatSelected] = useState(false);
 
     // Persist League Data
     useEffect(() => {
@@ -211,7 +220,7 @@ const App: React.FC = () => {
                     setRivalB(resultB);
                     setIsRouletteSpinning(false);
                     setRouletteWinner(null);
-                    handleNamesSubmit(); // Go to slots
+                    handleNamesSubmit(resultA, resultB); // Go to slots with EXPLICIT names
                 }, 2000);
             }
         }, 100);
@@ -280,10 +289,16 @@ const App: React.FC = () => {
         }, 850);
     };
 
-    const handleNamesSubmit = () => {
-        // Set defaults if empty
-        if (!rivalA.trim()) setRivalA("MC AZUL");
-        if (!rivalB.trim()) setRivalB("MC ROJO");
+    const handleNamesSubmit = (leagueA?: any, leagueB?: string) => {
+        // If coming from League (passed explicitly), use those names safely
+        if (typeof leagueA === 'string' && typeof leagueB === 'string') {
+            setRivalA(leagueA); // Ensure State is force updated
+            setRivalB(leagueB);
+        } else {
+            // Normal manual flow logic: Only set defaults if state is truly empty
+            if (!rivalA) setRivalA("BUFÓN MORADO");
+            if (!rivalB) setRivalB("BUFÓN AZUL");
+        }
         setAttempts(3); // Reset attempts when starting new
 
         // Reset Votes for new battle
@@ -316,6 +331,35 @@ const App: React.FC = () => {
                 setPreGeneratedTopic(null);
                 setPreGeneratedPool([]);
 
+                if (selectedMode === 'role_play') {
+                    // Pick random roles for the pool
+                    const shuffled = [...ROLES].sort(() => 0.5 - Math.random());
+                    // Format: "ROLE|DESCRIPTION"
+                    const formattedPool = shuffled.slice(0, 40).map(r => `${r.title}|${r.description}`);
+                    setPreGeneratedPool(formattedPool);
+                    setPreGeneratedTopic(formattedPool[0]);
+                    setIsPreGenerating(false);
+                    return;
+                }
+
+                if (selectedMode === 'structure_easy') {
+                    const patterns = ['A A B A', 'A B A B', 'A B B A', 'A A B B'];
+                    const randomPattern = patterns[Math.floor(Math.random() * patterns.length)];
+                    setPreGeneratedPool(patterns);
+                    setPreGeneratedTopic(randomPattern);
+                    setIsPreGenerating(false);
+                    return;
+                }
+
+                if (selectedMode === 'structure_hard') {
+                    const patterns = ['A A BBB A', 'AB AB AB AB'];
+                    const randomPattern = patterns[Math.floor(Math.random() * patterns.length)];
+                    setPreGeneratedPool(patterns);
+                    setPreGeneratedTopic(randomPattern);
+                    setIsPreGenerating(false);
+                    return;
+                }
+
                 if (selectedMode === 'themes') {
                     // Generate topics, pick one
                     const topics = await generateTopics(40);
@@ -344,8 +388,14 @@ const App: React.FC = () => {
                 setIsPreGenerating(false);
             };
             prepareContent();
+
+            // Auto open beat player
+            if (selectedGenre) {
+                setIsBeatPlayerOpen(true);
+                setIsBeatSelected(false); // Reset selection on new spin
+            }
         }
-    }, [step, selectedMode]);
+    }, [step, selectedMode, selectedGenre]);
 
     const resetApp = () => {
         setStep('names');
@@ -377,21 +427,7 @@ const App: React.FC = () => {
 
     const openYoutubeBeat = () => {
         if (!selectedGenre) return;
-        // Updated search query format
-        const query = encodeURIComponent(`${selectedGenre} instrumental freestyle`);
-        const url = `https://www.youtube.com/results?search_query=${query}`;
-
-        // Open in a small popup window (Mini Pestaña)
-        const width = 500;
-        const height = 600;
-        const left = (window.screen.width - width) / 2;
-        const top = (window.screen.height - height) / 2;
-
-        window.open(
-            url,
-            'YoutubeBeatWindow',
-            `width=${width},height=${height},top=${top},left=${left},toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes`
-        );
+        setIsBeatPlayerOpen(true);
     };
 
     const handleStartBattle = () => {
@@ -399,6 +435,7 @@ const App: React.FC = () => {
     };
 
     const handleFinishBattle = () => {
+        setIsBeatPlayerOpen(false); // Stop Beat
         changeStepWithTransition('voting');
     };
 
@@ -626,13 +663,13 @@ const App: React.FC = () => {
                         </h2>
 
                         <div className="flex flex-col md:flex-row items-center gap-8 md:gap-20">
-                            {/* CARD A */}
-                            <div className={`w-64 h-80 border-4 ${rouletteWinner ? 'border-blue-500 bg-blue-900/20 shadow-[0_0_50px_rgba(59,130,246,0.5)] scale-110' : 'border-gray-700 bg-gray-900/50'} rounded-3xl flex flex-col items-center justify-center p-6 transition-all duration-300 relative overflow-hidden`}>
+                            {/* CARD A (Purple - Was Blue) */}
+                            <div className={`w-64 h-80 border-4 ${rouletteWinner ? 'border-purple-500 bg-purple-900/20 shadow-[0_0_50px_rgba(168,85,247,0.5)] scale-110' : 'border-gray-700 bg-gray-900/50'} rounded-3xl flex flex-col items-center justify-center p-6 transition-all duration-300 relative overflow-hidden`}>
                                 <div className="text-6xl mb-4 opacity-50"><User size={64} /></div>
-                                <div className={`text-3xl font-black text-center uppercase tracking-wider ${rouletteWinner ? 'text-blue-300' : 'text-gray-500'}`}>
+                                <div className={`text-3xl font-black text-center uppercase tracking-wider ${rouletteWinner ? 'text-purple-300' : 'text-gray-500'}`}>
                                     {rouletteNames.A}
                                 </div>
-                                {rouletteWinner && <div className="absolute inset-0 border-4 border-blue-400 animate-ping rounded-3xl"></div>}
+                                {rouletteWinner && <div className="absolute inset-0 border-4 border-purple-400 animate-ping rounded-3xl"></div>}
                             </div>
 
                             {/* VS */}
@@ -640,13 +677,13 @@ const App: React.FC = () => {
                                 <span className="-rotate-45 text-3xl font-black text-white italic">VS</span>
                             </div>
 
-                            {/* CARD B */}
-                            <div className={`w-64 h-80 border-4 ${rouletteWinner ? 'border-red-500 bg-red-900/20 shadow-[0_0_50px_rgba(239,68,68,0.5)] scale-110' : 'border-gray-700 bg-gray-900/50'} rounded-3xl flex flex-col items-center justify-center p-6 transition-all duration-300 relative overflow-hidden`}>
+                            {/* CARD B (Blue - Was Red) */}
+                            <div className={`w-64 h-80 border-4 ${rouletteWinner ? 'border-blue-500 bg-blue-900/20 shadow-[0_0_50px_rgba(59,130,246,0.5)] scale-110' : 'border-gray-700 bg-gray-900/50'} rounded-3xl flex flex-col items-center justify-center p-6 transition-all duration-300 relative overflow-hidden`}>
                                 <div className="text-6xl mb-4 opacity-50"><User size={64} /></div>
-                                <div className={`text-3xl font-black text-center uppercase tracking-wider ${rouletteWinner ? 'text-red-300' : 'text-gray-500'}`}>
+                                <div className={`text-3xl font-black text-center uppercase tracking-wider ${rouletteWinner ? 'text-blue-300' : 'text-gray-500'}`}>
                                     {rouletteNames.B}
                                 </div>
-                                {rouletteWinner && <div className="absolute inset-0 border-4 border-red-400 animate-ping rounded-3xl"></div>}
+                                {rouletteWinner && <div className="absolute inset-0 border-4 border-blue-400 animate-ping rounded-3xl"></div>}
                             </div>
                         </div>
                     </div>
@@ -839,7 +876,7 @@ const App: React.FC = () => {
                             <Crown size={48} className={`${isReplica ? 'text-red-500' : 'text-yellow-400'} drop-shadow-[0_0_15px_rgba(250,204,21,0.6)]`} fill={isReplica ? "rgba(220,38,38,0.2)" : "rgba(250,204,21,0.2)"} />
                         </div>
 
-                        <h1 className="text-3xl md:text-5xl font-urban font-black tracking-tighter transform -rotate-2 relative z-10 animate-shine-text drop-shadow-xl">
+                        <h1 className="text-3xl md:text-5xl font-urban font-black tracking-tighter transform -rotate-2 relative z-10 animate-shine-text drop-shadow-xl text-transparent bg-clip-text bg-gradient-to-r from-purple-500 via-indigo-400 to-blue-500">
                             LA CORTE DEL REY
                         </h1>
 
@@ -886,20 +923,20 @@ const App: React.FC = () => {
                                     </h2>
 
                                     <div className="flex flex-col md:flex-row w-full gap-8 md:gap-4 items-center justify-center mb-10 relative">
-                                        {/* Rival A - Blue */}
+                                        {/* Rival A - Purple (Was Blue) */}
                                         <div className="w-full max-w-xs md:max-w-sm relative group z-10">
-                                            <div className="absolute inset-0 bg-blue-600/20 rounded-2xl blur-xl group-hover:bg-blue-500/40 transition-all"></div>
-                                            <div className="relative bg-black/80 border-2 border-blue-500 p-6 rounded-2xl shadow-[0_0_20px_rgba(59,130,246,0.3)]">
-                                                <div className="flex items-center gap-2 mb-2 text-blue-400 font-urban text-xl">
+                                            <div className="absolute inset-0 bg-purple-600/20 rounded-2xl blur-xl group-hover:bg-purple-500/40 transition-all"></div>
+                                            <div className="relative bg-black/80 border-2 border-purple-500 p-6 rounded-2xl shadow-[0_0_20px_rgba(168,85,247,0.3)]">
+                                                <div className="flex items-center gap-2 mb-2 text-purple-400 font-urban text-xl">
                                                     <User size={24} />
-                                                    <span>BUFÓN AZUL</span>
+                                                    <span>BUFÓN MORADO</span>
                                                 </div>
                                                 <input
                                                     type="text"
                                                     value={rivalA}
                                                     onChange={(e) => setRivalA(e.target.value)}
                                                     placeholder="MC 1"
-                                                    className="w-full bg-transparent border-b-2 border-blue-800 focus:border-blue-400 outline-none text-2xl font-bold text-white py-2 placeholder-blue-900/50 uppercase tracking-wide text-center"
+                                                    className="w-full bg-transparent border-b-2 border-purple-800 focus:border-purple-400 outline-none text-2xl font-bold text-white py-2 placeholder-purple-900/50 uppercase tracking-wide text-center"
                                                 />
                                             </div>
                                         </div>
@@ -911,12 +948,12 @@ const App: React.FC = () => {
                                             </div>
                                         </div>
 
-                                        {/* Rival B - Red */}
+                                        {/* Rival B - Blue (Was Red) */}
                                         <div className="w-full max-w-xs md:max-w-sm relative group z-10">
-                                            <div className="absolute inset-0 bg-red-600/20 rounded-2xl blur-xl group-hover:bg-red-500/40 transition-all"></div>
-                                            <div className="relative bg-black/80 border-2 border-red-500 p-6 rounded-2xl shadow-[0_0_20px_rgba(239,68,68,0.3)]">
-                                                <div className="flex items-center gap-2 mb-2 text-red-400 font-urban text-xl justify-end">
-                                                    <span>BUFÓN ROJO</span>
+                                            <div className="absolute inset-0 bg-blue-600/20 rounded-2xl blur-xl group-hover:bg-blue-500/40 transition-all"></div>
+                                            <div className="relative bg-black/80 border-2 border-blue-500 p-6 rounded-2xl shadow-[0_0_20px_rgba(59,130,246,0.3)]">
+                                                <div className="flex items-center gap-2 mb-2 text-blue-400 font-urban text-xl justify-end">
+                                                    <span>BUFÓN AZUL</span>
                                                     <User size={24} />
                                                 </div>
                                                 <input
@@ -924,7 +961,7 @@ const App: React.FC = () => {
                                                     value={rivalB}
                                                     onChange={(e) => setRivalB(e.target.value)}
                                                     placeholder="MC 2"
-                                                    className="w-full bg-transparent border-b-2 border-red-800 focus:border-red-400 outline-none text-2xl font-bold text-white py-2 placeholder-red-900/50 uppercase tracking-wide text-center"
+                                                    className="w-full bg-transparent border-b-2 border-blue-800 focus:border-blue-400 outline-none text-2xl font-bold text-white py-2 placeholder-blue-900/50 uppercase tracking-wide text-center"
                                                 />
                                             </div>
                                         </div>
@@ -932,7 +969,7 @@ const App: React.FC = () => {
 
                                     <button
                                         onClick={handleNamesSubmit}
-                                        className="group relative px-10 py-4 bg-gradient-to-r from-blue-600 to-red-600 rounded-xl font-black text-2xl uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-[0_0_30px_rgba(168,85,247,0.4)] overflow-hidden"
+                                        className="group relative px-10 py-4 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl font-black text-2xl uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-[0_0_30px_rgba(168,85,247,0.4)] overflow-hidden"
                                     >
                                         <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 skew-y-12"></div>
                                         <span className="relative z-10 flex items-center gap-3">
@@ -1056,7 +1093,9 @@ const App: React.FC = () => {
                     {step === 'slots' && (
                         <div className="w-full flex flex-col justify-center min-h-[60vh]">
                             {!isReplica && (
-                                <button onClick={() => changeStepWithTransition('names')} className="mb-6 text-sm text-purple-400 hover:text-white uppercase font-bold tracking-widest flex items-center gap-1 mx-auto">← Volver</button>
+                                <button onClick={() => changeStepWithTransition('names')} className="mb-8 text-xs text-white/50 hover:text-white uppercase font-bold tracking-[0.2em] flex items-center justify-center gap-2 mx-auto bg-purple-900/30 hover:bg-purple-800/50 px-6 py-2 rounded-full transition-all border border-purple-500/20 hover:border-purple-400/50">
+                                    <span>⬅️</span> VOLVER
+                                </button>
                             )}
                             <SlotMachine
                                 onComplete={handleRouletteComplete}
@@ -1075,6 +1114,17 @@ const App: React.FC = () => {
                     {step === 'summary' && (
                         <div className="w-full max-w-2xl mx-auto flex flex-col items-center justify-center animate-fadeIn">
                             <h2 className="text-4xl font-urban text-white mb-8 text-center drop-shadow-lg">¿LISTO PARA LA BATALLA?</h2>
+
+                            {/* RIVAL VS RIVAL DISPLAY FOR SUMMARY */}
+                            {(rivalA || rivalB) && (
+                                <div className="flex items-center gap-6 text-3xl md:text-5xl font-black font-urban text-white mb-8 animate-fadeIn">
+                                    <span className="text-purple-400 drop-shadow-[0_0_15px_rgba(168,85,247,0.5)]">{rivalA || 'BUFÓN MORADO'}</span>
+                                    <span className="text-gray-400 text-2xl flex flex-col items-center">
+                                        <span className="text-sm tracking-widest uppercase">VS</span>
+                                    </span>
+                                    <span className="text-blue-500 drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]">{rivalB || 'BUFÓN AZUL'}</span>
+                                </div>
+                            )}
 
                             <div className="w-full bg-purple-900/20 border border-purple-600/50 rounded-2xl p-6 mb-8 backdrop-blur-sm">
                                 <h3 className="text-purple-300 uppercase text-xs font-bold tracking-widest mb-4">Resumen</h3>
@@ -1096,31 +1146,26 @@ const App: React.FC = () => {
 
                             <div className="flex flex-col gap-4 w-full">
                                 {/* 1. Open Beat */}
-                                <button
-                                    onClick={openYoutubeBeat}
-                                    className="w-full py-4 bg-black border-2 border-red-600 text-red-500 hover:bg-red-600 hover:text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-[0_0_20px_rgba(220,38,38,0.2)] hover:shadow-[0_0_30px_rgba(220,38,38,0.5)]"
-                                >
-                                    <Youtube size={24} />
-                                    ABRIR BEAT (MINI VENTANA)
-                                    <ExternalLink size={16} className="opacity-70" />
-                                </button>
 
-                                <p className="text-center text-xs text-gray-400">Abre el beat y regresa para empezar</p>
 
                                 {/* 2. Start Battle */}
                                 <button
                                     onClick={handleStartBattle}
-                                    disabled={isPreGenerating}
-                                    className={`w-full py-8 mt-4 rounded-xl font-black text-3xl font-urban tracking-wider flex items-center justify-center gap-3 transition-all transform active:scale-95 ${isPreGenerating
-                                        ? 'bg-gray-800 text-gray-500 cursor-wait border-2 border-gray-700'
-                                        : 'bg-gradient-to-r from-blue-600 to-red-600 text-white shadow-[0_0_30px_rgba(37,99,235,0.4)] border-b-8 border-purple-900 hover:scale-[1.02]'
+                                    disabled={isPreGenerating || !isBeatSelected}
+                                    className={`w-full py-8 mt-4 rounded-xl font-black text-3xl font-urban tracking-wider flex items-center justify-center gap-3 transition-all transform active:scale-95 ${isPreGenerating || !isBeatSelected
+                                        ? 'bg-gray-800 text-gray-500 border-2 border-gray-700 cursor-not-allowed'
+                                        : 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-[0_0_30px_rgba(168,85,247,0.4)] border-b-8 border-purple-900 hover:scale-[1.02]'
                                         }`}
                                 >
                                     {isPreGenerating ? (
                                         <>
                                             <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-gray-500"></div>
-                                            {selectedMode === 'themes' ? 'BUSCANDO TEMÁTICA...' : selectedMode === 'terminations' ? 'BUSCANDO RIMAS...' : selectedMode === 'characters' ? 'PREPARANDO DUELO...' : selectedMode === 'questions' ? 'PENSANDO PREGUNTA...' : 'BUSCANDO CONCEPTOS...'}
+                                            {selectedMode === 'themes' ? 'BUSCANDO TEMÁTICA...' : selectedMode === 'terminations' ? 'BUSCANDO RIMAS...' : selectedMode === 'characters' ? 'PREPARANDO DUELO...' : selectedMode === 'questions' ? 'PENSANDO PREGUNTA...' : selectedMode === 'role_play' ? 'ASIGNANDO ROLES...' : selectedMode === 'structure_easy' || selectedMode === 'structure_hard' ? 'GENERANDO ESTRUCTURA...' : 'BUSCANDO CONCEPTOS...'}
                                         </>
+                                    ) : !isBeatSelected ? (
+                                        <div className="flex flex-col items-center">
+                                            <span className="text-gray-400 text-lg">SELECCIONA UN BEAT PARA INICIAR</span>
+                                        </div>
                                     ) : (
                                         <>
                                             <Play size={32} fill="white" />
@@ -1145,16 +1190,16 @@ const App: React.FC = () => {
                     {step === 'arena' && (
                         <div className="w-full h-full flex flex-col md:flex-row items-center md:items-stretch justify-center gap-4 md:gap-6 animate-fadeIn">
 
-                            {/* LEFT COLUMN: RIVAL A */}
-                            <div className="w-full md:w-1/4 flex md:flex-col justify-between md:justify-center items-center order-2 md:order-1 gap-2 bg-blue-900/10 border border-blue-500/20 rounded-xl p-2 md:p-4">
+                            {/* LEFT COLUMN: RIVAL A (Purple - Was Blue) */}
+                            <div className="w-full md:w-1/4 flex md:flex-col justify-between md:justify-center items-center order-2 md:order-1 gap-2 bg-purple-900/10 border border-purple-500/20 rounded-xl p-2 md:p-4">
                                 <div className="flex flex-col items-center">
-                                    <User size={32} className="text-blue-500 mb-1" />
-                                    <h2 className="text-2xl md:text-4xl font-black font-urban text-blue-400 text-center uppercase leading-none break-words">
-                                        {rivalA || "MC AZUL"}
+                                    <User size={32} className="text-purple-500 mb-1" />
+                                    <h2 className="text-2xl md:text-4xl font-black font-urban text-purple-400 text-center uppercase leading-none break-words">
+                                        {rivalA || "BUFÓN MORADO"}
                                     </h2>
                                 </div>
-                                <div className="hidden md:block w-1 h-16 bg-blue-500/50 rounded-full my-4"></div>
-                                <div className="text-xs text-blue-300 font-bold uppercase tracking-widest rotate-0 md:-rotate-90 whitespace-nowrap">RIVAL 1</div>
+                                <div className="hidden md:block w-1 h-16 bg-purple-500/50 rounded-full my-4"></div>
+                                <div className="text-xs text-purple-300 font-bold uppercase tracking-widest rotate-0 md:-rotate-90 whitespace-nowrap">RIVAL 1</div>
                             </div>
 
                             {/* MIDDLE COLUMN: GENERATOR + CONTROLS */}
@@ -1190,7 +1235,7 @@ const App: React.FC = () => {
                                 <div className="flex flex-col gap-2 w-full mt-2">
                                     <button
                                         onClick={handleFinishBattle}
-                                        className="w-full py-4 rounded-xl font-black text-xl uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-[0_0_20px_rgba(37,99,235,0.4)] border-b-4 border-purple-900 bg-gradient-to-r from-blue-600 to-red-600 text-white hover:scale-105 active:scale-95"
+                                        className="w-full py-4 rounded-xl font-black text-xl uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-[0_0_20px_rgba(168,85,247,0.4)] border-b-4 border-purple-900 bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:scale-105 active:scale-95"
                                     >
                                         <Trophy size={24} />
                                         TERMINAR BATALLA
@@ -1206,16 +1251,16 @@ const App: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* RIGHT COLUMN: RIVAL B */}
-                            <div className="w-full md:w-1/4 flex md:flex-col justify-between md:justify-center items-center order-3 md:order-3 gap-2 bg-red-900/10 border border-red-500/20 rounded-xl p-2 md:p-4">
+                            {/* RIGHT COLUMN: RIVAL B (Blue - Was Red) */}
+                            <div className="w-full md:w-1/4 flex md:flex-col justify-between md:justify-center items-center order-3 md:order-3 gap-2 bg-blue-900/10 border border-blue-500/20 rounded-xl p-2 md:p-4">
                                 <div className="flex flex-col items-center">
-                                    <User size={32} className="text-red-500 mb-1" />
-                                    <h2 className="text-2xl md:text-4xl font-black font-urban text-red-400 text-center uppercase leading-none break-words">
-                                        {rivalB || "MC ROJO"}
+                                    <User size={32} className="text-blue-500 mb-1" />
+                                    <h2 className="text-2xl md:text-4xl font-black font-urban text-blue-400 text-center uppercase leading-none break-words">
+                                        {rivalB || "BUFÓN AZUL"}
                                     </h2>
                                 </div>
-                                <div className="hidden md:block w-1 h-16 bg-red-500/50 rounded-full my-4"></div>
-                                <div className="text-xs text-red-300 font-bold uppercase tracking-widest rotate-0 md:rotate-90 whitespace-nowrap">RIVAL 2</div>
+                                <div className="hidden md:block w-1 h-16 bg-blue-500/50 rounded-full my-4"></div>
+                                <div className="text-xs text-blue-300 font-bold uppercase tracking-widest rotate-0 md:rotate-90 whitespace-nowrap">RIVAL 2</div>
                             </div>
 
                         </div>
@@ -1265,8 +1310,8 @@ const App: React.FC = () => {
                                             </div>
                                             <div className="flex flex-col items-center gap-2"><span className="text-gray-400 font-bold">VS</span></div>
                                             <div className="flex flex-col items-center gap-2">
-                                                <div className="text-6xl font-black font-urban text-white element-text-stroke-cyan">{votesB}</div>
-                                                <span className="text-xs text-cyan-400 font-bold tracking-widest">VOTOS</span>
+                                                <div className="text-6xl font-black font-urban text-white element-text-stroke-blue">{votesB}</div>
+                                                <span className="text-xs text-blue-400 font-bold tracking-widest">VOTOS</span>
                                             </div>
                                         </div>
                                         <div className="flex flex-col items-center justify-center -mt-4 mb-4">
@@ -1306,7 +1351,7 @@ const App: React.FC = () => {
                                                         text = `${v.user} votó por ${voteTarget}`;
                                                     }
                                                     return (
-                                                        <span key={i} className={`text-[10px] uppercase font-bold tracking-widest ${i === 0 ? 'text-cyan-400 animate-pulse' : 'text-gray-500'}`}>
+                                                        <span key={i} className={`text-[10px] uppercase font-bold tracking-widest ${i === 0 ? 'text-blue-400 animate-pulse' : 'text-gray-500'}`}>
                                                             {text}
                                                         </span>
                                                     );
@@ -1329,7 +1374,7 @@ const App: React.FC = () => {
                                 </h2>
                             </div>
                             <div className="absolute bottom-[10%] right-[5%] z-30 pointer-events-none transform -rotate-3 text-right max-w-[40%] flex flex-col items-end">
-                                <h2 className="text-3xl md:text-5xl font-black font-urban text-white uppercase leading-[0.9] element-text-stroke-cyan animate-epic-pulse-cyan break-words">
+                                <h2 className="text-3xl md:text-5xl font-black font-urban text-white uppercase leading-[0.9] element-text-stroke-blue animate-epic-pulse-blue break-words">
                                     {rivalB}
                                 </h2>
                             </div>
@@ -1337,17 +1382,17 @@ const App: React.FC = () => {
                             {/* Text Stroke & Animation Styles Injection */}
                             <style>{`
                                 .element-text-stroke-purple { -webkit-text-stroke: 2px #a855f7; paint-order: stroke fill; }
-                                .element-text-stroke-cyan { -webkit-text-stroke: 2px #06b6d4; paint-order: stroke fill; }
+                                .element-text-stroke-blue { -webkit-text-stroke: 2px #3b82f6; paint-order: stroke fill; }
                                 @keyframes epic-pulse-purple {
                                     0%, 100% { filter: drop-shadow(0 0 10px rgba(168, 85, 247, 0.6)); transform: scale(1); }
                                     50% { filter: drop-shadow(0 0 25px rgba(168, 85, 247, 1)); transform: scale(1.05); opacity: 0.9; }
                                 }
-                                @keyframes epic-pulse-cyan {
-                                    0%, 100% { filter: drop-shadow(0 0 10px rgba(6, 182, 212, 0.6)); transform: scale(1); }
-                                    50% { filter: drop-shadow(0 0 25px rgba(6, 182, 212, 1)); transform: scale(1.05); opacity: 0.9; }
+                                @keyframes epic-pulse-blue {
+                                    0%, 100% { filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.6)); transform: scale(1); }
+                                    50% { filter: drop-shadow(0 0 25px rgba(59, 130, 246, 1)); transform: scale(1.05); opacity: 0.9; }
                                 }
                                 .animate-epic-pulse-purple { animation: epic-pulse-purple 3s ease-in-out infinite; }
-                                .animate-epic-pulse-cyan { animation: epic-pulse-cyan 3s ease-in-out infinite reverse; }
+                                .animate-epic-pulse-blue { animation: epic-pulse-blue 3s ease-in-out infinite reverse; }
                                 @keyframes fade-to-gray { from { opacity: 0; backdrop-filter: grayscale(0%); } to { opacity: 1; backdrop-filter: grayscale(100%); } }
                                 .animate-fade-to-gray { animation: fade-to-gray 3s forwards; animation-delay: 2.5s; }
                                 @keyframes glitch-anim {
@@ -1468,6 +1513,14 @@ const App: React.FC = () => {
                     )
                 }
             </div >
+
+            {/* Persistent Beat Player */}
+            <BeatPlayer
+                isOpen={isBeatPlayerOpen}
+                onClose={() => setIsBeatPlayerOpen(false)}
+                initialQuery={selectedGenre ? `${selectedGenre} instrumental freestyle` : ''}
+                onVideoSelect={() => setIsBeatSelected(true)}
+            />
 
 
 

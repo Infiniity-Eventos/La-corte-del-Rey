@@ -71,7 +71,7 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({ mode, initialTop
             pool = await fetchTopics();
         }
 
-        if (mode === 'themes' || mode === 'terminations' || mode === 'questions' || mode === 'characters') {
+        if (mode === 'themes' || mode === 'terminations' || mode === 'questions' || mode === 'characters' || mode === 'role_play' || mode === 'structure_easy' || mode === 'structure_hard') {
             // Themes now uses roulette for the WORD, then generates image
             startRoulette(pool);
         }
@@ -174,6 +174,69 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({ mode, initialTop
                                     </h1>
                                     <p className="text-red-300 tracking-widest uppercase mt-2">Modo Libre</p>
                                 </div>
+                            ) : mode === 'role_play' && !isRolling ? (
+                                <div className="flex flex-col items-center justify-center text-center w-full relative animate-fadeIn px-2">
+
+                                    {/* Floating Badge */}
+                                    <div className="mb-6 px-6 py-1 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full border border-purple-400 shadow-[0_0_20px_rgba(147,51,234,0.5)] transform -rotate-1">
+                                        <p className="text-white font-black tracking-[0.3em] text-[10px] md:text-xs uppercase flex items-center gap-2">
+                                            <span className="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+                                            TU MISIÓN
+                                            <span className="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+                                        </p>
+                                    </div>
+
+                                    {/* Main Role Title - Huge & Glowing */}
+                                    <h1 className="text-4xl md:text-6xl font-black font-urban text-transparent bg-clip-text bg-gradient-to-b from-white to-purple-300 drop-shadow-[0_0_25px_rgba(168,85,247,0.8)] mb-8 uppercase leading-tight break-words max-w-full px-4">
+                                        {displayTopic.split('|')[0]}
+                                    </h1>
+
+                                    {/* Description Box - Glassmorphism Card */}
+                                    <div className="relative max-w-lg mx-auto group">
+                                        <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
+                                        <div className="relative px-8 py-6 bg-black/60 ring-1 ring-gray-900/5 rounded-2xl leading-none flex items-center justify-center border border-white/10 backdrop-blur-sm">
+                                            <p className="text-lg md:text-2xl text-purple-100 font-urban tracking-wide italic leading-relaxed">
+                                                "{displayTopic.split('|')[1] || ''}"
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (mode === 'structure_easy' || mode === 'structure_hard') && !isRolling ? (
+                                <div className="flex flex-col items-center justify-center text-center w-full relative animate-fadeIn px-4">
+
+                                    {/* Floating Badge */}
+                                    <div className="mb-8 px-8 py-1 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-full border border-blue-400 shadow-[0_0_20px_rgba(37,99,235,0.5)] transform rotate-1">
+                                        <p className="text-white font-black tracking-[0.3em] text-xs uppercase flex items-center gap-2">
+                                            <span className="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+                                            {mode === 'structure_hard' ? 'NI VEL DIOS' : 'PATRÓN 4x4'}
+                                            <span className="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+                                        </p>
+                                    </div>
+
+                                    {/* Structure Pattern - Bars Layout */}
+                                    <div className="relative flex gap-4 md:gap-8 justify-center items-end mt-4">
+                                        {/* Background Glow */}
+                                        <div className="absolute -inset-10 bg-gradient-to-r from-cyan-500/20 to-blue-600/20 opacity-50 blur-2xl rounded-full pointer-events-none"></div>
+
+                                        {displayTopic.split(' ').map((bar, index) => (
+                                            <div key={index} className="flex flex-col items-center gap-2 group">
+                                                <span className="text-[10px] md:text-xs font-bold text-cyan-500 tracking-widest uppercase opacity-60 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                                                    BARRA {index + 1}
+                                                </span>
+                                                <div className="w-16 h-20 md:w-24 md:h-32 bg-black/40 border border-cyan-500/30 rounded-xl flex items-center justify-center relative overflow-hidden group-hover:border-cyan-400 transition-colors shadow-[0_0_15px_rgba(6,182,212,0.1)]">
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-cyan-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                                    <span className={`${bar.length > 2 ? 'text-2xl md:text-4xl' : bar.length > 1 ? 'text-3xl md:text-5xl' : 'text-4xl md:text-7xl'} font-mono font-black text-white drop-shadow-[0_0_10px_rgba(34,211,238,0.8)] relative z-10`}>
+                                                        {bar}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <p className="text-cyan-400/60 font-medium tracking-[0.5em] text-sm uppercase mt-4">
+                                        {mode === 'structure_hard' ? 'MODO HARDCORE' : 'MODO CLÁSICO'}
+                                    </p>
+                                </div>
                             ) : (
                                 <div className="flex flex-col items-center justify-center text-center w-full relative">
 
@@ -210,7 +273,7 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({ mode, initialTop
                                                     ? 'text-5xl md:text-8xl font-urban text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-300 drop-shadow-[0_0_30px_rgba(16,185,129,0.4)] tracking-wider'
                                                     : 'text-5xl md:text-7xl drop-shadow-[0_4px_8px_rgba(0,0,0,1)] scale-105'}
                             `}>
-                                        {mode === 'questions' ? `¿${displayTopic.replace(/[¿?]/g, '')}?` : displayTopic.toUpperCase()}
+                                        {mode === 'questions' ? `¿${displayTopic.replace(/[¿?]/g, '')}?` : displayTopic.split('|')[0].toUpperCase()}
                                     </h1>
                                 </div>
                             )}
@@ -234,7 +297,7 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({ mode, initialTop
                         ) : (
                             <>
                                 {mode === 'terminations' ? <Hash size={32} /> : mode === 'characters' ? <Swords size={32} /> : mode === 'questions' ? <MessageCircleQuestion size={32} /> : <Sparkles size={32} />}
-                                {mode === 'themes' ? 'NUEVA TEMÁTICA' : mode === 'terminations' ? 'OTRA TERMINACIÓN' : mode === 'characters' ? 'NUEVO DUELO' : mode === 'questions' ? 'OTRA PREGUNTA' : 'OTRO CONCEPTO'}
+                                {mode === 'themes' ? 'NUEVA TEMÁTICA' : mode === 'terminations' ? 'OTRA TERMINACIÓN' : mode === 'characters' ? 'NUEVO DUELO' : mode === 'questions' ? 'OTRA PREGUNTA' : mode === 'role_play' ? 'NUEVOS ROLES' : (mode === 'structure_easy' || mode === 'structure_hard') ? 'OTRO PATRÓN' : 'OTRO CONCEPTO'}
                             </>
                         )}
                     </button>

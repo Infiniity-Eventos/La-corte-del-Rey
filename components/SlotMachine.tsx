@@ -21,7 +21,10 @@ const MODE_TRANSLATIONS: Record<string, string> = {
   free: 'SANGRE',
   terminations: 'TERMINACIONES',
   characters: 'PERSONAJES',
-  questions: 'PREGUNTAS'
+  questions: 'PREGUNTAS',
+  role_play: 'JUEGO DE ROLES',
+  structure_easy: 'ESTRUCTURA EASY',
+  structure_hard: 'ESTRUCTURA HARD'
 };
 
 export const SlotMachine: React.FC<SlotMachineProps> = ({
@@ -61,7 +64,8 @@ export const SlotMachine: React.FC<SlotMachineProps> = ({
   const intervals = useRef<[(ReturnType<typeof setInterval> | null), (ReturnType<typeof setInterval> | null), (ReturnType<typeof setInterval> | null)]>([null, null, null]);
 
   // Data Pools
-  const formats = Object.values(TrainingFormat);
+  // Data Pools (Weighted 4x4: Added extra instance for ~1.5x prob)
+  const formats = [TrainingFormat.FOUR_BY_FOUR, ...Object.values(TrainingFormat)];
   const modes = ALL_TRAINING_MODES;
   const genres = Object.values(BeatGenre);
 
@@ -164,10 +168,22 @@ export const SlotMachine: React.FC<SlotMachineProps> = ({
 
       // If Replica, FORCE SANGRE (free).
       // If Format is KICK_BACK, also FORCE SANGRE (free).
-      setValues(prev => ({
-        ...prev,
-        mode: (isReplica || prev.format === TrainingFormat.KICK_BACK) ? 'free' : prev.mode
-      }));
+      // STRUCTURE CONSTRAINT: Only allow structure_easy/hard if format is 4x4.
+      setValues(prev => {
+        let finalMode = prev.mode;
+
+        if (isReplica || prev.format === TrainingFormat.KICK_BACK) {
+          finalMode = 'free';
+        } else if ((prev.mode === 'structure_easy' || prev.mode === 'structure_hard') && prev.format !== TrainingFormat.FOUR_BY_FOUR) {
+          // Fallback to themes if not 4x4
+          finalMode = 'themes';
+        } else if (prev.format === TrainingFormat.EIGHT_BY_EIGHT && prev.mode === 'terminations') {
+          // 8x8 NO TERMINATIONS
+          finalMode = 'themes';
+        }
+
+        return { ...prev, mode: finalMode };
+      });
 
       setSpinning(prev => [false, false, prev[2]]);
       setLocked(prev => [true, true, false]);
@@ -178,10 +194,17 @@ export const SlotMachine: React.FC<SlotMachineProps> = ({
       if (intervals.current[2]) clearInterval(intervals.current[2]!);
 
       // If Replica, FORCE BOOM BAP.
-      setValues(prev => ({
-        ...prev,
-        genre: isReplica ? BeatGenre.BOOM_BAP : prev.genre
-      }));
+      // If Format is KICK_BACK, also FORCE BOOM BAP.
+      // If Mode is STRUCTURE HARD, FORCE TRAP.
+      setValues(prev => {
+        let finalGenre = prev.genre;
+        if (isReplica || prev.format === TrainingFormat.KICK_BACK) {
+          finalGenre = BeatGenre.BOOM_BAP;
+        } else if (prev.mode === 'structure_hard') {
+          finalGenre = BeatGenre.TRAP;
+        }
+        return { ...prev, genre: finalGenre };
+      });
 
       setSpinning(prev => [false, false, false]);
       setLocked(prev => [true, true, true]);
@@ -247,9 +270,9 @@ export const SlotMachine: React.FC<SlotMachineProps> = ({
             {/* RIVAL VS RIVAL DISPLAY FOR REPLICA */}
             {(rivalA || rivalB) && (
               <div className="flex items-center gap-4 text-2xl md:text-3xl font-black font-urban text-white mb-4 animate-fadeIn">
-                <span className="text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.5)]">{rivalA || 'MC AZUL'}</span>
+                <span className="text-purple-400 drop-shadow-[0_0_10px_rgba(168,85,247,0.5)]">{rivalA || 'BUFÓN MORADO'}</span>
                 <span className="text-red-500 text-lg">VS</span>
-                <span className="text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]">{rivalB || 'MC ROJO'}</span>
+                <span className="text-blue-500 drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]">{rivalB || 'BUFÓN AZUL'}</span>
               </div>
             )}
             <p className="text-red-200 font-bold tracking-widest uppercase text-sm md:text-lg border-b-2 border-red-600 pb-1">
@@ -265,9 +288,9 @@ export const SlotMachine: React.FC<SlotMachineProps> = ({
             {/* RIVAL VS RIVAL DISPLAY */}
             {(rivalA || rivalB) && (
               <div className="flex items-center gap-4 text-2xl md:text-3xl font-black font-urban text-white mb-4 animate-fadeIn">
-                <span className="text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.5)]">{rivalA || 'MC AZUL'}</span>
+                <span className="text-purple-400 drop-shadow-[0_0_10px_rgba(168,85,247,0.5)]">{rivalA || 'BUFÓN MORADO'}</span>
                 <span className="text-gray-400 text-lg">VS</span>
-                <span className="text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.5)]">{rivalB || 'MC ROJO'}</span>
+                <span className="text-blue-500 drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]">{rivalB || 'BUFÓN AZUL'}</span>
               </div>
             )}
 

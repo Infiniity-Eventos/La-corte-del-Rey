@@ -27,13 +27,16 @@ export enum TrainingFormat {
   CALL_FRIEND = 'Llamado a un amigo'
 }
 
-export type TrainingMode = 'themes' | 'free' | 'terminations' | 'characters' | 'questions';
+export type TrainingMode = 'themes' | 'free' | 'terminations' | 'characters' | 'questions' | 'role_play' | 'structure_easy' | 'structure_hard';
 
 export const ALL_TRAINING_MODES: TrainingMode[] = [
   'themes',
   'terminations',
   'characters',
   'questions',
+  'role_play',
+  'structure_easy',
+  'structure_hard',
   'free'
 ];
 

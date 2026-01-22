@@ -311,202 +311,286 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
 
             </main>
 
-            {/* STEP 4: VOTING (NEON JESTER EDITION - BOXED FOR SPECTATOR TOO) */}
+            {/* STEP 4: VOTING (RESPONSIVE SPLIT) */}
             {step === 'voting' && (
-                <div className={`fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl aspect-square max-h-[85vh] flex overflow-hidden bg-black rounded-3xl border-4 border-purple-500/30 shadow-2xl animate-fadeIn z-[200]`}>
-                    {/* Background */}
-                    <div className="absolute inset-0 z-0">
-                        <img
-                            src={loserImage || "/vs-bg-final.jpg"}
-                            alt="Voting Background"
-                            className={`w-full h-full object-cover object-center ${isFlickering ? 'animate-glitch duration-0' : 'transition-all duration-500'} `}
-                        />
-                        <div className="absolute inset-0 bg-black/20"></div>
+                <div className={`fixed inset-0 z-[200] flex flex-col md:flex-row bg-black animate-fadeIn`}>
 
-                        {/* Loser Filter */}
-                        {winner && !showWinnerScreen && (
-                            <div
-                                className="absolute inset-0 z-10 pointer-events-none"
-                                style={{
-                                    clipPath: winner === 'A'
-                                        ? 'polygon(95% 0, 100% 0, 100% 100%, 5% 100%)' // B Lost
-                                        : 'polygon(0 0, 95% 0, 5% 100%, 0% 100%)'     // A Lost
-                                }}
-                            >
-                                <div className="w-full h-full bg-black/70 backdrop-grayscale animate-fade-to-gray opacity-100"></div>
+                    {/* --- MOBILE LAYOUT (VERTICAL SPLIT) --- */}
+                    <div className="md:hidden flex flex-col w-full h-full relative">
+                        {/* TOP HALF: RIVAL A (PURPLE) */}
+                        <div
+                            onClick={() => !hasVoted && castVote('A', rivalA || 'MC AZUL', rivalB || 'MC ROJO') && setHasVoted(true)}
+                            className={`flex-1 relative overflow-hidden flex flex-col items-center justify-center border-b-2 border-white/20 transition-all active:scale-[0.98] ${hasVoted ? 'grayscale opacity-50' : 'cursor-pointer'}`}
+                        >
+                            {/* Bg Image with Purple Tint */}
+                            <div className="absolute inset-0 bg-purple-900 z-0"></div>
+                            {loserImage && <img src={loserImage} className="absolute inset-0 w-full h-full object-cover opacity-50 mix-blend-overlay" />}
+                            <div className="absolute inset-0 bg-gradient-to-b from-purple-600/50 to-black/50 z-10"></div>
+
+                            {/* Content */}
+                            <div className="relative z-20 text-center p-4">
+                                <Crown className="w-12 h-12 text-purple-300 mx-auto mb-2 drop-shadow-lg" />
+                                <h2 className="text-4xl font-black font-urban text-white uppercase tracking-wider drop-shadow-[0_4px_0_rgba(0,0,0,0.5)] leading-none mb-2">
+                                    {rivalA || 'BUFÓN MORADO'}
+                                </h2>
+                                <span className="inline-block bg-purple-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest shadow-lg">
+                                    Votar A
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* VS BADGE CENTER */}
+                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30">
+                            <div className="w-14 h-14 bg-black border-4 border-white rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(255,255,255,0.5)]">
+                                <span className="font-black italic text-md text-white">VS</span>
+                            </div>
+                        </div>
+
+                        {/* BOTTOM HALF: RIVAL B (BLUE) */}
+                        <div
+                            onClick={() => !hasVoted && castVote('B', rivalA || 'MC AZUL', rivalB || 'MC ROJO') && setHasVoted(true)}
+                            className={`flex-1 relative overflow-hidden flex flex-col items-center justify-center border-t-2 border-white/20 transition-all active:scale-[0.98] ${hasVoted ? 'grayscale opacity-50' : 'cursor-pointer'}`}
+                        >
+                            {/* Bg Image with Blue Tint */}
+                            <div className="absolute inset-0 bg-blue-900 z-0"></div>
+                            {loserImage && <img src={loserImage} className="absolute inset-0 w-full h-full object-cover opacity-50 mix-blend-overlay" />}
+                            <div className="absolute inset-0 bg-gradient-to-t from-blue-600/50 to-black/50 z-10"></div>
+
+                            {/* Content */}
+                            <div className="relative z-20 text-center p-4">
+                                <span className="inline-block bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest shadow-lg mb-2">
+                                    Votar B
+                                </span>
+                                <h2 className="text-4xl font-black font-urban text-white uppercase tracking-wider drop-shadow-[0_4px_0_rgba(0,0,0,0.5)] leading-none mb-2">
+                                    {rivalB || 'BUFÓN AZUL'}
+                                </h2>
+                                <Crown className="w-12 h-12 text-blue-300 mx-auto drop-shadow-lg" />
+                            </div>
+                        </div>
+
+                        {/* REPLICA BUTTON (FLOATING BOTTOM) */}
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (hasVoted) return;
+                                setHasVoted(true);
+                                castVote('Replica', rivalA || 'MC AZUL', rivalB || 'MC ROJO');
+                            }}
+                            className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-40 bg-gray-800/90 border border-white/30 text-white font-bold text-xs uppercase tracking-widest px-6 py-3 rounded-full shadow-[0_0_20px_rgba(0,0,0,0.8)] active:scale-95 transition-all"
+                        >
+                            VOTAR RÉPLICA
+                        </button>
+
+                        {/* VOTED OVERLAY */}
+                        {hasVoted && (
+                            <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fadeIn">
+                                <div className="text-center p-6 bg-white/10 rounded-2xl border border-white/20">
+                                    <div className="text-4xl mb-2">✅</div>
+                                    <h3 className="text-2xl font-black font-urban text-white uppercase">Voto Enviado</h3>
+                                    <p className="text-gray-300 text-xs mt-2">Esperando resultados...</p>
+                                </div>
                             </div>
                         )}
+                    </div>
 
-                        {/* INTERACTIVE VOTING ZONES (Spectator) */}
-                        {!winner && !hasVoted && (
-                            <>
-                                {/* ZONE A: Click to Vote A (Left Half) */}
+
+                    {/* --- DESKTOP LAYOUT (ORIGINAL BOXED) --- */}
+                    <div className="hidden md:flex fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl aspect-square max-h-[85vh] overflow-hidden bg-black rounded-3xl border-4 border-purple-500/30 shadow-2xl">
+                        {/* Background */}
+                        <div className="absolute inset-0 z-0">
+                            <img
+                                src={loserImage || "/vs-bg-final.jpg"}
+                                alt="Voting Background"
+                                className={`w-full h-full object-cover object-center ${isFlickering ? 'animate-glitch duration-0' : 'transition-all duration-500'} `}
+                            />
+                            <div className="absolute inset-0 bg-black/20"></div>
+
+                            {/* Loser Filter */}
+                            {winner && !showWinnerScreen && (
                                 <div
-                                    onClick={() => {
-                                        if (hasVoted) return;
-                                        setHasVoted(true);
-                                        castVote('A', rivalA || 'MC AZUL', rivalB || 'MC ROJO');
+                                    className="absolute inset-0 z-10 pointer-events-none"
+                                    style={{
+                                        clipPath: winner === 'A'
+                                            ? 'polygon(95% 0, 100% 0, 100% 100%, 5% 100%)' // B Lost
+                                            : 'polygon(0 0, 95% 0, 5% 100%, 0% 100%)'     // A Lost
                                     }}
-                                    className="absolute top-0 left-0 w-1/2 h-full z-40 cursor-pointer group hover:bg-white/5 transition-all duration-300"
                                 >
-                                    <div className="absolute inset-0 opacity-0 group-hover:opacity-30 bg-purple-600 blur-3xl transition-opacity duration-300"></div>
+                                    <div className="w-full h-full bg-black/70 backdrop-grayscale animate-fade-to-gray opacity-100"></div>
                                 </div>
+                            )}
 
-                                {/* ZONE B: Click to Vote B (Right Half) */}
-                                <div
-                                    onClick={() => {
-                                        if (hasVoted) return;
-                                        setHasVoted(true);
-                                        castVote('B', rivalA || 'MC AZUL', rivalB || 'MC ROJO');
-                                    }}
-                                    className="absolute top-0 right-0 w-1/2 h-full z-40 cursor-pointer group hover:bg-white/5 transition-all duration-300"
-                                >
-                                    <div className="absolute inset-0 opacity-0 group-hover:opacity-30 bg-cyan-600 blur-3xl transition-opacity duration-300"></div>
-                                </div>
-
-                                {/* ZONE REPLICA: Central Bottom Button */}
-                                <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2 z-50 w-full flex justify-center pointer-events-none">
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation(); // Prevent clicking zones below
+                            {/* INTERACTIVE VOTING ZONES (Spectator) */}
+                            {!winner && !hasVoted && (
+                                <>
+                                    {/* ZONE A: Click to Vote A (Left Half) */}
+                                    <div
+                                        onClick={() => {
                                             if (hasVoted) return;
                                             setHasVoted(true);
-                                            castVote('Replica', rivalA || 'MC AZUL', rivalB || 'MC ROJO');
+                                            castVote('A', rivalA || 'MC AZUL', rivalB || 'MC ROJO');
                                         }}
-                                        className="pointer-events-auto bg-gray-800/80 border-2 border-white/30 hover:bg-gray-700 text-white font-black uppercase tracking-widest px-8 py-4 rounded-xl shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:scale-105 transition-all animate-pulse"
+                                        className="absolute top-0 left-0 w-1/2 h-full z-40 cursor-pointer group hover:bg-white/5 transition-all duration-300"
                                     >
-                                        VOTAR RÉPLICA
-                                    </button>
-                                </div>
-                            </>
-                        )}
-
-                        {/* VOTED FEEDBACK */}
-                        {!winner && hasVoted && (
-                            <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none">
-                                <div className="bg-black/60 backdrop-blur-md px-8 py-4 rounded-2xl border border-white/20 animate-bounce-slow">
-                                    <span className="text-white font-bold uppercase tracking-widest text-xl">¡Voto Registrado!</span>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* CENTRAL VOTING PANEL (Spectator - Restored) */}
-                        {!winner && (
-                            <div className="absolute inset-0 z-40 flex flex-col items-center justify-center pointer-events-none">
-                                <div className="bg-black/60 backdrop-blur-md p-6 rounded-3xl border border-white/20 shadow-2xl pointer-events-auto flex flex-col items-center gap-6 mt-0">
-                                    <h3 className="text-white font-urban uppercase tracking-widest text-xl animate-pulse">Panel de Votación</h3>
-                                    <div className="flex items-center gap-8 md:gap-16">
-                                        <div className="flex flex-col items-center gap-2">
-                                            <div className="text-6xl font-black font-urban text-white element-text-stroke-purple">?</div>
-                                            <span className="text-xs text-purple-400 font-bold tracking-widest">VOTOS</span>
-                                        </div>
-                                        <div className="flex flex-col items-center gap-2"><span className="text-gray-400 font-bold">VS</span></div>
-                                        <div className="flex flex-col items-center gap-2">
-                                            <div className="text-6xl font-black font-urban text-white element-text-stroke-cyan">?</div>
-                                            <span className="text-xs text-cyan-400 font-bold tracking-widest">VOTOS</span>
-                                        </div>
+                                        <div className="absolute inset-0 opacity-0 group-hover:opacity-30 bg-purple-600 blur-3xl transition-opacity duration-300"></div>
                                     </div>
-                                    <p className="text-[10px] text-gray-400 uppercase tracking-widest opacity-60">
-                                        Escanea el QR o haz clic en tu favorito
-                                    </p>
-                                </div>
-                            </div>
-                        )}
-                    </div>
 
-                    {/* RIVAL NAMES OVERLAY */}
-                    <div className="absolute top-[10%] left-[5%] md:left-[8%] z-30 pointer-events-none transform -rotate-3 max-w-[40%]">
-                        <h2 className="text-4xl md:text-7xl font-black font-urban text-white uppercase leading-[0.9] element-text-stroke-purple animate-epic-pulse-purple break-words">
-                            {rivalA}
+                                    {/* ZONE B: Click to Vote B (Right Half) */}
+                                    <div
+                                        onClick={() => {
+                                            if (hasVoted) return;
+                                            setHasVoted(true);
+                                            castVote('B', rivalA || 'MC AZUL', rivalB || 'MC ROJO');
+                                        }}
+                                        className="absolute top-0 right-0 w-1/2 h-full z-40 cursor-pointer group hover:bg-white/5 transition-all duration-300"
+                                    >
+                                        <div className="absolute inset-0 opacity-0 group-hover:opacity-30 bg-cyan-600 blur-3xl transition-opacity duration-300"></div>
+                                    </div>
+
+                                    {/* ZONE REPLICA: Central Bottom Button */}
+                                    <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2 z-50 w-full flex justify-center pointer-events-none">
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation(); // Prevent clicking zones below
+                                                if (hasVoted) return;
+                                                setHasVoted(true);
+                                                castVote('Replica', rivalA || 'MC AZUL', rivalB || 'MC ROJO');
+                                            }}
+                                            className="pointer-events-auto bg-gray-800/80 border-2 border-white/30 hover:bg-gray-700 text-white font-black uppercase tracking-widest px-8 py-4 rounded-xl shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:scale-105 transition-all animate-pulse"
+                                        >
+                                            VOTAR RÉPLICA
+                                        </button>
+                                    </div>
+                                </>
+                            )}
+
+                            {/* VOTED FEEDBACK */}
+                            {!winner && hasVoted && (
+                                <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none">
+                                    <div className="bg-black/60 backdrop-blur-md px-8 py-4 rounded-2xl border border-white/20 animate-bounce-slow">
+                                        <span className="text-white font-bold uppercase tracking-widest text-xl">¡Voto Registrado!</span>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* CENTRAL VOTING PANEL (Spectator - Restored) */}
+                            {!winner && (
+                                <div className="absolute inset-0 z-40 flex flex-col items-center justify-center pointer-events-none">
+                                    <div className="bg-black/60 backdrop-blur-md p-6 rounded-3xl border border-white/20 shadow-2xl pointer-events-auto flex flex-col items-center gap-6 mt-0">
+                                        <h3 className="text-white font-urban uppercase tracking-widest text-xl animate-pulse">Panel de Votación</h3>
+                                        <div className="flex items-center gap-8 md:gap-16">
+                                            <div className="flex flex-col items-center gap-2">
+                                                <div className="text-6xl font-black font-urban text-white element-text-stroke-purple">?</div>
+                                                <span className="text-xs text-purple-400 font-bold tracking-widest">VOTOS</span>
+                                            </div>
+                                            <div className="flex flex-col items-center gap-2"><span className="text-gray-400 font-bold">VS</span></div>
+                                            <div className="flex flex-col items-center gap-2">
+                                                <div className="text-6xl font-black font-urban text-white element-text-stroke-cyan">?</div>
+                                                <span className="text-xs text-cyan-400 font-bold tracking-widest">VOTOS</span>
+                                            </div>
+                                        </div>
+                                        <p className="text-[10px] text-gray-400 uppercase tracking-widest opacity-60">
+                                            Escanea el QR o haz clic en tu favorito
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* RIVAL NAMES OVERLAY (DESKTOP ONLY) */}
+            <div className="hidden md:block absolute top-[10%] left-[8%] z-30 pointer-events-none transform -rotate-3 max-w-[40%]">
+                <h2 className="text-7xl font-black font-urban text-white uppercase leading-[0.9] element-text-stroke-purple animate-epic-pulse-purple break-words">
+                    {rivalA}
+                </h2>
+                {!winner && (
+                    <div className="mt-2 text-white font-bold tracking-[0.3em] uppercase opacity-90 text-lg animate-pulse shadow-black drop-shadow-md">
+                        ¡VOTA AQUÍ!
+                    </div>
+                )}
+            </div>
+            <div className="hidden md:block absolute bottom-[10%] right-[8%] z-30 pointer-events-none transform -rotate-3 text-right max-w-[40%] flex flex-col items-end">
+                <h2 className="text-7xl font-black font-urban text-white uppercase leading-[0.9] element-text-stroke-cyan animate-epic-pulse-cyan break-words">
+                    {rivalB}
+                </h2>
+                {!winner && (
+                    <div className="mt-2 text-white font-bold tracking-[0.3em] uppercase opacity-90 text-lg animate-pulse shadow-black drop-shadow-md">
+                        ¡VOTA AQUÍ!
+                    </div>
+                )}
+            </div>
+
+            {/* WINNER SCREEN */}
+            {showWinnerScreen && winner && (
+                <div className={`fixed inset-0 z-[100] flex items-center justify-center animate-fadeIn bg-black/80 backdrop-blur-sm`}>
+                    <div className={`relative w-[90%] max-w-sm md:max-w-lg bg-[#1a0b2e] border-4 rounded-3xl p-4 md:p-8 flex flex-col items-center shadow-[0_0_100px_rgba(0,0,0,0.9)] animate-scale-up z-20 overflow-hidden ${winner === 'A' ? 'border-fuchsia-500 shadow-[0_0_50px_rgba(192,38,211,0.5)]' : 'border-cyan-500 shadow-[0_0_50px_rgba(6,182,212,0.5)]'} `}>
+                        {/* Winner Badge */}
+                        <div className="mb-4 md:mb-6 relative">
+                            <div className={`absolute inset-0 blur-[40px] ${winner === 'A' ? 'bg-fuchsia-500' : 'bg-cyan-500'} `}></div>
+                            <Crown size={50} className={`relative z-10 md:w-20 md:h-20 ${winner === 'A' ? 'text-fuchsia-100' : 'text-cyan-100'} `} fill="currentColor" />
+                        </div>
+
+                        <h3 className="text-gray-400 font-bold uppercase tracking-[0.3em] text-[10px] md:text-xs mb-2 text-center">GANADOR INDISCUTIBLE</h3>
+
+                        <h2 className={`text-4xl md:text-6xl font-black font-urban text-center uppercase leading-none mb-4 md:mb-6 break-words w-full ${winner === 'A' ? 'text-fuchsia-400 drop-shadow-[0_0_15px_rgba(192,38,211,0.8)]' : 'text-cyan-400 drop-shadow-[0_0_15px_rgba(6,182,212,0.8)]'} `}>
+                            {winner === 'A' ? rivalA : rivalB}
                         </h2>
-                        {!winner && (
-                            <div className="mt-2 text-white font-bold tracking-[0.3em] uppercase opacity-90 text-sm md:text-lg animate-pulse shadow-black drop-shadow-md">
-                                ¡VOTA AQUÍ!
-                            </div>
-                        )}
-                    </div>
-                    <div className="absolute bottom-[10%] right-[5%] md:right-[8%] z-30 pointer-events-none transform -rotate-3 text-right max-w-[40%] flex flex-col items-end">
-                        <h2 className="text-4xl md:text-7xl font-black font-urban text-white uppercase leading-[0.9] element-text-stroke-cyan animate-epic-pulse-cyan break-words">
-                            {rivalB}
-                        </h2>
-                        {!winner && (
-                            <div className="mt-2 text-white font-bold tracking-[0.3em] uppercase opacity-90 text-sm md:text-lg animate-pulse shadow-black drop-shadow-md">
-                                ¡VOTA AQUÍ!
-                            </div>
-                        )}
                     </div>
 
-                    {/* WINNER SCREEN */}
-                    {showWinnerScreen && winner && (
-                        <div className={`fixed inset-0 z-[100] flex items-center justify-center animate-fadeIn bg-black/80 backdrop-blur-sm`}>
-                            <div className={`relative w-[90%] max-w-sm md:max-w-lg bg-[#1a0b2e] border-4 rounded-3xl p-4 md:p-8 flex flex-col items-center shadow-[0_0_100px_rgba(0,0,0,0.9)] animate-scale-up z-20 overflow-hidden ${winner === 'A' ? 'border-fuchsia-500 shadow-[0_0_50px_rgba(192,38,211,0.5)]' : 'border-cyan-500 shadow-[0_0_50px_rgba(6,182,212,0.5)]'} `}>
-                                {/* Winner Badge */}
-                                <div className="mb-4 md:mb-6 relative">
-                                    <div className={`absolute inset-0 blur-[40px] ${winner === 'A' ? 'bg-fuchsia-500' : 'bg-cyan-500'} `}></div>
-                                    <Crown size={50} className={`relative z-10 md:w-20 md:h-20 ${winner === 'A' ? 'text-fuchsia-100' : 'text-cyan-100'} `} fill="currentColor" />
-                                </div>
-
-                                <h3 className="text-gray-400 font-bold uppercase tracking-[0.3em] text-[10px] md:text-xs mb-2 text-center">GANADOR INDISCUTIBLE</h3>
-
-                                <h2 className={`text-4xl md:text-6xl font-black font-urban text-center uppercase leading-none mb-4 md:mb-6 break-words w-full ${winner === 'A' ? 'text-fuchsia-400 drop-shadow-[0_0_15px_rgba(192,38,211,0.8)]' : 'text-cyan-400 drop-shadow-[0_0_15px_rgba(6,182,212,0.8)]'} `}>
-                                    {winner === 'A' ? rivalA : rivalB}
-                                </h2>
-                            </div>
-
-                            {/* TRUMPETS & CANNON CONFETTI LAYER */}
-                            <div className="absolute inset-0 overflow-visible pointer-events-none z-[80]">
-                                {/* LEFT TRUMPET */}
-                                <div className="absolute top-[65%] left-2 md:left-10 transform -translate-y-1/2 -rotate-12">
-                                    <div className="text-6xl md:text-9xl filter drop-shadow-[0_0_20px_rgba(234,179,8,0.5)] relative animate-trumpet-beat">
-                                        🎺
-                                        <div className="absolute top-2 right-2 w-1 h-1">
-                                            {Array.from({ length: 40 }).map((_, i) => (
-                                                <div
-                                                    key={`confetti - l - ${i} `}
-                                                    className="absolute w-2 h-2 md:w-3 md:h-3 rounded-sm animate-fountain-flow"
-                                                    style={{
-                                                        backgroundColor: ['#ef4444', '#3b82f6', '#eab308', '#a855f7', '#ec4899'][i % 5],
-                                                        left: 0, top: 0,
-                                                        '--tx': `${50 + Math.random() * 200} px`,
-                                                        '--ty': `${-100 - Math.random() * 200} px`,
-                                                        '--r': `${Math.random() * 720} deg`,
-                                                        animationDuration: `${1 + Math.random() * 1.5} s`,
-                                                        animationDelay: `${Math.random() * 0.5} s`
-                                                    } as React.CSSProperties}
-                                                ></div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* RIGHT TRUMPET (Flipped) */}
-                                <div className="absolute top-[65%] right-2 md:right-10 transform -translate-y-1/2 rotate-12 scale-x-[-1]">
-                                    <div className="text-6xl md:text-9xl filter drop-shadow-[0_0_20px_rgba(234,179,8,0.5)] relative animate-trumpet-beat">
-                                        🎺
-                                        <div className="absolute top-2 right-2 w-1 h-1">
-                                            {Array.from({ length: 40 }).map((_, i) => (
-                                                <div
-                                                    key={`confetti - r - ${i} `}
-                                                    className="absolute w-2 h-2 md:w-3 md:h-3 rounded-sm animate-fountain-flow"
-                                                    style={{
-                                                        backgroundColor: ['#ef4444', '#3b82f6', '#eab308', '#a855f7', '#ec4899'][i % 5],
-                                                        left: 0, top: 0,
-                                                        '--tx': `${50 + Math.random() * 200} px`,
-                                                        '--ty': `${-100 - Math.random() * 200} px`,
-                                                        '--r': `${Math.random() * 720} deg`,
-                                                        animationDuration: `${1 + Math.random() * 1.5} s`,
-                                                        animationDelay: `${Math.random() * 0.5} s`
-                                                    } as React.CSSProperties}
-                                                ></div>
-                                            ))}
-                                        </div>
-                                    </div>
+                    {/* TRUMPETS & CANNON CONFETTI LAYER */}
+                    <div className="absolute inset-0 overflow-visible pointer-events-none z-[80]">
+                        {/* LEFT TRUMPET */}
+                        <div className="absolute top-[65%] left-2 md:left-10 transform -translate-y-1/2 -rotate-12">
+                            <div className="text-6xl md:text-9xl filter drop-shadow-[0_0_20px_rgba(234,179,8,0.5)] relative animate-trumpet-beat">
+                                🎺
+                                <div className="absolute top-2 right-2 w-1 h-1">
+                                    {Array.from({ length: 40 }).map((_, i) => (
+                                        <div
+                                            key={`confetti - l - ${i} `}
+                                            className="absolute w-2 h-2 md:w-3 md:h-3 rounded-sm animate-fountain-flow"
+                                            style={{
+                                                backgroundColor: ['#ef4444', '#3b82f6', '#eab308', '#a855f7', '#ec4899'][i % 5],
+                                                left: 0, top: 0,
+                                                '--tx': `${50 + Math.random() * 200} px`,
+                                                '--ty': `${-100 - Math.random() * 200} px`,
+                                                '--r': `${Math.random() * 720} deg`,
+                                                animationDuration: `${1 + Math.random() * 1.5} s`,
+                                                animationDelay: `${Math.random() * 0.5} s`
+                                            } as React.CSSProperties}
+                                        ></div>
+                                    ))}
                                 </div>
                             </div>
                         </div>
-                    )}
+
+                        {/* RIGHT TRUMPET (Flipped) */}
+                        <div className="absolute top-[65%] right-2 md:right-10 transform -translate-y-1/2 rotate-12 scale-x-[-1]">
+                            <div className="text-6xl md:text-9xl filter drop-shadow-[0_0_20px_rgba(234,179,8,0.5)] relative animate-trumpet-beat">
+                                🎺
+                                <div className="absolute top-2 right-2 w-1 h-1">
+                                    {Array.from({ length: 40 }).map((_, i) => (
+                                        <div
+                                            key={`confetti - r - ${i} `}
+                                            className="absolute w-2 h-2 md:w-3 md:h-3 rounded-sm animate-fountain-flow"
+                                            style={{
+                                                backgroundColor: ['#ef4444', '#3b82f6', '#eab308', '#a855f7', '#ec4899'][i % 5],
+                                                left: 0, top: 0,
+                                                '--tx': `${50 + Math.random() * 200} px`,
+                                                '--ty': `${-100 - Math.random() * 200} px`,
+                                                '--r': `${Math.random() * 720} deg`,
+                                                animationDuration: `${1 + Math.random() * 1.5} s`,
+                                                animationDelay: `${Math.random() * 0.5} s`
+                                            } as React.CSSProperties}
+                                        ></div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             )}
+
 
             {/* Styles Injection */}
             <style>{`
@@ -633,50 +717,52 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
             </div>
 
             {/* LEAGUE TABLE OVERLAY (SPECTATOR) */}
-            {(showLeagueTable || localShowTable) && league && (
-                <div className="fixed inset-0 z-[180] bg-black/95 backdrop-blur-lg flex items-center justify-center p-4 animate-fadeIn">
-                    <button
-                        onClick={() => setLocalShowTable(false)}
-                        className="absolute top-4 right-4 text-white/50 hover:text-white"
-                    >
-                        ✖
-                    </button>
-                    <div className="bg-[#1a0b2e] w-full max-w-4xl max-h-[90vh] rounded-2xl border-2 border-yellow-600 shadow-[0_0_50px_rgba(234,179,8,0.2)] overflow-hidden flex flex-col relative">
-                        <div className="p-6 border-b border-purple-800 flex justify-between items-center bg-purple-950/50">
-                            <div className="flex items-center gap-3">
-                                <Award className="text-yellow-400" size={32} />
-                                <h2 className="text-2xl font-urban text-white tracking-widest uppercase">POSICIONES DE LA LIGA</h2>
+            {
+                (showLeagueTable || localShowTable) && league && (
+                    <div className="fixed inset-0 z-[180] bg-black/95 backdrop-blur-lg flex items-center justify-center p-4 animate-fadeIn">
+                        <button
+                            onClick={() => setLocalShowTable(false)}
+                            className="absolute top-4 right-4 text-white/50 hover:text-white"
+                        >
+                            ✖
+                        </button>
+                        <div className="bg-[#1a0b2e] w-full max-w-4xl max-h-[90vh] rounded-2xl border-2 border-yellow-600 shadow-[0_0_50px_rgba(234,179,8,0.2)] overflow-hidden flex flex-col relative">
+                            <div className="p-6 border-b border-purple-800 flex justify-between items-center bg-purple-950/50">
+                                <div className="flex items-center gap-3">
+                                    <Award className="text-yellow-400" size={32} />
+                                    <h2 className="text-2xl font-urban text-white tracking-widest uppercase">POSICIONES DE LA LIGA</h2>
+                                </div>
+                            </div>
+                            <div className="p-0 overflow-y-auto custom-scrollbar flex-1">
+                                <table className="w-full text-left">
+                                    <thead className="bg-purple-900/40 text-purple-200 uppercase text-xs tracking-widest sticky top-0 backdrop-blur-md">
+                                        <tr>
+                                            <th className="p-4">Pos</th>
+                                            <th className="p-4">MC</th>
+                                            <th className="p-4 text-center">Batallas</th>
+                                            <th className="p-4 text-right">Puntos</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="text-gray-200">
+                                        {[...league.participants].sort((a, b) => b.points - a.points || b.battles - a.battles).map((p, idx) => (
+                                            <tr key={p.id} className={`border-b border-purple-800/30 ${!p.active ? 'opacity-50 grayscale' : ''} `}>
+                                                <td className="p-4 font-bold text-gray-500">#{idx + 1}</td>
+                                                <td className="p-4 font-black text-lg uppercase flex items-center gap-2">
+                                                    {idx === 0 && <Crown size={16} className="text-yellow-400" fill="currentColor" />}
+                                                    {p.name}
+                                                    {!p.active && <span className="text-[10px] bg-red-900/50 text-red-300 px-2 py-0.5 rounded border border-red-800 ml-2">COMPLETADO</span>}
+                                                </td>
+                                                <td className="p-4 text-center font-mono text-blue-300">{p.battles} / {league.maxBattlesPerPerson}</td>
+                                                <td className="p-4 text-right font-black text-xl text-yellow-400">{p.points}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
-                        <div className="p-0 overflow-y-auto custom-scrollbar flex-1">
-                            <table className="w-full text-left">
-                                <thead className="bg-purple-900/40 text-purple-200 uppercase text-xs tracking-widest sticky top-0 backdrop-blur-md">
-                                    <tr>
-                                        <th className="p-4">Pos</th>
-                                        <th className="p-4">MC</th>
-                                        <th className="p-4 text-center">Batallas</th>
-                                        <th className="p-4 text-right">Puntos</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="text-gray-200">
-                                    {[...league.participants].sort((a, b) => b.points - a.points || b.battles - a.battles).map((p, idx) => (
-                                        <tr key={p.id} className={`border-b border-purple-800/30 ${!p.active ? 'opacity-50 grayscale' : ''} `}>
-                                            <td className="p-4 font-bold text-gray-500">#{idx + 1}</td>
-                                            <td className="p-4 font-black text-lg uppercase flex items-center gap-2">
-                                                {idx === 0 && <Crown size={16} className="text-yellow-400" fill="currentColor" />}
-                                                {p.name}
-                                                {!p.active && <span className="text-[10px] bg-red-900/50 text-red-300 px-2 py-0.5 rounded border border-red-800 ml-2">COMPLETADO</span>}
-                                            </td>
-                                            <td className="p-4 text-center font-mono text-blue-300">{p.battles} / {league.maxBattlesPerPerson}</td>
-                                            <td className="p-4 text-right font-black text-xl text-yellow-400">{p.points}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 };
