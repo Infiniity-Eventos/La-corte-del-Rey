@@ -17,7 +17,15 @@ export const ComodinSelector: React.FC<ComodinSelectorProps> = ({ isOpen, pool, 
 
     useEffect(() => {
         if (isOpen && !spinning && !selected) {
-            handleSpin();
+            // Reset state on open if needed
+            setSpinning(false);
+            setCurrentIndex(0);
+
+            // Short timeout to ensure render before spin starts
+            const timer = setTimeout(() => {
+                handleSpin();
+            }, 100);
+            return () => clearTimeout(timer);
         }
     }, [isOpen]);
 
