@@ -166,9 +166,15 @@ const App: React.FC = () => {
 
             if (p.name === winnerName) {
                 const pointsToAdd = isTieBreaker ? 2 : 3;
-                // If Wildcard: DO NOT increment battles. DO NOT add points (Ghost battle for them).
-                // User said "no cuenta para el que ya batallo", implies no stats change effectively.
-                if (isWildcard) return p;
+
+                // If Wildcard: Increment POINTS but NOT BATTLES
+                if (isWildcard) {
+                    return {
+                        ...p,
+                        points: p.points + pointsToAdd
+                        // battles and active status remain unchanged
+                    };
+                }
 
                 const newBattles = p.battles + 1;
                 return {
@@ -180,8 +186,15 @@ const App: React.FC = () => {
             }
             if (p.name === loserName) {
                 const pointsToAdd = isTieBreaker ? 1 : 0;
-                // If Wildcard: DO NOT increment battles.
-                if (isWildcard) return p;
+
+                // If Wildcard: Increment POINTS (if any) but NOT BATTLES
+                if (isWildcard) {
+                    return {
+                        ...p,
+                        points: p.points + pointsToAdd
+                        // battles and active status remain unchanged
+                    };
+                }
 
                 const newBattles = p.battles + 1;
                 return {
