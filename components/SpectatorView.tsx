@@ -342,13 +342,8 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
                         </div>
 
                         {/* CENTER AREA: VS BADGE + REPLICA BUTTON */}
-                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-40 flex flex-col items-center gap-1">
-                            {/* VS BADGE */}
-                            <div className="w-12 h-12 bg-black border-4 border-white rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(255,255,255,0.5)] z-20">
-                                <span className="font-black italic text-sm text-white">VS</span>
-                            </div>
-
-                            {/* REPLICA BUTTON (CENTERED) */}
+                        {/* CENTER AREA: REPLICA BUTTON (REPLACES VS) */}
+                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-40">
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
@@ -356,9 +351,11 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
                                     setHasVoted(true);
                                     castVote('Replica', rivalA || 'MC AZUL', rivalB || 'MC ROJO');
                                 }}
-                                className="bg-gray-800/90 border border-white/50 text-white font-bold text-[10px] uppercase tracking-widest px-4 py-1.5 rounded-full shadow-[0_0_20px_rgba(0,0,0,0.8)] active:scale-95 transition-all z-10 hover:bg-gray-700"
+                                className="w-16 h-16 md:w-20 md:h-20 bg-gray-900 border-4 border-white rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(255,255,255,0.5)] active:scale-95 transition-all hover:bg-gray-800 hover:scale-110"
                             >
-                                RÉPLICA
+                                <span className="font-black text-[10px] md:text-sm text-white uppercase tracking-widest text-center leading-none">
+                                    VOTAR<br />RÉPLICA
+                                </span>
                             </button>
                         </div>
 
