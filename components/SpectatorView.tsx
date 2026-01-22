@@ -188,7 +188,7 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
                                 <div className="absolute inset-0 bg-purple-600/20 rounded-2xl blur-xl transition-all"></div>
                                 <div className="relative bg-black/80 border-2 border-purple-500 p-6 rounded-2xl shadow-[0_0_20px_rgba(168,85,247,0.3)] text-center">
                                     <div className="flex justify-center mb-4 text-purple-400"><User size={48} /></div>
-                                    <div className="text-3xl font-black font-urban text-white uppercase tracking-wider">{rivalA || "MC AZUL"}</div>
+                                    <div className="text-3xl font-black font-urban text-white uppercase tracking-wider">{rivalA || "MC MORADO"}</div>
                                 </div>
                             </div>
                             {/* VS */}
@@ -202,7 +202,7 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
                                 <div className="absolute inset-0 bg-blue-600/20 rounded-2xl blur-xl transition-all"></div>
                                 <div className="relative bg-black/80 border-2 border-blue-500 p-6 rounded-2xl shadow-[0_0_20px_rgba(59,130,246,0.3)] text-center">
                                     <div className="flex justify-center mb-4 text-blue-400"><User size={48} /></div>
-                                    <div className="text-3xl font-black font-urban text-white uppercase tracking-wider">{rivalB || "MC ROJO"}</div>
+                                    <div className="text-3xl font-black font-urban text-white uppercase tracking-wider">{rivalB || "MC AZUL"}</div>
                                 </div>
                             </div>
                         </div>
@@ -257,11 +257,11 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
                 {step === 'arena' && (
                     <div className="w-full h-full flex flex-col md:flex-row items-center md:items-stretch justify-center gap-4 md:gap-6 animate-fadeIn">
                         {/* LEFT: Rival A */}
-                        <div className="w-full md:w-1/4 flex md:flex-col justify-between md:justify-center items-center order-2 md:order-1 gap-2 bg-blue-900/10 border border-blue-500/20 rounded-xl p-2 md:p-4">
+                        <div className="w-full md:w-1/4 flex md:flex-col justify-between md:justify-center items-center order-2 md:order-1 gap-2 bg-purple-900/10 border border-purple-500/20 rounded-xl p-2 md:p-4">
                             <div className="flex flex-col items-center">
-                                <User size={32} className="text-blue-500 mb-1" />
-                                <h2 className="text-2xl md:text-4xl font-black font-urban text-blue-400 text-center uppercase leading-none break-words">
-                                    {rivalA || "MC AZUL"}
+                                <User size={32} className="text-purple-500 mb-1" />
+                                <h2 className="text-2xl md:text-4xl font-black font-urban text-purple-400 text-center uppercase leading-none break-words">
+                                    {rivalA || "MC MORADO"}
                                 </h2>
                             </div>
                         </div>
@@ -298,11 +298,11 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
                         </div>
 
                         {/* RIGHT: Rival B */}
-                        <div className="w-full md:w-1/4 flex md:flex-col justify-between md:justify-center items-center order-3 md:order-3 gap-2 bg-red-900/10 border border-red-500/20 rounded-xl p-2 md:p-4">
+                        <div className="w-full md:w-1/4 flex md:flex-col justify-between md:justify-center items-center order-3 md:order-3 gap-2 bg-blue-900/10 border border-blue-500/20 rounded-xl p-2 md:p-4">
                             <div className="flex flex-col items-center">
-                                <User size={32} className="text-red-500 mb-1" />
-                                <h2 className="text-2xl md:text-4xl font-black font-urban text-red-400 text-center uppercase leading-none break-words">
-                                    {rivalB || "MC ROJO"}
+                                <User size={32} className="text-blue-500 mb-1" />
+                                <h2 className="text-2xl md:text-4xl font-black font-urban text-blue-400 text-center uppercase leading-none break-words">
+                                    {rivalB || "MC AZUL"}
                                 </h2>
                             </div>
                         </div>
