@@ -341,11 +341,25 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
                             </div>
                         </div>
 
-                        {/* VS BADGE CENTER */}
-                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30">
-                            <div className="w-14 h-14 bg-black border-4 border-white rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(255,255,255,0.5)]">
-                                <span className="font-black italic text-md text-white">VS</span>
+                        {/* CENTER AREA: VS BADGE + REPLICA BUTTON */}
+                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-40 flex flex-col items-center gap-1">
+                            {/* VS BADGE */}
+                            <div className="w-12 h-12 bg-black border-4 border-white rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(255,255,255,0.5)] z-20">
+                                <span className="font-black italic text-sm text-white">VS</span>
                             </div>
+
+                            {/* REPLICA BUTTON (CENTERED) */}
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (hasVoted) return;
+                                    setHasVoted(true);
+                                    castVote('Replica', rivalA || 'MC AZUL', rivalB || 'MC ROJO');
+                                }}
+                                className="bg-gray-800/90 border border-white/50 text-white font-bold text-[10px] uppercase tracking-widest px-4 py-1.5 rounded-full shadow-[0_0_20px_rgba(0,0,0,0.8)] active:scale-95 transition-all z-10 hover:bg-gray-700"
+                            >
+                                RÉPLICA
+                            </button>
                         </div>
 
                         {/* BOTTOM HALF: RIVAL B (BLUE) */}
@@ -370,18 +384,7 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
                             </div>
                         </div>
 
-                        {/* REPLICA BUTTON (FLOATING BOTTOM) */}
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                if (hasVoted) return;
-                                setHasVoted(true);
-                                castVote('Replica', rivalA || 'MC AZUL', rivalB || 'MC ROJO');
-                            }}
-                            className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-40 bg-gray-800/90 border border-white/30 text-white font-bold text-xs uppercase tracking-widest px-6 py-3 rounded-full shadow-[0_0_20px_rgba(0,0,0,0.8)] active:scale-95 transition-all"
-                        >
-                            VOTAR RÉPLICA
-                        </button>
+
 
                         {/* VOTED OVERLAY */}
                         {hasVoted && (
