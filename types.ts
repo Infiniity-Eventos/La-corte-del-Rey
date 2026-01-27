@@ -23,20 +23,21 @@ export enum TrainingFormat {
   EIGHT_BY_EIGHT = '8x8',
   TWO_BY_TWO = '2x2',
   MINUTE = 'Minuto y Minuto',
-  KICK_BACK = 'Kick Back',
-  CALL_FRIEND = 'Llamado a un amigo'
+  KICK_BACK = 'Kick Back'
 }
 
-export type TrainingMode = 'themes' | 'free' | 'terminations' | 'characters' | 'questions' | 'role_play' | 'structure_easy' | 'structure_hard';
+export type TrainingMode = 'themes' | 'free' | 'terminations' | 'characters' | 'questions' | 'role_play' | 'structure_easy' | 'structure_hard' | 'structure_duplas' | 'news';
 
 export const ALL_TRAINING_MODES: TrainingMode[] = [
   'themes',
   'terminations',
   'characters',
   'questions',
+  'news',
   'role_play',
   'structure_easy',
   'structure_hard',
+  'structure_duplas',
   'free'
 ];
 

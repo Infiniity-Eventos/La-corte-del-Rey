@@ -24,7 +24,9 @@ const MODE_TRANSLATIONS: Record<string, string> = {
   questions: 'PREGUNTAS',
   role_play: 'JUEGO DE ROLES',
   structure_easy: 'ESTRUCTURA EASY',
-  structure_hard: 'ESTRUCTURA HARD'
+  structure_hard: 'ESTRUCTURA HARD',
+  structure_duplas: 'ESTRUCTURA DUPLAS',
+  news: 'NOTICIAS'
 };
 
 export const SlotMachine: React.FC<SlotMachineProps> = ({
@@ -64,8 +66,9 @@ export const SlotMachine: React.FC<SlotMachineProps> = ({
   const intervals = useRef<[(ReturnType<typeof setInterval> | null), (ReturnType<typeof setInterval> | null), (ReturnType<typeof setInterval> | null)]>([null, null, null]);
 
   // Data Pools
-  // Data Pools (Weighted 4x4: Added extra instance for ~1.5x prob)
-  const formats = [TrainingFormat.FOUR_BY_FOUR, ...Object.values(TrainingFormat)];
+  // Data Pools (Weighted 4x4: 50% chance, others share rest)
+  const otherFormats = Object.values(TrainingFormat).filter(f => f !== TrainingFormat.FOUR_BY_FOUR);
+  const formats = [...otherFormats, ...Array(otherFormats.length).fill(TrainingFormat.FOUR_BY_FOUR)];
   const modes = ALL_TRAINING_MODES;
   const genres = Object.values(BeatGenre);
 
@@ -126,6 +129,16 @@ export const SlotMachine: React.FC<SlotMachineProps> = ({
     }, 80); // Speed of text change
   };
 
+  // Auto-Spin for Replica (Sin derecho a elegir)
+  useEffect(() => {
+    if (isReplica && !hasStarted && !spectator && attempts > 0) {
+      const timer = setTimeout(() => {
+        handleSpin();
+      }, 500); // Small delay for visual impact
+      return () => clearTimeout(timer);
+    }
+  }, [isReplica, hasStarted, spectator, attempts]);
+
   const handleSpin = () => {
     if (spectator) return;
     if (spinning.some(s => s) || attempts <= 0) return;
@@ -172,14 +185,32 @@ export const SlotMachine: React.FC<SlotMachineProps> = ({
       setValues(prev => {
         let finalMode = prev.mode;
 
-        if (isReplica || prev.format === TrainingFormat.KICK_BACK) {
+        if (isReplica) {
+          // REPLICA LOGIC: Force Random Mode
+          // Request: "Sangre" (free) allowed + higher chance. No structures.
+
+          // 1. Filter valid modes (No Structures)
+          const validReplicaModes = ALL_TRAINING_MODES.filter(m =>
+            m !== 'structure_easy' &&
+            m !== 'structure_hard' &&
+            m !== 'structure_duplas'
+          );
+
+          // 2. Create weighted pool (Sangre x3)
+          const weightedPool = [...validReplicaModes];
+          // Add 'free' extra times to boost probability
+          weightedPool.push('free');
+          weightedPool.push('free');
+
+          finalMode = weightedPool[Math.floor(Math.random() * weightedPool.length)];
+
+        } else if (prev.format === TrainingFormat.KICK_BACK) {
           finalMode = 'free';
-        } else if ((prev.mode === 'structure_easy' || prev.mode === 'structure_hard') && prev.format !== TrainingFormat.FOUR_BY_FOUR) {
+        } else if ((prev.mode === 'structure_easy' || prev.mode === 'structure_hard' || prev.mode === 'structure_duplas') && prev.format !== TrainingFormat.FOUR_BY_FOUR) {
           // Fallback to themes if not 4x4
           finalMode = 'themes';
-        } else if (prev.format === TrainingFormat.EIGHT_BY_EIGHT && prev.mode === 'terminations') {
-          // 8x8 NO TERMINATIONS
-          finalMode = 'themes';
+        } else if (prev.format === TrainingFormat.EIGHT_BY_EIGHT && (prev.mode === 'terminations' || prev.mode === 'news')) {
+          if (prev.mode === 'terminations') finalMode = 'themes';
         }
 
         return { ...prev, mode: finalMode };
@@ -198,7 +229,10 @@ export const SlotMachine: React.FC<SlotMachineProps> = ({
       // If Mode is STRUCTURE HARD, FORCE TRAP.
       setValues(prev => {
         let finalGenre = prev.genre;
-        if (isReplica || prev.format === TrainingFormat.KICK_BACK) {
+        if (isReplica) {
+          // Force Boom Bap as requested
+          finalGenre = BeatGenre.BOOM_BAP;
+        } else if (prev.format === TrainingFormat.KICK_BACK) {
           finalGenre = BeatGenre.BOOM_BAP;
         } else if (prev.mode === 'structure_hard') {
           finalGenre = BeatGenre.TRAP;

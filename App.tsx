@@ -8,9 +8,10 @@ import { TournamentBracket } from './components/TournamentBracket';
 import { AccessScreen } from './components/AccessScreen'; // New Import
 import { BeatPlayer } from './components/BeatPlayer';
 import { ComodinSelector } from './components/ComodinSelector'; // New Import
-import { Info, Image as ImageIcon, RotateCcw, Youtube, Play, ExternalLink, User, Crown, Trophy, Zap, Swords, BookOpen, X, List, Scale, Timer, Star, Award } from 'lucide-react';
+import { Info, Image as ImageIcon, RotateCcw, Youtube, Play, ExternalLink, User, Crown, Trophy, Zap, Swords, BookOpen, X, List, Scale, Timer, Star, Award, Newspaper, Settings } from 'lucide-react';
 import { TrainingFormat, TrainingMode, BeatGenre, ALL_TRAINING_MODES, AppStep, LeagueParticipant } from './types';
 import { generateTopics, generateTerminations, generateCharacterBattles, generateQuestions } from './services/geminiService';
+import { fetchLatestNews } from './services/newsService';
 import { ROLES } from './data/roles';
 import { useFirebaseSync } from './hooks/useFirebaseSync';
 
@@ -25,7 +26,9 @@ const MODE_TRANSLATIONS: Record<string, string> = {
     questions: 'PREGUNTAS',
     role_play: 'JUEGO DE ROLES',
     structure_easy: 'ESTRUCTURA EASY',
-    structure_hard: 'ESTRUCTURA HARD'
+    structure_hard: 'ESTRUCTURA HARD',
+    structure_duplas: 'ESTRUCTURA DUPLAS',
+    news: 'NOTICIAS'
 };
 
 const ENTRADAS_RULES: Record<string, string> = {
@@ -33,8 +36,7 @@ const ENTRADAS_RULES: Record<string, string> = {
     [TrainingFormat.EIGHT_BY_EIGHT]: "3 Entradas por MC",
     [TrainingFormat.TWO_BY_TWO]: "10 Entradas por MC",
     [TrainingFormat.MINUTE]: "5 Entradas por MC",
-    [TrainingFormat.KICK_BACK]: "5 Entradas por MC",
-    [TrainingFormat.CALL_FRIEND]: "6 Entradas por MC"
+    [TrainingFormat.KICK_BACK]: "5 Entradas por MC"
 };
 
 const App: React.FC = () => {
@@ -63,6 +65,9 @@ const App: React.FC = () => {
     const [selectedFormat, setSelectedFormat] = useState<TrainingFormat | null>(null);
     const [selectedMode, setSelectedMode] = useState<TrainingMode>('themes');
     const [selectedGenre, setSelectedGenre] = useState<BeatGenre | null>(null);
+    // Editor Mode State
+    const [isEditorMode, setIsEditorMode] = useState(false);
+
     const [countdown, setCountdown] = useState<string | null>(null);
 
     // Transition State
@@ -447,6 +452,15 @@ const App: React.FC = () => {
                     return;
                 }
 
+                if (selectedMode === 'structure_duplas') {
+                    const patterns = ['A B A A', 'A B B A', 'A A B A', 'B B A A'];
+                    const randomPattern = patterns[Math.floor(Math.random() * patterns.length)];
+                    setPreGeneratedPool(patterns);
+                    setPreGeneratedTopic(randomPattern);
+                    setIsPreGenerating(false);
+                    return;
+                }
+
                 if (selectedMode === 'themes') {
                     // Generate topics, pick one
                     const topics = await generateTopics(40);
@@ -471,6 +485,21 @@ const App: React.FC = () => {
                     setPreGeneratedPool(battles);
                     const randomBattle = battles[Math.floor(Math.random() * battles.length)];
                     setPreGeneratedTopic(randomBattle);
+
+                } else if (selectedMode === 'news') {
+                    const news = await fetchLatestNews(20);
+                    // Store full news items as stringified JSON in the pool to pass them cleanly
+                    // Format: "TITLE|SOURCE|DESCRIPTION" (Simplified for basic pool usage, or JSON)
+                    // Let's use JSON string for safety
+                    const formattedNews = news.map(n => JSON.stringify(n));
+                    setPreGeneratedPool(formattedNews);
+                    if (formattedNews.length > 0) {
+                        // Pick a random news item initially so it's not always the same one
+                        const randomIndex = Math.floor(Math.random() * formattedNews.length);
+                        setPreGeneratedTopic(formattedNews[randomIndex]);
+                    } else {
+                        setPreGeneratedTopic(JSON.stringify({ title: "No hay noticias recientes", source: "System" }));
+                    }
                 }
                 setIsPreGenerating(false);
             };
@@ -653,7 +682,9 @@ const App: React.FC = () => {
         votedUsersRef.current = new Set(); // Reset Ref for Replica
         setVoteHistory([]); // Clear visual history
 
-        changeStepWithTransition('slots'); // Go back to slots, but now in Replica mode
+        // Logic for Random Replica is now handled in SlotMachine.tsx via isReplica prop
+        // It will force 4x4 and Random Mode (Step 289 request)
+        changeStepWithTransition('slots');
     };
 
     const triggerCountdown = () => {
@@ -741,13 +772,24 @@ const App: React.FC = () => {
                 </button >
 
                 {/* MANUAL/INFO BUTTON */}
-                < button
+                <button
                     onClick={() => setShowInfoModal(true)}
                     className="bg-black/40 backdrop-blur-md border border-purple-500/50 hover:bg-purple-900/50 hover:border-green-400 text-purple-200 p-3 rounded-full shadow-[0_0_15px_rgba(168,85,247,0.3)] transition-all transform hover:scale-105"
                     title="Ver opciones disponibles"
                 >
                     <List size={24} />
-                </button >
+                </button>
+
+                {/* EDITOR MODE TOGGLE */}
+                {step === 'slots' && (
+                    <button
+                        onClick={() => setIsEditorMode(!isEditorMode)}
+                        className={`bg-black/40 backdrop-blur-md border ${isEditorMode ? 'border-green-500 bg-green-900/20 text-green-400' : 'border-gray-600 text-gray-400'} p-3 rounded-full shadow-lg transition-all transform hover:scale-105`}
+                        title="Modo Editor (Pruebas)"
+                    >
+                        <Settings size={24} />
+                    </button>
+                )}
             </div >
 
 
@@ -1199,15 +1241,117 @@ const App: React.FC = () => {
                         <div className="w-full flex flex-col justify-center items-center flex-1 min-h-[60vh] py-0 gap-8 relative">
 
 
+                            {/* EDITOR MODE PANEL */}
+                            {isEditorMode && step === 'slots' && (
+                                <div className="absolute top-20 right-4 z-50 bg-black/90 border border-green-500/50 p-6 rounded-2xl shadow-2xl backdrop-blur-xl w-80 animate-fadeIn text-left">
+                                    <div className="flex items-center gap-2 mb-4 text-green-400 border-b border-green-500/30 pb-2">
+                                        <Settings size={20} />
+                                        <h3 className="font-bold uppercase tracking-wider text-sm">Panel de Control</h3>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        {/* Format Selector */}
+                                        <div>
+                                            <label className="text-gray-400 text-xs font-bold uppercase block mb-1">Formato</label>
+                                            <select
+                                                className="w-full bg-gray-900 border border-gray-700 text-white rounded-lg p-2 text-sm focus:border-green-500 outline-none transition-colors"
+                                                onChange={(e) => {
+                                                    const val = e.target.value as TrainingFormat;
+                                                    setTempSlotValues(prev => ({
+                                                        format: val,
+                                                        mode: prev?.mode || 'themes',
+                                                        genre: prev?.genre || BeatGenre.BOOM_BAP
+                                                    }));
+                                                }}
+                                                value={tempSlotValues?.format || ''}
+                                            >
+                                                <option value="">Seleccionar Formato...</option>
+                                                {Object.values(TrainingFormat).map(f => (
+                                                    <option key={f} value={f}>{f}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        {/* Mode Selector */}
+                                        <div>
+                                            <label className="text-gray-400 text-xs font-bold uppercase block mb-1">Estímulo</label>
+                                            <select
+                                                className="w-full bg-gray-900 border border-gray-700 text-white rounded-lg p-2 text-sm focus:border-green-500 outline-none transition-colors"
+                                                onChange={(e) => {
+                                                    const val = e.target.value as TrainingMode;
+                                                    setTempSlotValues(prev => ({
+                                                        mode: val,
+                                                        format: prev?.format || TrainingFormat.FOUR_BY_FOUR,
+                                                        genre: prev?.genre || BeatGenre.BOOM_BAP
+                                                    }));
+                                                }}
+                                                value={tempSlotValues?.mode || ''}
+                                            >
+                                                <option value="">Seleccionar Estímulo...</option>
+                                                {ALL_TRAINING_MODES.map(m => (
+                                                    <option key={m} value={m}>{MODE_TRANSLATIONS[m]}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        {/* Genre Selector */}
+                                        <div>
+                                            <label className="text-gray-400 text-xs font-bold uppercase block mb-1">Beat Genre</label>
+                                            <select
+                                                className="w-full bg-gray-900 border border-gray-700 text-white rounded-lg p-2 text-sm focus:border-green-500 outline-none transition-colors"
+                                                onChange={(e) => {
+                                                    const val = e.target.value as BeatGenre;
+                                                    setTempSlotValues(prev => ({
+                                                        genre: val,
+                                                        format: prev?.format || TrainingFormat.FOUR_BY_FOUR,
+                                                        mode: prev?.mode || 'themes'
+                                                    }));
+                                                }}
+                                                value={tempSlotValues?.genre || ''}
+                                            >
+                                                <option value="">Seleccionar Género...</option>
+                                                {Object.values(BeatGenre).map(g => (
+                                                    <option key={g} value={g}>{g}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <button
+                                            onClick={() => {
+                                                if (tempSlotValues?.format && tempSlotValues?.mode && tempSlotValues?.genre) {
+                                                    handleRouletteComplete(tempSlotValues.format, tempSlotValues.mode, tempSlotValues.genre);
+                                                    setIsEditorMode(false);
+                                                } else {
+                                                    alert("Por favor selecciona todos los campos");
+                                                }
+                                            }}
+                                            className="w-full mt-2 py-3 bg-green-600 hover:bg-green-500 text-black font-black uppercase rounded-lg shadow-lg hover:shadow-green-500/20 transition-all active:scale-95"
+                                        >
+                                            FORZAR PROBAR
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
                             <SlotMachine
-                                onComplete={handleRouletteComplete}
-                                onSpinFinish={setTempSlotValues}
-                                onSpinStart={() => setTempSlotValues(null)}
                                 isReplica={isReplica}
+                                spectator={false}
                                 attempts={attempts}
                                 setAttempts={setAttempts}
                                 rivalA={rivalA}
                                 rivalB={rivalB}
+                                onSpinStart={() => {
+                                    // Play Spin Sound
+                                    const audio = new Audio('/sounds/spin.mp3');
+                                    audio.volume = 0.5;
+                                    audio.play().catch(() => { });
+                                }}
+                                onSpinFinish={(val) => {
+                                    // Play Ding Sound
+                                    const audio = new Audio('/sounds/ding.mp3');
+                                    audio.volume = 0.6;
+                                    audio.play().catch(() => { });
+                                }}
+                                onComplete={handleRouletteComplete}
                             />
                         </div>
                     )}
@@ -1253,8 +1397,8 @@ const App: React.FC = () => {
                                 {/* 2. Start Battle */}
                                 <button
                                     onClick={handleStartBattle}
-                                    disabled={isPreGenerating || !isBeatSelected}
-                                    className={`w-full py-8 mt-4 rounded-xl font-black text-3xl font-urban tracking-wider flex items-center justify-center gap-3 transition-all transform active:scale-95 ${isPreGenerating || !isBeatSelected
+                                    disabled={isPreGenerating}
+                                    className={`w-full py-8 mt-4 rounded-xl font-black text-3xl font-urban tracking-wider flex items-center justify-center gap-3 transition-all transform active:scale-95 ${isPreGenerating
                                         ? 'bg-gray-800 text-gray-500 border-2 border-gray-700 cursor-not-allowed'
                                         : 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-[0_0_30px_rgba(168,85,247,0.4)] border-b-8 border-purple-900 hover:scale-[1.02]'
                                         }`}
@@ -1264,14 +1408,10 @@ const App: React.FC = () => {
                                             <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-gray-500"></div>
                                             {selectedMode === 'themes' ? 'BUSCANDO TEMÁTICA...' : selectedMode === 'terminations' ? 'BUSCANDO RIMAS...' : selectedMode === 'characters' ? 'PREPARANDO DUELO...' : selectedMode === 'questions' ? 'PENSANDO PREGUNTA...' : selectedMode === 'role_play' ? 'ASIGNANDO ROLES...' : selectedMode === 'structure_easy' || selectedMode === 'structure_hard' ? 'GENERANDO ESTRUCTURA...' : 'BUSCANDO CONCEPTOS...'}
                                         </>
-                                    ) : !isBeatSelected ? (
-                                        <div className="flex flex-col items-center">
-                                            <span className="text-gray-400 text-lg">SELECCIONA UN BEAT PARA INICIAR</span>
-                                        </div>
                                     ) : (
                                         <>
                                             <Play size={32} fill="white" />
-                                            ¡INICIAR BATALLA!
+                                            {!isBeatSelected ? 'INICIAR SIN BEAT' : '¡INICIAR BATALLA!'}
                                         </>
                                     )}
                                 </button>

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { generateTopics, generateTopicImage, generateTerminations, generateCharacterBattles, generateQuestions } from '../services/geminiService';
-import { RefreshCw, Zap, Image as ImageIcon, Dice5, Skull, Hash, Swords, MessageCircleQuestion, Sparkles } from 'lucide-react';
+import { RefreshCw, Zap, Image as ImageIcon, Dice5, Skull, Hash, Swords, MessageCircleQuestion, Sparkles, Newspaper } from 'lucide-react';
 import { TrainingMode } from '../types';
 
 interface TopicGeneratorProps {
@@ -71,7 +71,7 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({ mode, initialTop
             pool = await fetchTopics();
         }
 
-        if (mode === 'themes' || mode === 'terminations' || mode === 'questions' || mode === 'characters' || mode === 'role_play' || mode === 'structure_easy' || mode === 'structure_hard') {
+        if (mode === 'themes' || mode === 'terminations' || mode === 'questions' || mode === 'characters' || mode === 'role_play' || mode === 'structure_easy' || mode === 'structure_hard' || mode === 'structure_duplas' || mode === 'news') {
             // Themes now uses roulette for the WORD, then generates image
             startRoulette(pool);
         }
@@ -105,7 +105,13 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({ mode, initialTop
                 if (rouletteRef.current) clearInterval(rouletteRef.current);
                 setIsRolling(false);
 
-                const finalIndex = Math.floor(Math.random() * pool.length);
+                let finalIndex = Math.floor(Math.random() * pool.length);
+
+                // Prevent exact repetition if pool is larger than 1
+                if (pool.length > 1 && pool[finalIndex] === displayTopic) {
+                    finalIndex = (finalIndex + 1) % pool.length;
+                }
+
                 const finalTopic = pool[finalIndex];
                 setDisplayTopic(finalTopic);
 
@@ -201,14 +207,14 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({ mode, initialTop
                                         </div>
                                     </div>
                                 </div>
-                            ) : (mode === 'structure_easy' || mode === 'structure_hard') && !isRolling ? (
+                            ) : (mode === 'structure_easy' || mode === 'structure_hard' || mode === 'structure_duplas') && !isRolling ? (
                                 <div className="flex flex-col items-center justify-center text-center w-full relative animate-fadeIn px-4">
 
                                     {/* Floating Badge */}
-                                    <div className="mb-8 px-8 py-1 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-full border border-blue-400 shadow-[0_0_20px_rgba(37,99,235,0.5)] transform rotate-1">
+                                    <div className={`mb-8 px-8 py-1 bg-gradient-to-r rounded-full border shadow-[0_0_20px_rgba(37,99,235,0.5)] transform rotate-1 ${mode === 'structure_duplas' ? 'from-purple-600 to-pink-600 border-purple-400' : 'from-blue-600 to-cyan-600 border-blue-400'}`}>
                                         <p className="text-white font-black tracking-[0.3em] text-xs uppercase flex items-center gap-2">
                                             <span className="w-2 h-2 rounded-full bg-white animate-pulse"></span>
-                                            {mode === 'structure_hard' ? 'NI VEL DIOS' : 'PATRÓN 4x4'}
+                                            {mode === 'structure_hard' ? 'NI VEL DIOS' : mode === 'structure_duplas' ? 'MODO DUPLAS' : 'PATRÓN 4x4'}
                                             <span className="w-2 h-2 rounded-full bg-white animate-pulse"></span>
                                         </p>
                                     </div>
@@ -216,26 +222,89 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({ mode, initialTop
                                     {/* Structure Pattern - Bars Layout */}
                                     <div className="relative flex gap-4 md:gap-8 justify-center items-end mt-4">
                                         {/* Background Glow */}
-                                        <div className="absolute -inset-10 bg-gradient-to-r from-cyan-500/20 to-blue-600/20 opacity-50 blur-2xl rounded-full pointer-events-none"></div>
+                                        <div className={`absolute -inset-10 bg-gradient-to-r opacity-50 blur-2xl rounded-full pointer-events-none ${mode === 'structure_duplas' ? 'from-purple-500/20 to-pink-600/20' : 'from-cyan-500/20 to-blue-600/20'}`}></div>
 
-                                        {displayTopic.split(' ').map((bar, index) => (
-                                            <div key={index} className="flex flex-col items-center gap-2 group">
-                                                <span className="text-[10px] md:text-xs font-bold text-cyan-500 tracking-widest uppercase opacity-60 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                                                    BARRA {index + 1}
-                                                </span>
-                                                <div className="w-16 h-20 md:w-24 md:h-32 bg-black/40 border border-cyan-500/30 rounded-xl flex items-center justify-center relative overflow-hidden group-hover:border-cyan-400 transition-colors shadow-[0_0_15px_rgba(6,182,212,0.1)]">
-                                                    <div className="absolute inset-0 bg-gradient-to-t from-cyan-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                                    <span className={`${bar.length > 2 ? 'text-2xl md:text-4xl' : bar.length > 1 ? 'text-3xl md:text-5xl' : 'text-4xl md:text-7xl'} font-mono font-black text-white drop-shadow-[0_0_10px_rgba(34,211,238,0.8)] relative z-10`}>
-                                                        {bar}
+                                        {displayTopic.split(' ').map((bar, index) => {
+                                            let displayBar = bar;
+                                            if (mode === 'structure_duplas') {
+                                                displayBar = bar === 'A' ? 'P1' : 'P2';
+                                            }
+
+                                            return (
+                                                <div key={index} className="flex flex-col items-center gap-2 group">
+                                                    <span className={`text-[10px] md:text-xs font-bold tracking-widest uppercase opacity-60 group-hover:opacity-100 transition-opacity whitespace-nowrap ${mode === 'structure_duplas' ? 'text-pink-400' : 'text-cyan-500'}`}>
+                                                        {mode === 'structure_duplas' ? `LÍNEA ${index + 1}` : `BARRA ${index + 1}`}
                                                     </span>
+                                                    <div className={`w-16 h-20 md:w-24 md:h-32 bg-black/40 border rounded-xl flex items-center justify-center relative overflow-hidden transition-colors shadow-[0_0_15px_rgba(6,182,212,0.1)] 
+                                                        ${mode === 'structure_duplas' ? 'border-pink-500/30 group-hover:border-pink-400' : 'border-cyan-500/30 group-hover:border-cyan-400'}
+                                                        ${displayBar === 'P2' ? 'animate-electric-surge' : ''}
+                                                    `}>
+                                                        <div className={`absolute inset-0 bg-gradient-to-t opacity-0 group-hover:opacity-100 transition-opacity ${mode === 'structure_duplas' ? 'from-pink-900/40' : 'from-cyan-900/40'}`}></div>
+
+                                                        {/* Electric Effect for P2 */}
+                                                        {displayBar === 'P2' && (
+                                                            <>
+                                                                <div className="absolute inset-0 bg-purple-500/20 z-0 animate-pulse-fast"></div>
+                                                                <Zap className="absolute top-1 right-1 text-purple-300 w-3 h-3 md:w-4 md:h-4 opacity-0 animate-flash-icon" />
+                                                            </>
+                                                        )}
+
+                                                        <span className={`${displayBar.length > 2 ? 'text-2xl md:text-4xl' : displayBar.length > 1 ? 'text-3xl md:text-5xl' : 'text-4xl md:text-7xl'} font-mono font-black text-white ${mode === 'structure_duplas' ? 'drop-shadow-[0_0_10px_rgba(236,72,153,0.8)]' : 'drop-shadow-[0_0_10px_rgba(34,211,238,0.8)]'} relative z-10`}>
+                                                            {displayBar}
+                                                        </span>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
 
-                                    <p className="text-cyan-400/60 font-medium tracking-[0.5em] text-sm uppercase mt-4">
-                                        {mode === 'structure_hard' ? 'MODO HARDCORE' : 'MODO CLÁSICO'}
+                                    <p className={`font-medium tracking-[0.5em] text-sm uppercase mt-4 ${mode === 'structure_duplas' ? 'text-pink-400/60' : 'text-cyan-400/60'}`}>
+                                        {mode === 'structure_hard' ? 'MODO HARDCORE' : mode === 'structure_duplas' ? 'COOPERATIVO' : 'MODO CLÁSICO'}
                                     </p>
+                                </div>
+                            ) : mode === 'news' && !isRolling ? (
+                                <div className="flex flex-col items-center justify-center text-center w-full h-full relative animate-fadeIn px-6 py-4">
+
+                                    {/* News Badge - Relative flow to avoid overlap */}
+                                    <div className="mb-4 md:mb-8">
+                                        <div className="inline-block px-4 py-1 bg-gradient-to-r from-red-700 to-red-600 rounded-sm shadow-[0_4px_15px_rgba(220,38,38,0.4)] border border-red-500/50">
+                                            <p className="text-white font-black tracking-[0.2em] text-[10px] md:text-xs uppercase flex items-center gap-2">
+                                                <span className="w-2 h-2 rounded-full bg-white animate-pulse shadow-[0_0_10px_white]"></span>
+                                                NOTICIAS DE ACTUALIDAD
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Main News Title - Clean & Centered */}
+                                    <div className="w-full flex-1 flex flex-col items-center justify-center">
+                                        <div className="w-full max-w-3xl bg-black/20 backdrop-blur-sm rounded-2xl p-6 border border-white/5 shadow-2xl">
+                                            <h1 className="text-2xl md:text-4xl font-bold font-sans text-white leading-snug break-words drop-shadow-xl mb-4 text-balance">
+                                                {(() => {
+                                                    try {
+                                                        const newsItem = JSON.parse(displayTopic);
+                                                        return `"${newsItem.title}"`;
+                                                    } catch (e) {
+                                                        return displayTopic;
+                                                    }
+                                                })()}
+                                            </h1>
+
+                                            {/* Source */}
+                                            {(() => {
+                                                try {
+                                                    const newsItem = JSON.parse(displayTopic);
+                                                    return (
+                                                        <div className="mt-4 pt-4 border-t border-white/10 w-full flex justify-center">
+                                                            <div className="inline-flex items-center gap-2 text-gray-400 text-xs md:text-sm font-bold uppercase tracking-widest">
+                                                                <Newspaper size={14} className="text-red-500" />
+                                                                <span>{newsItem.source}</span>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                } catch (e) { return null; }
+                                            })()}
+                                        </div>
+                                    </div>
                                 </div>
                             ) : (
                                 <div className="flex flex-col items-center justify-center text-center w-full relative">
@@ -296,8 +365,8 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({ mode, initialTop
                             <span className="animate-pulse">SELECCIONANDO...</span>
                         ) : (
                             <>
-                                {mode === 'terminations' ? <Hash size={32} /> : mode === 'characters' ? <Swords size={32} /> : mode === 'questions' ? <MessageCircleQuestion size={32} /> : <Sparkles size={32} />}
-                                {mode === 'themes' ? 'NUEVA TEMÁTICA' : mode === 'terminations' ? 'OTRA TERMINACIÓN' : mode === 'characters' ? 'NUEVO DUELO' : mode === 'questions' ? 'OTRA PREGUNTA' : mode === 'role_play' ? 'NUEVOS ROLES' : (mode === 'structure_easy' || mode === 'structure_hard') ? 'OTRO PATRÓN' : 'OTRO CONCEPTO'}
+                                {mode === 'terminations' ? <Hash size={32} /> : mode === 'characters' ? <Swords size={32} /> : mode === 'questions' ? <MessageCircleQuestion size={32} /> : mode === 'news' ? <Newspaper size={32} /> : <Sparkles size={32} />}
+                                {mode === 'themes' ? 'NUEVA TEMÁTICA' : mode === 'terminations' ? 'OTRA TERMINACIÓN' : mode === 'characters' ? 'NUEVO DUELO' : mode === 'questions' ? 'OTRA PREGUNTA' : mode === 'role_play' ? 'NUEVOS ROLES' : mode === 'news' ? 'OTRA NOTICIA' : (mode === 'structure_easy' || mode === 'structure_hard' || mode === 'structure_duplas') ? 'OTRO PATRÓN' : 'OTRO CONCEPTO'}
                             </>
                         )}
                     </button>
@@ -307,6 +376,28 @@ export const TopicGenerator: React.FC<TopicGeneratorProps> = ({ mode, initialTop
 
 
             <style>{`
+        @keyframes electric-surge {
+            0%, 90% { box-shadow: 0 0 15px rgba(236,72,153,0.1); border-color: rgba(236,72,153,0.3); }
+            92% { box-shadow: 0 0 30px rgba(168,85,247,0.8), inset 0 0 20px rgba(168,85,247,0.4); border-color: rgba(168,85,247,1); filter: brightness(1.3); }
+            94% { box-shadow: 0 0 15px rgba(236,72,153,0.1); border-color: rgba(236,72,153,0.3); filter: brightness(1); }
+            96% { box-shadow: 0 0 40px rgba(168,85,247,0.9), inset 0 0 30px rgba(168,85,247,0.5); border-color: rgba(255,255,255,0.9); filter: brightness(1.5); }
+            100% { box-shadow: 0 0 15px rgba(236,72,153,0.1); border-color: rgba(236,72,153,0.3); }
+        }
+        @keyframes flash-icon {
+            0%, 90% { opacity: 0; transform: scale(0.8) rotate(0deg); }
+            92% { opacity: 1; transform: scale(1.2) rotate(10deg); color: #fff; }
+            96% { opacity: 1; transform: scale(1.4) rotate(-10deg); color: #e879f9; }
+            100% { opacity: 0; transform: scale(0.8) rotate(0deg); }
+        }
+        .animate-electric-surge {
+            animation: electric-surge 4s infinite linear;
+        }
+        .animate-flash-icon {
+            animation: flash-icon 4s infinite linear;
+        }
+        .animate-pulse-fast {
+             animation: pulse 0.15s infinite;
+        }
         @keyframes glitch {
           0% { transform: translate(0); text-shadow: -2px 2px red; }
           25% { transform: translate(-2px, 2px); text-shadow: 2px -2px blue; }

@@ -42,34 +42,30 @@ export const AccessScreen: React.FC<AccessScreenProps> = ({ onAdminLogin, onSpec
                     </h1>
 
                     {mode === 'selection' && (
-                        <div className="flex flex-col gap-4">
-                            <button
-                                onClick={() => { setMode('admin'); setError(''); }}
-                                className="group relative p-6 bg-gradient-to-br from-purple-900/40 to-black border border-purple-500/30 rounded-2xl hover:border-purple-400 hover:shadow-[0_0_20px_rgba(168,85,247,0.3)] transition-all flex items-center gap-4 text-left"
-                            >
-                                <div className="p-3 bg-purple-500/10 rounded-xl group-hover:bg-purple-500/20 transition-colors">
-                                    <Shield className="text-purple-400 group-hover:scale-110 transition-transform" size={32} />
-                                </div>
-                                <div>
-                                    <h3 className="text-white font-bold text-lg uppercase tracking-wider">Modo Administrador</h3>
-                                    <p className="text-gray-400 text-xs mt-1">Control total del evento</p>
-                                </div>
-                                <ArrowRight className="ml-auto text-gray-500 group-hover:text-white transition-colors" />
-                            </button>
-
+                        <div className="flex flex-col gap-6">
                             <button
                                 onClick={() => { setMode('spectator'); setError(''); }}
-                                className="group relative p-6 bg-gradient-to-br from-cyan-900/40 to-black border border-cyan-500/30 rounded-2xl hover:border-cyan-400 hover:shadow-[0_0_20px_rgba(6,182,212,0.3)] transition-all flex items-center gap-4 text-left"
+                                className="group relative p-8 bg-gradient-to-br from-cyan-900/40 to-black border border-cyan-500/30 rounded-2xl hover:border-cyan-400 hover:shadow-[0_0_30px_rgba(6,182,212,0.4)] transition-all flex items-center gap-6 text-left w-full transform hover:scale-[1.02]"
                             >
-                                <div className="p-3 bg-cyan-500/10 rounded-xl group-hover:bg-cyan-500/20 transition-colors">
-                                    <Users className="text-cyan-400 group-hover:scale-110 transition-transform" size={32} />
+                                <div className="p-4 bg-cyan-500/10 rounded-2xl group-hover:bg-cyan-500/20 transition-colors">
+                                    <Users className="text-cyan-400 group-hover:scale-110 transition-transform" size={40} />
                                 </div>
-                                <div>
-                                    <h3 className="text-white font-bold text-lg uppercase tracking-wider">Modo Espectador</h3>
-                                    <p className="text-gray-400 text-xs mt-1">Ver batallas y votar</p>
+                                <div className="flex-1">
+                                    <h3 className="text-white font-black text-2xl uppercase tracking-wider">Modo Espectador</h3>
+                                    <p className="text-gray-300 text-sm mt-1">Ver batallas y votar en vivo</p>
                                 </div>
-                                <ArrowRight className="ml-auto text-gray-500 group-hover:text-white transition-colors" />
+                                <ArrowRight className="text-gray-500 group-hover:text-cyan-400 transition-colors" size={28} />
                             </button>
+
+                            <div className="flex justify-center">
+                                <button
+                                    onClick={() => { setMode('admin'); setError(''); }}
+                                    className="group flex items-center justify-center gap-2 text-gray-600 hover:text-purple-400 transition-colors py-3 px-6 rounded-lg hover:bg-white/5"
+                                >
+                                    <Shield size={16} className="group-hover:rotate-12 transition-transform" />
+                                    <span className="text-xs font-bold uppercase tracking-widest">Acceso Administrador</span>
+                                </button>
+                            </div>
                         </div>
                     )}
 
@@ -121,13 +117,13 @@ export const AccessScreen: React.FC<AccessScreenProps> = ({ onAdminLogin, onSpec
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Tu Nombre</label>
+                                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">TU A.K.A</label>
                                 <input
                                     type="text"
                                     value={spectatorName}
                                     onChange={(e) => setSpectatorName(e.target.value)}
                                     className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-500 transition-colors"
-                                    placeholder="Ej: Juan Pérez"
+                                    placeholder=""
                                     autoFocus
                                 />
                                 {error && <p className="text-red-400 text-xs font-bold">{error}</p>}

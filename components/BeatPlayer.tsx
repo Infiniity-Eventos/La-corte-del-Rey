@@ -39,7 +39,6 @@ export const BeatPlayer: React.FC<BeatPlayerProps> = ({ initialQuery, isOpen, on
     // Effect to perform search when opened with new query
     useEffect(() => {
         if (initialQuery && isOpen) {
-            // Only reset if query is different or we explicitly want to (but for now just if different)
             if (initialQuery !== query) {
                 setQuery(initialQuery);
                 setSelectedVideo(null); // Reset selection on new battle/query
@@ -49,10 +48,13 @@ export const BeatPlayer: React.FC<BeatPlayerProps> = ({ initialQuery, isOpen, on
         }
     }, [initialQuery, isOpen]);
 
+    const [error, setError] = useState<string | null>(null);
+
     const handleSearch = async (searchQuery: string, pageToken?: string) => {
         if (!searchQuery.trim()) return;
 
         setLoading(true);
+        setError(null);
         try {
             const results = await searchYouTubeVideos(searchQuery, pageToken);
 
@@ -68,8 +70,14 @@ export const BeatPlayer: React.FC<BeatPlayerProps> = ({ initialQuery, isOpen, on
 
             setVideos(filteredVideos);
             setNextPageToken(results.nextPageToken);
+
+            if (filteredVideos.length === 0 && results.items.length === 0) {
+                // No results found (not an error, handled in render)
+            }
+
         } catch (error) {
             console.error("Search failed", error);
+            setError("No se pudieron cargar los beats. Es posible que se haya alcanzado el límite diario de la API de YouTube. Intenta de nuevo más tarde.");
         } finally {
             setLoading(false);
         }
@@ -251,7 +259,12 @@ export const BeatPlayer: React.FC<BeatPlayerProps> = ({ initialQuery, isOpen, on
                             </div>
                         ))}
 
-                        {videos.length === 0 && !loading && (
+                        {error ? (
+                            <div className="text-center text-red-400 text-sm mt-10 px-4">
+                                <p className="font-bold mb-1">¡Ups!</p>
+                                {error}
+                            </div>
+                        ) : videos.length === 0 && !loading && (
                             <div className="text-center text-gray-500 text-sm mt-10">
                                 {initialQuery ? 'No se encontraron resultados.' : 'Busca un estilo para empezar.'}
                             </div>
