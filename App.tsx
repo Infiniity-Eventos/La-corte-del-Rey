@@ -591,7 +591,7 @@ const App: React.FC = () => {
         return (
             <>
                 <AccessScreen
-                    onAdminLogin={() => handleLogin({ name: 'Admin', role: 'admin' })}
+                    onAdminLogin={() => handleLogin({ username: 'Admin', status: 'approved', createdAt: Date.now() })}
                     onSpectatorLogin={(name) => {
                         setViewerName(name);
                         setIsSpectator(true);
