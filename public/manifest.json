@@ -1,0 +1,16 @@
+{
+    "short_name": "La Corte",
+    "name": "La Corte del Rey - Freestyle App",
+    "icons": [
+        {
+            "src": "pwa-icon.jpg",
+            "sizes": "192x192 512x512",
+            "type": "image/jpeg"
+        }
+    ],
+    "start_url": ".",
+    "display": "standalone",
+    "theme_color": "#0d001a",
+    "background_color": "#0d001a",
+    "orientation": "portrait"
+}

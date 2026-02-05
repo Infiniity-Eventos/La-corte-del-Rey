@@ -10,7 +10,7 @@ import { UserManagementModal } from './components/UserManagementModal';
 
 import { BeatPlayer } from './components/BeatPlayer';
 import { ComodinSelector } from './components/ComodinSelector'; // New Import
-import { Info, Image as ImageIcon, RotateCcw, Youtube, Play, ExternalLink, User, Crown, Trophy, Zap, Swords, BookOpen, X, List, Scale, Timer, Star, Award, Newspaper, Settings, Users } from 'lucide-react';
+import { Info, Image as ImageIcon, RotateCcw, Youtube, Play, ExternalLink, User, Crown, Trophy, Zap, Swords, BookOpen, X, List, Scale, Timer, Star, Award, Newspaper, Settings, Users, Download } from 'lucide-react';
 
 import { TrainingFormat, TrainingMode, BeatGenre, ALL_TRAINING_MODES, AppStep, LeagueParticipant } from './types';
 import { generateTopics, generateTerminations, generateCharacterBattles, generateQuestions } from './services/geminiService';
@@ -56,6 +56,27 @@ const App: React.FC = () => {
             setIsSpectator(true);
         }
     }, []);
+
+    // PWA Install State
+    const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+    useEffect(() => {
+        const handler = (e: any) => {
+            e.preventDefault();
+            setDeferredPrompt(e);
+        };
+        window.addEventListener('beforeinstallprompt', handler);
+        return () => window.removeEventListener('beforeinstallprompt', handler);
+    }, []);
+
+    const handleInstallClick = async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+            setDeferredPrompt(null);
+        }
+    };
 
     const [step, setStep] = useState<AppStep>('names'); // Start at names
     const [rivalA, setRivalA] = useState('BUFÓN MORADO');
@@ -838,6 +859,17 @@ const App: React.FC = () => {
                         title="Administrar Usuarios"
                     >
                         <Users size={24} />
+                    </button>
+                )}
+
+                {/* PWA INSTALL BUTTON */}
+                {deferredPrompt && (
+                    <button
+                        onClick={handleInstallClick}
+                        className="bg-green-600/80 backdrop-blur-md border border-green-500 hover:bg-green-500 hover:scale-105 text-white p-3 rounded-full shadow-[0_0_15px_rgba(34,197,94,0.4)] transition-all animate-bounce"
+                        title="Instalar Aplicación"
+                    >
+                        <Download size={24} />
                     </button>
                 )}
             </div >
