@@ -590,7 +590,13 @@ const App: React.FC = () => {
     if (!isAuthenticated && !isSpectator) {
         return (
             <>
-                <AccessScreen onLogin={handleLogin} onSpectator={() => setIsSpectator(true)} />
+                <AccessScreen
+                    onAdminLogin={() => handleLogin({ name: 'Admin', role: 'admin' })}
+                    onSpectatorLogin={(name) => {
+                        setViewerName(name);
+                        setIsSpectator(true);
+                    }}
+                />
                 {deferredPrompt && (
                     <div className="fixed bottom-6 right-6 z-[9999] animate-bounce">
                         <button
