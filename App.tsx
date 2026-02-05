@@ -46,6 +46,12 @@ const ENTRADAS_RULES: Record<string, string> = {
 const App: React.FC = () => {
     const [authStep, setAuthStep] = useState<'login' | 'app'>('login');
     const [viewerName, setViewerName] = useState('');
+    const [isAuthenticated, setIsAuthenticated] = useState(false); // Add this state
+
+    const handleLogin = (user: UserType) => {
+        setIsAuthenticated(true);
+        // Any other login logic
+    };
 
     // Check for Spectator Mode Route
     const [isSpectator, setIsSpectator] = useState(() => window.location.pathname === '/modoespectador');
@@ -572,6 +578,27 @@ const App: React.FC = () => {
             }
         }
     }, [step, selectedMode, selectedGenre]);
+
+    // --- RENDER ACCESS SCREEN IF NOT AUTHENTICATED ---
+    if (!isAuthenticated && !isSpectator) {
+        return (
+            <>
+                <AccessScreen onLogin={handleLogin} onSpectator={() => setIsSpectator(true)} />
+                {deferredPrompt && (
+                    <div className="fixed bottom-6 right-6 z-[9999] animate-bounce">
+                        <button
+                            onClick={handleInstallClick}
+                            className="bg-green-600/90 backdrop-blur-md border border-green-500 hover:bg-green-500 hover:scale-105 text-white p-4 rounded-full shadow-[0_0_20px_rgba(34,197,94,0.6)] transition-all flex items-center gap-2 font-bold uppercase tracking-wider"
+                            title="Instalar Aplicación"
+                        >
+                            <Download size={24} />
+                            <span className="hidden md:inline">Instalar App</span>
+                        </button>
+                    </div>
+                )}
+            </>
+        );
+    }
 
     const resetApp = () => {
         setStep('names');
