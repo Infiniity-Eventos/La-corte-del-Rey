@@ -120,7 +120,20 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
     }, [animationTrigger]);
 
 
+
     // Derived values
+
+    // Check if the current spectator is one of the battling MCs (Moved up to avoid conditional hook)
+    const isBattling = React.useMemo(() => {
+        const rA = gameState?.rivalA;
+        const rB = gameState?.rivalB;
+
+        if (!viewerName || !rA || !rB) return false;
+
+        const vName = viewerName.trim().toLowerCase();
+        return vName === rA.trim().toLowerCase() || vName === rB.trim().toLowerCase();
+    }, [viewerName, gameState?.rivalA, gameState?.rivalB]);
+
     if (!gameState) {
         return (
             <div className="min-h-screen bg-[#0d001a] flex flex-col items-center justify-center text-purple-500 animate-pulse">
@@ -130,6 +143,19 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
         );
     }
 
+    // ... rest of simple derived values ... 
+    // (Note: I need to be careful not to cut off too much or insert in wrong place. 
+    // The previous view showed lines 30-60 and 430-480. 
+    // I will insert `isBattling` logic near the top or use it directly in the JSX.
+    // Let's insert the `isBattling` calculation inside the component body before return, 
+    // and then update the JSX around line 429.)
+
+    // RE-READING FILE CONTENT TO ENSURE SAFETY
+    // The previous view showed `isFlickering` etc. around line 43.
+    // I'll add the Memo there.
+
+
+
     // Derived values
     const {
         step, rivalA, rivalB, winner, selectedFormat, selectedMode, selectedGenre,
@@ -137,6 +163,7 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
         loserImage: remoteLoserImage, showWinnerScreen, votingBg, currentSlotValues, spinAttempts,
         league, showLeagueTable
     } = gameState;
+
 
     // Use override if flickering, otherwise remote
     const loserImage = isFlickering ? glitchImageOverride : remoteLoserImage;
@@ -426,7 +453,7 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
                             )}
 
                             {/* INTERACTIVE VOTING ZONES (Spectator) */}
-                            {!winner && !hasVoted && (
+                            {!winner && !hasVoted && !isBattling && (
                                 <>
                                     {/* ZONE A: Click to Vote A (Left Half) */}
                                     <div
@@ -467,6 +494,17 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
                                         </button>
                                     </div>
                                 </>
+                            )}
+
+                            {/* IS BATTLING FEEDBACK */}
+                            {!winner && isBattling && (
+                                <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none">
+                                    <div className="bg-red-900/80 backdrop-blur-md px-8 py-4 rounded-2xl border border-red-500/50 animate-pulse shadow-[0_0_30px_rgba(220,38,38,0.5)]">
+                                        <span className="text-white font-bold uppercase tracking-widest text-lg flex items-center gap-2">
+                                            <Swords size={24} /> No puedes votar en tu batalla
+                                        </span>
+                                    </div>
+                                </div>
                             )}
 
                             {/* VOTED FEEDBACK */}

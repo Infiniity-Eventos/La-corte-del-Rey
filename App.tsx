@@ -6,14 +6,18 @@ import { SlotMachine } from './components/SlotMachine';
 import { SpectatorView } from './components/SpectatorView';
 import { TournamentBracket } from './components/TournamentBracket';
 import { AccessScreen } from './components/AccessScreen'; // New Import
+import { UserManagementModal } from './components/UserManagementModal';
+
 import { BeatPlayer } from './components/BeatPlayer';
 import { ComodinSelector } from './components/ComodinSelector'; // New Import
-import { Info, Image as ImageIcon, RotateCcw, Youtube, Play, ExternalLink, User, Crown, Trophy, Zap, Swords, BookOpen, X, List, Scale, Timer, Star, Award, Newspaper, Settings } from 'lucide-react';
+import { Info, Image as ImageIcon, RotateCcw, Youtube, Play, ExternalLink, User, Crown, Trophy, Zap, Swords, BookOpen, X, List, Scale, Timer, Star, Award, Newspaper, Settings, Users } from 'lucide-react';
+
 import { TrainingFormat, TrainingMode, BeatGenre, ALL_TRAINING_MODES, AppStep, LeagueParticipant } from './types';
 import { generateTopics, generateTerminations, generateCharacterBattles, generateQuestions } from './services/geminiService';
 import { fetchLatestNews } from './services/newsService';
 import { ROLES } from './data/roles';
 import { useFirebaseSync } from './hooks/useFirebaseSync';
+import { getAllUsers, User as UserType } from './services/userService'; // New Import
 
 // Updated steps: replaced format/mode/beat with 'slots'
 // AppStep moved to types.ts
@@ -87,6 +91,7 @@ const App: React.FC = () => {
     // Info Modal State
     const [showInfoModal, setShowInfoModal] = useState(false);
     const [showTournamentModal, setShowTournamentModal] = useState(false);
+    const [showUserModal, setShowUserModal] = useState(false);
 
     // Loser Image State
     const [loserImage, setLoserImage] = useState<string | null>(null);
@@ -108,16 +113,10 @@ const App: React.FC = () => {
 
     // --- LEAGUE MODE STATE ---
     const [isLeagueMode, setIsLeagueMode] = useState(false);
-    const [leagueParticipants, setLeagueParticipants] = useState<LeagueParticipant[]>(() => {
-        const saved = localStorage.getItem('league_participants');
-        return saved ? JSON.parse(saved) : [];
-    });
-    const [maxBattlesPerPerson, setMaxBattlesPerPerson] = useState(() => {
-        const saved = localStorage.getItem('league_max_battles');
-        return saved ? parseInt(saved) : 3;
-    });
+    // REMOVED DUPLICATE LEAGUE STATE DECLARATIONS HERE
     const [showLeagueTable, setShowLeagueTable] = useState(false);
-    const [newParticipantName, setNewParticipantName] = useState('');
+
+    // Roulette State
     const [isRouletteSpinning, setIsRouletteSpinning] = useState(false);
     const [rouletteNames, setRouletteNames] = useState<{ A: string, B: string }>({ A: '?', B: '?' });
     const [rouletteWinner, setRouletteWinner] = useState<{ A: string, B: string } | null>(null);
@@ -133,6 +132,30 @@ const App: React.FC = () => {
     const [currentWildcardOpponent, setCurrentWildcardOpponent] = useState<string | null>(null); // Track who is the wildcard
 
     // Persist League Data
+    // League State
+    const [leagueParticipants, setLeagueParticipants] = useState<LeagueParticipant[]>(() => {
+        const saved = localStorage.getItem('league_participants');
+        return saved ? JSON.parse(saved) : [];
+    });
+    const [maxBattlesPerPerson, setMaxBattlesPerPerson] = useState(() => {
+        const saved = localStorage.getItem('league_max_battles');
+        return saved ? parseInt(saved) : 4;
+    });
+    const [newParticipantName, setNewParticipantName] = useState('');
+    const [availableUsers, setAvailableUsers] = useState<UserType[]>([]); // New state for registered users
+
+    // Fetch users for League Mode
+    useEffect(() => {
+        const fetchLeagueUsers = async () => {
+            const users = await getAllUsers();
+            // Filter only approved users
+            setAvailableUsers(users.filter(u => u.status === 'approved'));
+        };
+
+        fetchLeagueUsers();
+    }, []);
+
+    // Persist League Data
     useEffect(() => {
         localStorage.setItem('league_participants', JSON.stringify(leagueParticipants));
     }, [leagueParticipants]);
@@ -145,11 +168,27 @@ const App: React.FC = () => {
     // LEAGUE LOGIC: Add Participant
     const addParticipant = () => {
         if (!newParticipantName.trim()) return;
+
+        // VALIDATION: Check if user is in availableUsers
+        const userExists = availableUsers.some(u => u.username.toLowerCase() === newParticipantName.trim().toLowerCase());
+
+        if (!userExists) {
+            alert("Solo se pueden agregar usuarios registrados y aprobados. Verifica que el usuario exista en la lista.");
+            return;
+        }
+
+        const nameUpper = newParticipantName.trim().toUpperCase();
+
+        if (leagueParticipants.some(p => p.name === nameUpper)) {
+            alert("Este participante ya está en la liga");
+            return;
+        }
+
         setLeagueParticipants(prev => [
             ...prev,
             {
                 id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
-                name: newParticipantName.toUpperCase(),
+                name: nameUpper,
                 points: 0,
                 battles: 0,
                 active: true
@@ -790,6 +829,17 @@ const App: React.FC = () => {
                         <Settings size={24} />
                     </button>
                 )}
+
+                {/* USER MANAGEMENT BUTTON - Admin Only */}
+                {!isSpectator && (
+                    <button
+                        onClick={() => setShowUserModal(true)}
+                        className="bg-black/40 backdrop-blur-md border border-cyan-500/50 hover:bg-cyan-900/50 hover:border-cyan-400 text-cyan-200 p-3 rounded-full shadow-[0_0_15px_rgba(6,182,212,0.3)] transition-all transform hover:scale-105"
+                        title="Administrar Usuarios"
+                    >
+                        <Users size={24} />
+                    </button>
+                )}
             </div >
 
 
@@ -1146,12 +1196,19 @@ const App: React.FC = () => {
                                             <div className="flex gap-2 mb-4">
                                                 <input
                                                     type="text"
+                                                    list="approved-users" // Connect to datalist
                                                     value={newParticipantName}
                                                     onChange={(e) => setNewParticipantName(e.target.value)}
                                                     onKeyDown={(e) => e.key === 'Enter' && addParticipant()}
                                                     placeholder="Nuevo Participante..."
                                                     className="flex-1 bg-black/40 border border-purple-600 rounded-lg px-4 py-2 text-white placeholder-gray-600 focus:border-yellow-500 outline-none uppercase"
                                                 />
+                                                <datalist id="approved-users">
+                                                    {availableUsers.map(u => (
+                                                        <option key={u.username} value={u.username} />
+                                                    ))}
+                                                </datalist>
+
                                                 <button
                                                     onClick={addParticipant}
                                                     className="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-lg font-bold uppercase text-xs tracking-widest"
@@ -1877,6 +1934,8 @@ const App: React.FC = () => {
             border-radius: 4px;
         }
       `}</style>
+
+            <UserManagementModal isOpen={showUserModal} onClose={() => setShowUserModal(false)} />
         </div >
     );
 };
