@@ -10,7 +10,7 @@ import { UserManagementModal } from './components/UserManagementModal';
 
 import { BeatPlayer } from './components/BeatPlayer';
 import { ComodinSelector } from './components/ComodinSelector'; // New Import
-import { Info, Image as ImageIcon, RotateCcw, Youtube, Play, ExternalLink, User, Crown, Trophy, Zap, Swords, BookOpen, X, List, Scale, Timer, Star, Award, Newspaper, Settings, Users, Download } from 'lucide-react';
+import { Info, Image as ImageIcon, RotateCcw, Youtube, Play, ExternalLink, User, Crown, Trophy, Zap, Swords, BookOpen, X, List, Scale, Timer, Star, Award, Newspaper, Settings, Users, Download, LogOut } from 'lucide-react';
 
 import { TrainingFormat, TrainingMode, BeatGenre, ALL_TRAINING_MODES, AppStep, LeagueParticipant } from './types';
 import { generateTopics, generateTerminations, generateCharacterBattles, generateQuestions } from './services/geminiService';
@@ -51,6 +51,13 @@ const App: React.FC = () => {
     const handleLogin = (user: UserType) => {
         setIsAuthenticated(true);
         // Any other login logic
+    };
+
+    const handleLogout = () => {
+        if (window.confirm("¿Estás seguro de que deseas cerrar sesión?")) {
+            setIsAuthenticated(false);
+            setAuthStep('login');
+        }
     };
 
     // Check for Spectator Mode Route
@@ -879,13 +886,23 @@ const App: React.FC = () => {
                 )}
 
                 {/* USER MANAGEMENT BUTTON - Admin Only */}
+                <button
+                    onClick={() => setShowUserModal(true)}
+                    className="bg-black/40 backdrop-blur-md border border-cyan-500/50 hover:bg-cyan-900/50 hover:border-cyan-400 text-cyan-200 p-3 rounded-full shadow-[0_0_15px_rgba(6,182,212,0.3)] transition-all transform hover:scale-105"
+                    title="Administrar Usuarios"
+                >
+                    <Users size={24} />
+                </button>
+                )}
+
+                {/* LOGOUT BUTTON - Admin Only */}
                 {!isSpectator && (
                     <button
-                        onClick={() => setShowUserModal(true)}
-                        className="bg-black/40 backdrop-blur-md border border-cyan-500/50 hover:bg-cyan-900/50 hover:border-cyan-400 text-cyan-200 p-3 rounded-full shadow-[0_0_15px_rgba(6,182,212,0.3)] transition-all transform hover:scale-105"
-                        title="Administrar Usuarios"
+                        onClick={handleLogout}
+                        className="bg-black/40 backdrop-blur-md border border-red-500/50 hover:bg-red-900/50 hover:border-red-400 text-red-200 p-3 rounded-full shadow-[0_0_15px_rgba(239,68,68,0.3)] transition-all transform hover:scale-105"
+                        title="Cerrar Sesión"
                     >
-                        <Users size={24} />
+                        <LogOut size={24} />
                     </button>
                 )}
 
