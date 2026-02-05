@@ -886,13 +886,14 @@ const App: React.FC = () => {
                 )}
 
                 {/* USER MANAGEMENT BUTTON - Admin Only */}
-                <button
-                    onClick={() => setShowUserModal(true)}
-                    className="bg-black/40 backdrop-blur-md border border-cyan-500/50 hover:bg-cyan-900/50 hover:border-cyan-400 text-cyan-200 p-3 rounded-full shadow-[0_0_15px_rgba(6,182,212,0.3)] transition-all transform hover:scale-105"
-                    title="Administrar Usuarios"
-                >
-                    <Users size={24} />
-                </button>
+                {!isSpectator && (
+                    <button
+                        onClick={() => setShowUserModal(true)}
+                        className="bg-black/40 backdrop-blur-md border border-cyan-500/50 hover:bg-cyan-900/50 hover:border-cyan-400 text-cyan-200 p-3 rounded-full shadow-[0_0_15px_rgba(6,182,212,0.3)] transition-all transform hover:scale-105"
+                        title="Administrar Usuarios"
+                    >
+                        <Users size={24} />
+                    </button>
                 )}
 
                 {/* LOGOUT BUTTON - Admin Only */}
