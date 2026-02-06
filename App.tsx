@@ -586,6 +586,16 @@ const App: React.FC = () => {
         }
     }, [step, selectedMode, selectedGenre]);
 
+    // --- RENDER SPECTATOR VIEW ---
+    if (isSpectator) {
+        return (
+            <SpectatorView
+                viewerName={viewerName}
+                onLogout={handleLogout} // Pass logout handler
+            />
+        );
+    }
+
     // --- RENDER ACCESS SCREEN IF NOT AUTHENTICATED ---
     if (!isAuthenticated && !isSpectator) {
         return (

@@ -29,9 +29,10 @@ const ENTRADAS_RULES: Record<string, string> = {
 
 interface SpectatorViewProps {
     viewerName?: string;
+    onLogout?: () => void;
 }
 
-export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
+export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName, onLogout }) => {
     // Generate a persistent random ID for this spectator if no name provided
     const [randomId] = useState(() => Math.floor(Math.random() * 10000));
     const effectiveName = viewerName || `Espectador #${randomId} `;
@@ -760,6 +761,17 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
                         title="Ver Tabla de Liga"
                     >
                         <List size={24} />
+                    </button>
+                )}
+
+                {/* LOGOUT BUTTON - Explicitly added for Spectators */}
+                {onLogout && (
+                    <button
+                        onClick={onLogout}
+                        className="bg-red-600/20 backdrop-blur-md border border-red-500/50 hover:bg-red-600 hover:text-white text-red-400 p-4 rounded-full shadow-[0_0_15px_rgba(239,68,68,0.3)] transition-all transform hover:scale-110"
+                        title="Salir (Cerrar Sesión)"
+                    >
+                        <User size={24} className="rotate-180" /> {/* Using User icon rotated as exit metaphor since LogOut might need import */}
                     </button>
                 )}
             </div>
