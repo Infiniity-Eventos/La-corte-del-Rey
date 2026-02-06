@@ -902,8 +902,8 @@ const App: React.FC = () => {
                     </button>
                 )}
 
-                {/* LOGOUT BUTTON - Admin Only */}
-                {!isSpectator && (
+                {/* LOGOUT BUTTON - Visible for everyone logged in */}
+                {(isAuthenticated || isSpectator) && (
                     <button
                         onClick={handleLogout}
                         className="bg-black/40 backdrop-blur-md border border-red-500/50 hover:bg-red-900/50 hover:border-red-400 text-red-200 p-3 rounded-full shadow-[0_0_15px_rgba(239,68,68,0.3)] transition-all transform hover:scale-105"
