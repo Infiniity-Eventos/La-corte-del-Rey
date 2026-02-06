@@ -592,7 +592,7 @@ const App: React.FC = () => {
             <SpectatorView
                 viewerName={viewerName}
                 onLogout={handleLogout} // Pass logout handler
-                onInstallClick={handleInstallClick} // Pass install handler
+                onInstallClick={deferredPrompt ? handleInstallClick : undefined} // Only pass if install is possible
             />
         );
     }
