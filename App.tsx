@@ -4,6 +4,7 @@ import { TopicGenerator } from './components/TopicGenerator';
 import { SlotMachine } from './components/SlotMachine';
 import ProtectedRoute from './components/ProtectedRoute';
 import InstallPWA from './components/InstallPWA';
+import { SpectatorView } from './components/SpectatorView';
 import { TournamentBracket } from './components/TournamentBracket';
 import { AccessScreen } from './components/AccessScreen'; // New Import
 import { UserManagementModal } from './components/UserManagementModal';
