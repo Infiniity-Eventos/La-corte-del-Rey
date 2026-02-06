@@ -6,8 +6,14 @@ const InstallPWA = () => {
     const [isInstallable, setIsInstallable] = useState(false);
 
     useEffect(() => {
-        // Check if already in standalone mode
-        if (window.matchMedia('(display-mode: standalone)').matches) {
+        // Check if already in standalone mode (covers Android, Desktop, and iOS partially)
+        const isStandalone =
+            window.matchMedia('(display-mode: standalone)').matches ||
+            window.matchMedia('(display-mode: fullscreen)').matches ||
+            window.matchMedia('(display-mode: minimal-ui)').matches ||
+            (window.navigator as any).standalone === true;
+
+        if (isStandalone) {
             console.log("App is running in standalone mode");
             return;
         }
