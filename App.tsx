@@ -83,11 +83,15 @@ const App: React.FC = () => {
     }, []);
 
     const handleInstallClick = async () => {
-        if (!deferredPrompt) return;
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') {
-            setDeferredPrompt(null);
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+                setDeferredPrompt(null);
+            }
+        } else {
+            // Fallback: Instructions for Manual Install
+            alert("Para instalar la App:\n\n1. Presiona el menú de tu navegador (tres puntos ⋮ o compartir ⬆️)\n2. Busca la opción 'Instalar aplicación' o 'Agregar a inicio'.\n\nSi no aparece, ¡es posible que ya la tengas instalada!");
         }
     };
 
