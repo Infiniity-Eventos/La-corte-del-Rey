@@ -1,9 +1,9 @@
 
-
 import React, { useState, useEffect, useRef } from 'react';
 import { TopicGenerator } from './components/TopicGenerator';
 import { SlotMachine } from './components/SlotMachine';
-import { SpectatorView } from './components/SpectatorView';
+import ProtectedRoute from './components/ProtectedRoute';
+import InstallPWA from './components/InstallPWA';
 import { TournamentBracket } from './components/TournamentBracket';
 import { AccessScreen } from './components/AccessScreen'; // New Import
 import { UserManagementModal } from './components/UserManagementModal';
@@ -1179,6 +1179,7 @@ const App: React.FC = () => {
                         )}
                     </header>
                 )}
+                <InstallPWA />
 
                 {/* Main Content Area */}
                 <main className={`flex-1 flex flex-col justify-center animate-fadeIn relative min-h-0 ${step === 'voting' ? 'p-0' : ''} ${step === 'arena' ? 'justify-start md:justify-center' : ''}`}>
