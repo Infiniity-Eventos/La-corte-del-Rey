@@ -6,15 +6,16 @@ const InstallPWA = () => {
     const [isInstallable, setIsInstallable] = useState(false);
 
     useEffect(() => {
-        // Check if already in standalone mode (covers Android, Desktop, and iOS partially)
+        // Robust standalone detection
         const isStandalone =
             window.matchMedia('(display-mode: standalone)').matches ||
             window.matchMedia('(display-mode: fullscreen)').matches ||
             window.matchMedia('(display-mode: minimal-ui)').matches ||
-            (window.navigator as any).standalone === true;
+            (window.navigator as any).standalone === true ||
+            document.referrer.includes('android-app://');
 
         if (isStandalone) {
-            console.log("App is running in standalone mode");
+            console.log("App is running in standalone mode (Install button hidden)");
             return;
         }
 
@@ -22,8 +23,12 @@ const InstallPWA = () => {
             // Prevenir que Chrome muestre el prompt automáticamente
             e.preventDefault();
             setDeferredPrompt(e);
-            setIsInstallable(true);
-            console.log('App is installable!');
+
+            // Double check standalone status just in case
+            if (!window.matchMedia('(display-mode: standalone)').matches) {
+                setIsInstallable(true);
+            }
+            console.log('App is installable event fired');
         };
 
         window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
