@@ -30,9 +30,10 @@ const ENTRADAS_RULES: Record<string, string> = {
 interface SpectatorViewProps {
     viewerName?: string;
     onLogout?: () => void;
+    onInstallClick?: () => void;
 }
 
-export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName, onLogout }) => {
+export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName, onLogout, onInstallClick }) => {
     // Generate a persistent random ID for this spectator if no name provided
     const [randomId] = useState(() => Math.floor(Math.random() * 10000));
     const effectiveName = viewerName || `Espectador #${randomId} `;
@@ -772,6 +773,17 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName, onLogo
                         title="Salir (Cerrar Sesión)"
                     >
                         <User size={24} className="rotate-180" /> {/* Using User icon rotated as exit metaphor since LogOut might need import */}
+                    </button>
+                )}
+
+                {/* INSTALL APP BUTTON - Explicitly added for Spectators */}
+                {onInstallClick && (
+                    <button
+                        onClick={onInstallClick}
+                        className="bg-green-600/80 backdrop-blur-md border border-green-500/50 hover:bg-green-500 hover:text-white text-green-100 p-4 rounded-full shadow-[0_0_15px_rgba(34,197,94,0.3)] transition-all transform hover:scale-110"
+                        title="Instalar App"
+                    >
+                        <Download size={24} />
                     </button>
                 )}
             </div>

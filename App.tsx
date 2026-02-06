@@ -592,6 +592,7 @@ const App: React.FC = () => {
             <SpectatorView
                 viewerName={viewerName}
                 onLogout={handleLogout} // Pass logout handler
+                onInstallClick={handleInstallClick} // Pass install handler
             />
         );
     }
@@ -607,18 +608,6 @@ const App: React.FC = () => {
                         setIsSpectator(true);
                     }}
                 />
-                {deferredPrompt && (
-                    <div className="fixed bottom-6 right-6 z-[9999] animate-bounce">
-                        <button
-                            onClick={handleInstallClick}
-                            className="bg-green-600/90 backdrop-blur-md border border-green-500 hover:bg-green-500 hover:scale-105 text-white p-4 rounded-full shadow-[0_0_20px_rgba(34,197,94,0.6)] transition-all flex items-center gap-2 font-bold uppercase tracking-wider"
-                            title="Instalar Aplicación"
-                        >
-                            <Download size={24} />
-                            <span className="hidden md:inline">Instalar App</span>
-                        </button>
-                    </div>
-                )}
             </>
         );
     }
@@ -859,6 +848,19 @@ const App: React.FC = () => {
                     className="w-32 md:w-48 transition-all hover:scale-110 shadow-[0_0_20px_rgba(255,255,255,0.2)] rounded-lg bg-white p-2"
                 />
             </div>
+
+            {/* INSTALL APP BUTTON - Persistent for Admin */}
+            {deferredPrompt && (
+                <div className="fixed bottom-6 right-6 z-[9999] animate-bounce">
+                    <button
+                        onClick={handleInstallClick}
+                        className="bg-green-600/90 backdrop-blur-md border border-green-500 hover:bg-green-500 hover:scale-105 text-white p-3 rounded-full shadow-[0_0_20px_rgba(34,197,94,0.6)] transition-all transform hover:scale-110"
+                        title="Instalar App"
+                    >
+                        <Download size={24} />
+                    </button>
+                </div>
+            )}
 
             {/* --- TOP RIGHT BUTTONS --- */}
             <div className={`fixed top-4 right-4 z-[1000] flex items-center gap-2 transition-all duration-300 ${isBeatPlayerOpen ? 'translate-x-[-340px] md:translate-x-[-460px]' : ''}`}>
