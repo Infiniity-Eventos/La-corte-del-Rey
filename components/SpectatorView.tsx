@@ -735,7 +735,7 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName, onLogo
 `}</style>
             {/* FLOATING BUTTONS (SPECTATOR) */}
             <div className="fixed bottom-4 right-4 z-[90] flex flex-col gap-3">
-                {/* WHATSAPP BUTTON WITH TOOLTIP */}
+                {/* WHATSAPP BUTTON */}
                 <div className="relative group">
                     {(showWhatsappTooltip) && (
                         <div className="absolute right-full mr-4 top-1/2 -translate-y-1/2 bg-white text-black px-4 py-2 rounded-xl shadow-[0_0_15px_rgba(255,255,255,0.5)] whitespace-nowrap font-black uppercase text-xs tracking-wider animate-bounce-horizontal flex items-center z-50">
@@ -772,18 +772,7 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName, onLogo
                         className="bg-red-600/20 backdrop-blur-md border border-red-500/50 hover:bg-red-600 hover:text-white text-red-400 p-4 rounded-full shadow-[0_0_15px_rgba(239,68,68,0.3)] transition-all transform hover:scale-110"
                         title="Salir (Cerrar Sesión)"
                     >
-                        <User size={24} className="rotate-180" /> {/* Using User icon rotated as exit metaphor since LogOut might need import */}
-                    </button>
-                )}
-
-                {/* INSTALL APP BUTTON - Explicitly added for Spectators */}
-                {onInstallClick && (
-                    <button
-                        onClick={onInstallClick}
-                        className="bg-green-600/80 backdrop-blur-md border border-green-500/50 hover:bg-green-500 hover:text-white text-green-100 p-4 rounded-full shadow-[0_0_15px_rgba(34,197,94,0.3)] transition-all transform hover:scale-110"
-                        title="Instalar App"
-                    >
-                        <Download size={24} />
+                        <User size={24} className="rotate-180" />
                     </button>
                 )}
             </div>

@@ -58,16 +58,31 @@ const InstallPWA = () => {
         setIsInstallable(false);
     };
 
+    // ... (previous logic)
+
+    const handleDismiss = () => {
+        setIsInstallable(false);
+    };
+
     if (!isInstallable) return null;
 
     return (
-        <button
-            onClick={handleInstallClick}
-            className="fixed bottom-4 right-4 z-50 bg-[#76ff03] text-black font-bold py-3 px-6 rounded-full shadow-lg hover:bg-[#64dd17] transition-all transform hover:scale-105 flex items-center gap-2 font-urban animate-bounce"
-        >
-            <Download size={20} />
-            INSTALAR APP
-        </button>
+        <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2 animate-bounce">
+            <button
+                onClick={() => setIsInstallable(false)}
+                className="bg-black/50 text-white rounded-full p-1 hover:bg-black/80"
+                title="Ocultar"
+            >
+                <div className="h-4 w-4 flex items-center justify-center font-bold">×</div>
+            </button>
+            <button
+                onClick={handleInstallClick}
+                className="bg-[#76ff03] text-black font-bold py-3 px-6 rounded-full shadow-lg hover:bg-[#64dd17] transition-all transform hover:scale-105 flex items-center gap-2 font-urban"
+            >
+                <Download size={20} />
+                INSTALAR APP
+            </button>
+        </div>
     );
 };
 
