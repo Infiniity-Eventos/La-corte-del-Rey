@@ -3,7 +3,7 @@ import { TrainingFormat, BeatGenre, SpectatorState, AppStep } from '../types';
 import { TopicGenerator } from './TopicGenerator';
 import { SlotMachine } from './SlotMachine';
 import { TournamentBracket } from './TournamentBracket'; // In case we want to show it? Maybe later.
-import { Crown, User, Swords, Play, Trophy, Timer, Zap, Skull, Award, List, MessageCircle } from 'lucide-react';
+import { Crown, User, Swords, Play, Trophy, Timer, Zap, Skull, Award, List, MessageCircle, Download } from 'lucide-react';
 import { useFirebaseSync } from '../hooks/useFirebaseSync';
 
 const MODE_TRANSLATIONS: Record<string, string> = {
