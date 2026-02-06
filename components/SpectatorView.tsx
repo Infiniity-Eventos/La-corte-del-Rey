@@ -126,14 +126,20 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName, onLogo
     // Derived values
 
     // Check if the current spectator is one of the battling MCs (Moved up to avoid conditional hook)
+    // Check if the current spectator is one of the battling MCs (Moved up to avoid conditional hook)
     const isBattling = React.useMemo(() => {
         const rA = gameState?.rivalA;
         const rB = gameState?.rivalB;
 
         if (!viewerName || !rA || !rB) return false;
 
-        const vName = viewerName.trim().toLowerCase();
-        return vName === rA.trim().toLowerCase() || vName === rB.trim().toLowerCase();
+        const clean = (s: string) => s.trim().toLowerCase().replace(/\s+/g, ' ');
+        const vName = clean(viewerName);
+
+        // Check exact match or if name is contained (e.g. "Zeven DC" vs "Zeven")
+        // But be careful with partials like "Don" in "Donat". 
+        // Let's stick to exact match after cleaning.
+        return vName === clean(rA) || vName === clean(rB);
     }, [viewerName, gameState?.rivalA, gameState?.rivalB]);
 
     if (!gameState) {
@@ -354,8 +360,8 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName, onLogo
                     <div className="md:hidden flex flex-col w-full h-full relative">
                         {/* TOP HALF: RIVAL A (PURPLE) */}
                         <div
-                            onClick={() => !hasVoted && castVote('A', rivalA || 'MC AZUL', rivalB || 'MC ROJO') && setHasVoted(true)}
-                            className={`flex-1 relative overflow-hidden flex flex-col items-center justify-center border-b-2 border-white/20 transition-all active:scale-[0.98] ${hasVoted ? 'grayscale opacity-50' : 'cursor-pointer'}`}
+                            onClick={() => !hasVoted && !isBattling && castVote('A', rivalA || 'MC AZUL', rivalB || 'MC ROJO') && setHasVoted(true)}
+                            className={`flex-1 relative overflow-hidden flex flex-col items-center justify-center border-b-2 border-white/20 transition-all active:scale-[0.98] ${hasVoted || isBattling ? 'grayscale opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                         >
                             {/* Bg Image with Purple Tint */}
                             <div className="absolute inset-0 bg-purple-900 z-0"></div>
@@ -380,11 +386,11 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName, onLogo
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    if (hasVoted) return;
+                                    if (hasVoted || isBattling) return;
                                     setHasVoted(true);
                                     castVote('Replica', rivalA || 'MC AZUL', rivalB || 'MC ROJO');
                                 }}
-                                className="w-16 h-16 md:w-20 md:h-20 bg-gray-900 border-4 border-white rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(255,255,255,0.5)] active:scale-95 transition-all hover:bg-gray-800 hover:scale-110"
+                                className={`w-16 h-16 md:w-20 md:h-20 bg-gray-900 border-4 border-white rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(255,255,255,0.5)] transition-all ${isBattling ? 'opacity-50 grayscale cursor-not-allowed' : 'active:scale-95 hover:bg-gray-800 hover:scale-110'}`}
                             >
                                 <span className="font-black text-[10px] md:text-sm text-white uppercase tracking-widest text-center leading-none">
                                     VOTAR<br />RÉPLICA
@@ -394,8 +400,8 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName, onLogo
 
                         {/* BOTTOM HALF: RIVAL B (BLUE) */}
                         <div
-                            onClick={() => !hasVoted && castVote('B', rivalA || 'MC AZUL', rivalB || 'MC ROJO') && setHasVoted(true)}
-                            className={`flex-1 relative overflow-hidden flex flex-col items-center justify-center border-t-2 border-white/20 transition-all active:scale-[0.98] ${hasVoted ? 'grayscale opacity-50' : 'cursor-pointer'}`}
+                            onClick={() => !hasVoted && !isBattling && castVote('B', rivalA || 'MC AZUL', rivalB || 'MC ROJO') && setHasVoted(true)}
+                            className={`flex-1 relative overflow-hidden flex flex-col items-center justify-center border-t-2 border-white/20 transition-all active:scale-[0.98] ${hasVoted || isBattling ? 'grayscale opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                         >
                             {/* Bg Image with Blue Tint */}
                             <div className="absolute inset-0 bg-blue-900 z-0"></div>
