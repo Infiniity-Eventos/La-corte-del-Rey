@@ -6,10 +6,15 @@ const InstallPWA = () => {
     const [isInstallable, setIsInstallable] = useState(false);
 
     useEffect(() => {
+        // Check if already in standalone mode
+        if (window.matchMedia('(display-mode: standalone)').matches) {
+            console.log("App is running in standalone mode");
+            return;
+        }
+
         const handleBeforeInstallPrompt = (e: any) => {
-            // Prevenir que Chrome muestre el prompt automáticamente si se desea controlar
+            // Prevenir que Chrome muestre el prompt automáticamente
             e.preventDefault();
-            // Guardar el evento para dispararlo después
             setDeferredPrompt(e);
             setIsInstallable(true);
             console.log('App is installable!');

@@ -1187,7 +1187,17 @@ const App: React.FC = () => {
 
                     {/* STEP 0: NAMES INPUT / LEAGUE DASHBOARD */}
                     {step === 'names' && (
-                        <div className="w-full max-w-6xl mx-auto flex flex-col items-center justify-center flex-1 min-h-[50vh] p-4">
+                        <div className="w-full max-w-6xl mx-auto flex flex-col items-center justify-center flex-1 min-h-[50vh] p-4 relative">
+
+                            {/* LOGOUT BUTTON */}
+                            <button
+                                onClick={handleLogout}
+                                className="absolute top-0 right-4 p-2 text-red-500 hover:text-red-400 bg-red-950/30 hover:bg-red-900/50 rounded-lg transition-all border border-red-900/50 flex items-center gap-2 text-xs font-bold uppercase tracking-widest z-50"
+                                title="Cerrar Sesión"
+                            >
+                                <LogOut size={16} />
+                                <span className="hidden md:inline">Salir</span>
+                            </button>
 
                             {/* MODE TOGGLE */}
                             <div className="flex items-center gap-4 mb-8 bg-black/40 p-2 rounded-full border border-purple-500/30">
