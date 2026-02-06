@@ -851,7 +851,7 @@ const App: React.FC = () => {
             </div>
 
             {/* --- TOP RIGHT BUTTONS --- */}
-            <div className={`fixed top-4 right-4 z-[90] flex items-center gap-2 transition-all duration-300 ${isBeatPlayerOpen ? 'translate-x-[-340px] md:translate-x-[-460px]' : ''}`}>
+            <div className={`fixed top-4 right-4 z-[1000] flex items-center gap-2 transition-all duration-300 ${isBeatPlayerOpen ? 'translate-x-[-340px] md:translate-x-[-460px]' : ''}`}>
                 {/* VOLVER BUTTON - Only show in Slots */}
                 {step === 'slots' && !isReplica && (
                     <button

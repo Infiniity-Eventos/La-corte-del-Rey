@@ -201,7 +201,7 @@ export const SpectatorView: React.FC<SpectatorViewProps> = ({ viewerName }) => {
                         LA CORTE DEL REY
                     </h1>
                     {/* SPECTATOR BADGE */}
-                    <div className="mt-2 text-xs font-bold uppercase tracking-[0.5em] text-purple-400/50">Modo Espectador</div>
+                    <div className="mt-2 text-xs font-bold uppercase tracking-[0.5em] text-purple-400/50">Modo Espectador v2.1</div>
                 </header>
             )}
 
