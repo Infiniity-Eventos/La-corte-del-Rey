@@ -1,4 +1,4 @@
-const CACHE_NAME = 'corte-rey-v3';
+const CACHE_NAME = 'corte-rey-v4';
 const urlsToCache = [
     '/',
     '/index.html',

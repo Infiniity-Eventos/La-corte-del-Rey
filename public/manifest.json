@@ -4,6 +4,7 @@
     "description": "App oficial para entrenamiento de Freestyle y gestión de ligas.",
     "id": "/",
     "start_url": "/",
+    "scope": "/",
     "display": "standalone",
     "background_color": "#0d001a",
     "theme_color": "#0d001a",
