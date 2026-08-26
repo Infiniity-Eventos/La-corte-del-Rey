@@ -1,0 +1,612 @@
+<title>Cuestionario 4 · El Cierre</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Karla:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+
+<style>
+  :root{
+    --ground:#E7E9F0; --surface:#F8F9FC; --sunken:#DFE2EC;
+    --ink:#14161E; --ink-2:#474D5F; --ink-3:#767D91;
+    --line:#CFD4E1; --line-soft:#DFE3EC;
+    --brass:#8F6416; --brass-ink:#6E4C0E; --brass-wash:#F3E7CC;
+    --alert:#8C2F2F; --alert-wash:#F6E2E2;
+    --shadow:0 1px 2px rgba(20,22,30,.05); --r:7px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ground:#0F1118; --surface:#171A23; --sunken:#12141C;
+      --ink:#E9EBF2; --ink-2:#A9AFC1; --ink-3:#798094;
+      --line:#2A2F3C; --line-soft:#232833;
+      --brass:#D9A24E; --brass-ink:#E8BC76; --brass-wash:#2C2416;
+      --alert:#E58B8B; --alert-wash:#2E1B1B;
+      --shadow:0 1px 2px rgba(0,0,0,.3);
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#0F1118; --surface:#171A23; --sunken:#12141C;
+    --ink:#E9EBF2; --ink-2:#A9AFC1; --ink-3:#798094;
+    --line:#2A2F3C; --line-soft:#232833;
+    --brass:#D9A24E; --brass-ink:#E8BC76; --brass-wash:#2C2416;
+    --alert:#E58B8B; --alert-wash:#2E1B1B;
+    --shadow:0 1px 2px rgba(0,0,0,.3);
+  }
+
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);
+    font-family:"Karla","Helvetica Neue",Arial,sans-serif;
+    font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:44rem;margin:0 auto;padding:0 1.25rem 8rem}
+
+  .bar{position:sticky;top:0;z-index:20;
+    background:color-mix(in srgb, var(--ground) 88%, transparent);
+    backdrop-filter:blur(10px);border-bottom:1px solid var(--line-soft);}
+  .bar-in{max-width:44rem;margin:0 auto;padding:.7rem 1.25rem;display:flex;
+    align-items:center;gap:1rem;justify-content:space-between;}
+  .bar-name{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.7rem;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);}
+  .bar-count{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.78rem;
+    color:var(--ink-2);font-variant-numeric:tabular-nums;}
+  .bar-count b{color:var(--brass-ink);font-weight:500}
+  .track{height:2px;background:var(--line-soft)}
+  .fill{height:2px;width:0%;background:var(--brass);transition:width .35s ease}
+
+  header.hero{padding:3.5rem 0 2.5rem}
+  .eyebrow{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.7rem;
+    letter-spacing:.16em;text-transform:uppercase;color:var(--brass-ink);margin:0 0 1.1rem;}
+  h1{font-family:"Fraunces",Georgia,serif;
+    font-variation-settings:"SOFT" 30,"WONK" 1,"opsz" 100;font-weight:600;
+    font-size:clamp(2.1rem,7vw,3.1rem);line-height:1.05;letter-spacing:-.015em;
+    margin:0 0 1rem;text-wrap:balance;}
+  .lede{color:var(--ink-2);font-size:1.02rem;margin:0 0 1.6rem;max-width:34rem}
+  .howto{background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--r);
+    padding:1rem 1.1rem;font-size:.9rem;color:var(--ink-2);}
+  .howto ul{margin:.4rem 0 0;padding-left:1.1rem}
+  .howto li{margin:.28rem 0}
+  .howto strong{color:var(--ink)}
+
+  .critical{background:var(--alert-wash);border:1px solid color-mix(in srgb,var(--alert) 35%,transparent);
+    border-radius:var(--r);padding:1.05rem 1.1rem;margin:1.3rem 0 0;font-size:.9rem;color:var(--ink-2)}
+  .critical h3{font-family:"Fraunces",Georgia,serif;font-size:1rem;font-weight:600;
+    margin:0 0 .5rem;color:var(--alert)}
+  .critical p{margin:0 0 .6rem}
+  .critical p:last-child{margin:0}
+  .critical strong{color:var(--ink)}
+
+  section.block{margin-top:3rem}
+  .block-head{display:flex;align-items:baseline;gap:.85rem;padding-bottom:.7rem;
+    border-bottom:1px solid var(--line);margin-bottom:1.6rem;}
+  .block-letter{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.72rem;
+    letter-spacing:.12em;color:var(--brass-ink);}
+  .block-title{font-family:"Fraunces",Georgia,serif;
+    font-variation-settings:"SOFT" 20,"opsz" 40;font-weight:600;font-size:1.22rem;
+    margin:0;letter-spacing:-.01em;}
+  .block-note{font-size:.86rem;color:var(--ink-3);margin-left:auto;text-align:right}
+
+  .intro{background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--r);
+    padding:1.05rem 1.1rem;margin-bottom:1.3rem;font-size:.9rem;color:var(--ink-2);}
+  .intro p{margin:0 0 .7rem}
+  .intro p:last-child{margin-bottom:0}
+  .intro strong{color:var(--ink)}
+  .scroller{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:.9rem -.35rem;padding:0 .35rem}
+  table{border-collapse:collapse;font-size:.82rem;min-width:26rem;width:100%}
+  th,td{text-align:left;padding:.45rem .6rem;border-bottom:1px solid var(--line-soft);vertical-align:top}
+  thead th{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.63rem;letter-spacing:.09em;
+    text-transform:uppercase;color:var(--ink-3);border-bottom:1px solid var(--line);white-space:nowrap}
+  tbody th{font-weight:700;color:var(--ink);white-space:nowrap}
+  td.ok{color:var(--brass-ink)}
+
+  .q{background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--r);
+    padding:1.15rem 1.15rem 1rem;margin-bottom:1rem;box-shadow:var(--shadow);}
+  .q.answered{border-color:color-mix(in srgb, var(--brass) 40%, var(--line-soft))}
+  .q-head{display:flex;gap:.7rem;align-items:baseline;margin-bottom:.15rem}
+  .q-num{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.78rem;color:var(--ink-3);
+    flex:none;padding-top:.1rem;font-variant-numeric:tabular-nums;}
+  .q.answered .q-num{color:var(--brass-ink)}
+  .q-title{font-size:1.02rem;font-weight:700;margin:0;line-height:1.35;text-wrap:balance}
+  .q-hint{margin:.3rem 0 .9rem 1.48rem;font-size:.86rem;color:var(--ink-3)}
+  .q-hint.warn{color:var(--alert);background:var(--alert-wash);padding:.5rem .65rem;border-radius:5px}
+  .q-multi,.q-flag{display:inline-block;font-family:"JetBrains Mono",ui-monospace,monospace;
+    font-size:.63rem;letter-spacing:.1em;text-transform:uppercase;padding:.14rem .42rem;
+    border-radius:3px;margin-left:.5rem;vertical-align:.12em;}
+  .q-multi{color:var(--brass-ink);background:var(--brass-wash)}
+  .q-flag{color:var(--alert);background:var(--alert-wash)}
+
+  .opts{display:flex;flex-direction:column;gap:.4rem;margin-left:1.48rem}
+  .opt{display:flex;gap:.65rem;align-items:flex-start;border:1px solid var(--line-soft);
+    border-radius:5px;padding:.6rem .7rem;cursor:pointer;background:var(--ground);
+    transition:border-color .15s ease, background .15s ease;}
+  .opt:hover{border-color:var(--line)}
+  .opt input{appearance:none;-webkit-appearance:none;width:1.05rem;height:1.05rem;flex:none;
+    margin:.16rem 0 0;border:1.5px solid var(--ink-3);background:transparent;
+    display:grid;place-content:center;cursor:pointer;}
+  .opt input[type=radio]{border-radius:50%}
+  .opt input[type=checkbox]{border-radius:3px}
+  .opt input::after{content:"";width:.5rem;height:.5rem;transform:scale(0);
+    transition:transform .12s ease;background:var(--brass);}
+  .opt input[type=radio]::after{border-radius:50%}
+  .opt input:checked{border-color:var(--brass)}
+  .opt input:checked::after{transform:scale(1)}
+  .opt input:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+  .opt:has(input:checked){border-color:var(--brass);background:var(--brass-wash)}
+  .opt-txt{font-size:.94rem;line-height:1.4}
+  .opt-txt em{display:block;font-style:normal;color:var(--ink-3);font-size:.83rem;margin-top:.12rem}
+
+  textarea{width:100%;font-family:"Karla",Arial,sans-serif;font-size:.92rem;line-height:1.5;
+    color:var(--ink);background:var(--sunken);border:1px solid var(--line-soft);border-radius:5px;
+    padding:.6rem .7rem;resize:vertical;}
+  textarea:focus{outline:2px solid var(--brass);outline-offset:1px;border-color:transparent}
+  textarea::placeholder{color:var(--ink-3)}
+  .free{margin-left:1.48rem}
+  .obs{margin:.75rem 0 0 1.48rem}
+  .obs-lbl{display:block;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.65rem;
+    letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:.35rem;}
+  .obs textarea{min-height:2.6rem}
+  .free textarea{min-height:5.5rem}
+
+  .demo-zone{margin:0 0 1rem 1.48rem}
+  .demo-lbl{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.63rem;
+    letter-spacing:.12em;text-transform:uppercase;color:var(--brass-ink);margin:0 0 .6rem;display:block}
+
+  /* sonidos */
+  .sgrid{display:flex;flex-wrap:wrap;gap:.5rem}
+  .snd{display:inline-flex;align-items:center;gap:.5rem;font-family:"Karla",Arial,sans-serif;
+    font-size:.86rem;font-weight:700;background:var(--ground);color:var(--ink);
+    border:1px solid var(--line);border-radius:999px;padding:.55rem .95rem;cursor:pointer;
+    transition:background .15s ease,border-color .15s ease}
+  .snd:hover{border-color:var(--brass)}
+  .snd:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+  .snd.playing{background:var(--brass-wash);border-color:var(--brass)}
+  .snd span{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.72rem;color:var(--brass-ink)}
+  .snote{font-size:.8rem;color:var(--ink-3);margin:.6rem 0 0}
+
+  /* prompt de portada */
+  .pv{background:#EDE6D6;color:#2E2822;border-radius:6px;padding:.85rem .9rem;
+    font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.72rem;line-height:1.6;
+    white-space:pre-wrap;border:1px solid #DDD2BC;max-height:17rem;overflow:auto}
+  .pv b{color:#8A5A2B;font-weight:500}
+
+  .end{margin-top:3rem;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+    padding:1.6rem 1.3rem;text-align:center;}
+  .end h2{font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:1.3rem;margin:0 0 .4rem}
+  .end p{color:var(--ink-2);font-size:.92rem;margin:0 auto 1.2rem;max-width:26rem}
+  button.copy{font-family:"Karla",Arial,sans-serif;font-size:.98rem;font-weight:700;
+    color:var(--ground);background:var(--ink);border:none;border-radius:6px;padding:.8rem 1.6rem;
+    cursor:pointer;transition:transform .12s ease, opacity .15s ease;}
+  button.copy:hover{opacity:.88}
+  button.copy:active{transform:translateY(1px)}
+  button.copy:focus-visible{outline:2px solid var(--brass);outline-offset:3px}
+  button.copy.done{background:var(--brass);color:#14161E}
+  .end small{display:block;margin-top:.9rem;color:var(--ink-3);font-size:.8rem}
+
+  .float{position:fixed;right:1rem;bottom:1rem;z-index:30;font-family:"Karla",Arial,sans-serif;
+    font-size:.88rem;font-weight:700;color:var(--ground);background:var(--ink);border:none;
+    border-radius:999px;padding:.72rem 1.15rem;cursor:pointer;box-shadow:0 4px 16px rgba(20,22,30,.22);}
+  .float.done{background:var(--brass);color:#14161E}
+  .float:focus-visible{outline:2px solid var(--brass);outline-offset:3px}
+
+  #sink{position:fixed;left:-9999px;top:0;opacity:0}
+
+  @media (prefers-reduced-motion: reduce){ *{transition:none !important} }
+  @media (max-width:520px){
+    .opts,.obs,.free,.q-hint,.demo-zone{margin-left:0}
+    .block-note{display:none}
+  }
+</style>
+
+<div class="bar">
+  <div class="bar-in">
+    <span class="bar-name">Cuestionario 04 · el cierre</span>
+    <span class="bar-count"><b id="done">0</b>/<span id="total">0</span></span>
+  </div>
+  <div class="track"><div class="fill" id="fill"></div></div>
+</div>
+
+<div class="wrap">
+  <header class="hero">
+    <p class="eyebrow">Ronda 4 · la última, de verdad</p>
+    <h1>Lo que abrió tu nota de P61</h1>
+    <p class="lede">Sí, con Blaze se pueden subir los PDF, y con tu uso la factura sería cero. Pero hay una trampa que no está en ninguna tabla de precios y que te habría costado dinero sin avisar. Está justo aquí abajo, en rojo. Léela antes que nada.</p>
+    <div class="critical">
+      <h3>Blaze puede matar el traductor gratis</h3>
+      <p>El nivel gratuito de Gemini — tus 1.000 consultas diarias — <strong>solo existe mientras ese proyecto de Google no tenga facturación activada</strong>. Y pasar Firebase a Blaze es exactamente eso: activar facturación.</p>
+      <p>Si la clave de Gemini sale del mismo proyecto donde vive Firebase, cada traducción pasa a facturarse. Nada falla, nada avisa: solo llega el cobro.</p>
+      <p><strong>La solución es trivial: dos proyectos de Google separados.</strong> Uno para Firebase con Blaze, otro solo para la clave de Gemini, ese sin facturación jamás. No te pregunto nada aquí porque no hay alternativa razonable; te lo digo para que lo sepas y para que no lo toques nunca.</p>
+    </div>
+    <div class="howto" style="margin-top:1rem">
+      <strong>Tres bloques</strong>
+      <ul>
+        <li>Qué sube a la nube y cómo evitamos que un error genere cobros.</li>
+        <li>El sistema de portadas que pediste, con el prompt ya escrito.</li>
+        <li>El sonido de página: <strong>suena de verdad</strong>, pruébalo con el volumen encendido.</li>
+      </ul>
+    </div>
+  </header>
+
+  <main id="form"></main>
+
+  <div class="end">
+    <h2>Y arrancamos</h2>
+    <p>Con esto la Guía queda cerrada y empiezo a construir Vellum.</p>
+    <button class="copy" id="copy1">Copiar respuestas</button>
+    <small id="warn"></small>
+  </div>
+</div>
+
+<button class="float" id="copy2">Copiar</button>
+<textarea id="sink" aria-hidden="true" tabindex="-1"></textarea>
+
+<script>
+const DEMO_SOUND = '<div class="sgrid">'
+  + '<button type="button" class="snd" data-s="fina">Hoja fina <span>&#9654;</span></button>'
+  + '<button type="button" class="snd" data-s="gruesa">Papel grueso <span>&#9654;</span></button>'
+  + '<button type="button" class="snd" data-s="libro">Libro encuadernado <span>&#9654;</span></button>'
+  + '<button type="button" class="snd" data-s="seco">Clic seco <span>&#9654;</span></button>'
+  + '</div><p class="snote">Sonidos generados aquí mismo, sin descargar nada. En la app se afinan más, pero el carácter de cada uno es este.</p>';
+
+const DEMO_PROMPT = '<div class="pv">Portada para <b>{libro | cómic}</b> de una biblioteca personal.\n\n'
+  + 'Título: «<b>{título}</b>»\nTemas: <b>{etiquetas}</b>\nNombre del archivo: <b>{nombre-del-archivo}</b>\n\n'
+  + 'Estilo obligatorio, idéntico para toda la colección:\n'
+  + 'ilustración plana y editorial impresa a dos tintas sobre pergamino cálido.\n'
+  + 'Paleta estricta: fondo #EDE6D6, pergamino #F6F1E5, tinta parda #6B4423,\n'
+  + 'un único acento de ocre #8A5A2B. Ningún otro color.\n'
+  + 'Textura de papel muy sutil, como un grabado antiguo.\n'
+  + 'Sin degradados brillantes, sin efectos 3D, sin marcos.\n\n'
+  + 'Composición: vertical 2:3, centrada, con amplio margen.\n'
+  + 'Una sola imagen simbólica y sencilla que evoque los temas.\n'
+  + 'Nada de escenas recargadas. Nada de personajes con rostro.\n\n'
+  + 'No escribas ningún texto en la imagen.</div>';
+
+const BLOCKS = [
+  {
+    letter:"P", title:"Blaze y la nube", note:"Qué sube y qué no",
+    intro:'<p>Estos son los números oficiales de Firebase. En Blaze, Cloud Storage <strong>no cobra nada</strong> hasta:</p>'
+      +'<div class="scroller"><table><thead><tr><th>Concepto</th><th>Gratis hasta</th><th>Tu uso real</th></tr></thead><tbody>'
+      +'<tr><th>Guardado</th><td class="ok">5 GB</td><td>50 PDF de 20 MB son 1 GB. Solo aprieta con cómics muy pesados.</td></tr>'
+      +'<tr><th>Descarga</th><td class="ok">100 GB al mes</td><td>Inalcanzable entre dos personas.</td></tr>'
+      +'<tr><th>Subidas</th><td class="ok">5.000 al mes</td><td>Unas 50.</td></tr>'
+      +'<tr><th>Descargas</th><td class="ok">50.000 al mes</td><td>Unas decenas.</td></tr>'
+      +'</tbody></table></div>'
+      +'<p>Pasado eso son unos <strong>tres centavos de dólar por gigabyte al mes</strong>. Con tu uso, la factura es cero y tenías razón.</p>'
+      +'<p><strong>Lo que sí hay que vigilar no está en la tabla: Blaze no corta.</strong> Cobra lo que salga. Tu uso normal no se acerca ni de lejos a los límites, pero un fallo que suba archivos en bucle sí, y te enteras en la factura.</p>',
+    qs:[
+      { id:"p66", t:"Con los números delante, ¿confirmas Blaze?", key:true,
+        o:["Sí, Blaze y los PDF en la nube|Lo que pediste. Con dos personas y menos de 50 libros, cero pesos.",
+           "Blaze, pero solo para respaldo: la app lee siempre del aparato|Los archivos suben por seguridad, nunca por sincronizar. Menos tráfico, menos riesgo.",
+           "Pensándolo mejor, me quedo en Spark sin tarjeta|Los PDF se quedan locales y el respaldo es un archivo que guardas tú."] },
+      { id:"p67", t:"¿Qué sube a la nube exactamente?", multi:true,
+        h:"Marca lo que quieres que esté a salvo y disponible en el otro aparato.",
+        o:["Todos los PDF, automáticamente al importarlos",
+           "Solo los PDF que yo marque",
+           "Las portadas que genere|No las marcaste en P47. Sería una pena generarlas y perderlas al cambiar de teléfono.",
+           "Solo cuando pulso el botón de respaldo|Nada sube sin que tú lo decidas."] },
+      { id:"p68", t:"Abres un libro que está en la nube pero no en este aparato. ¿Qué hace?", key:true,
+        h:"Puede ser una descarga de 80 MB por datos móviles. Tu prioridad número uno es que nada se sienta lento.",
+        o:["Que me pregunte antes de descargar, y me diga cuánto pesa|Recomendado. Tú decides si es momento de gastar datos.",
+           "Que descargue solo si estoy en wifi; si no, que pregunte",
+           "Que descargue siempre sin preguntar",
+           "Que empiece a mostrar las primeras páginas mientras baja el resto|Lo más elegante y lo más difícil de hacer bien. Cuesta tiempo de desarrollo."] },
+      { id:"p69", t:"¿Ponemos un corte automático de facturación?", key:true,
+        h:"Se configura un aviso de gasto y, al llegar al tope, un proceso desactiva la facturación del proyecto sola. La app deja de sincronizar hasta que tú lo reactives, pero no puede cobrarte de más. Es una tarde de trabajo, una sola vez.",
+        o:["Sí, y córtalo bajito: 1 dólar|Con tu uso nunca debería activarse. Si se activa, es que algo va mal.",
+           "Sí, en 5 dólares",
+           "Solo avísame por correo, no cortes nada",
+           "No hace falta"] },
+      { id:"p70", t:"El botón de respaldo a un archivo que pediste en P44, ¿sigue en pie?",
+        h:"Con los PDF en la nube, ya hay una copia. Pero una copia que solo vive en la cuenta de Google no es una copia si pierdes la cuenta.",
+        o:["Sí, quiero los dos: nube y archivo mío","Con la nube me basta","Solo el archivo, quita la nube"] }
+    ]
+  },
+  {
+    letter:"Q", title:"Las portadas generadas", note:"El botón que pediste",
+    intro:'<p>Ya escribí el prompt. La app rellena lo que está en <b>naranja</b> con los datos del libro, lo copia al portapapeles y abre el generador. Tú generas allí, eliges la que más te guste y vuelves con la imagen.</p>'
+      +'<p>La parte que hace el trabajo no es el botón: es que <strong>el prompt sea idéntico para todos los libros salvo el sujeto</strong>. Eso es lo que hace que cincuenta portadas creadas en cincuenta momentos distintos parezcan una colección y no un cajón.</p>'
+      +'<p>Y una nota de honestidad: generar las imágenes dentro de la app costaría dinero de verdad. No hay nivel gratuito de generación de imágenes comparable al de texto. Este rodeo mantiene el costo en cero y además te deja elegir en vez de aceptar la primera que salga.</p>',
+    qs:[
+      { id:"p71", t:"¿Con qué generas las imágenes?", key:true,
+        h:"Necesito saberlo para que el botón abra la app correcta en tu teléfono.",
+        o:["La app de Gemini","Gemini en el navegador","Otra: la digo en observaciones","Varias, según el día: que me deje elegir al pulsar"] },
+      { id:"p72", t:"El botón «Crear portada»: ¿qué hace al pulsarlo?", demo:DEMO_PROMPT, demoLbl:"El prompt, ya escrito",
+        o:["Copia el prompt y abre el generador|Vuelves a Vellum y subes la imagen a mano.",
+           "Copia el prompt y ya; yo abro lo que quiera",
+           "Copia, abre, y al volver a Vellum me pregunta solo si quiero poner la imagen|Detecta que vuelves y te lo ofrece. Un paso menos.",
+           "Me deja ver y editar el prompt antes de copiarlo|Útil si quieres afinar una portada concreta."] },
+      { id:"p73", t:"¿Qué debe llevar el prompt?", multi:true,
+        h:"Ya incluye lo que pediste. Marca si falta algo o si sobra.",
+        o:["El título que escribí","Las etiquetas del libro","Si es libro o cómic","El nombre del archivo original","Que no escriba texto en la imagen|Los generadores escriben mal, y el título ya sale debajo dentro de la app.","Que el título sí aparezca escrito en la portada"] },
+      { id:"p74", t:"¿Y los libros sin portada generada?",
+        o:["La primera página del PDF; si no sirve, una portada tipográfica con el título|Nunca hay un hueco vacío en la estantería.",
+           "Siempre la primera página del PDF",
+           "Siempre tipográfica, aunque el PDF tenga portada|Toda la biblioteca uniforme, aunque pierdas las portadas originales."] }
+    ]
+  },
+  {
+    letter:"R", title:"El sonido del papel", note:"Sube el volumen",
+    intro:'<p>Pediste sonido al cambiar de página. Es un detalle pequeño que se convierte en una molestia enorme si se hace mal: se oye cientos de veces por sesión, y si suena a plástico o llega tarde respecto al gesto, acabas apagándolo el primer día.</p>'
+      +'<p>Estos cuatro están generados aquí mismo, en el navegador, sin descargar ningún archivo. En la app se afinan más, pero el carácter de cada uno es exactamente este.</p>',
+    qs:[
+      { id:"p75", t:"¿Cuál suena a tu libro?", key:true, demo:DEMO_SOUND, demoLbl:"Toca para oírlos",
+        o:["Hoja fina","Papel grueso","Libro encuadernado","Clic seco","Ninguno me gusta: te lo describo en observaciones","Pensándolo mejor, sin sonido"] },
+      { id:"p76", t:"¿Cuándo debe sonar?", multi:true,
+        h:"Un lector de libros que suena en el bus cuando creías que estaba en silencio es un lector que se desinstala.",
+        o:["Siempre que pase página","Que respete el modo silencio del teléfono|En el navegador esto no siempre se puede detectar; se acerca bajando el volumen del sonido.",
+           "Solo con auriculares","Con un interruptor en ajustes para apagarlo rápido","Que suene bajito, siempre por debajo de la música que esté oyendo"] },
+      { id:"p77", t:"¿Vibración además del sonido?",
+        o:["No, solo sonido","Sí, un toque muy corto al completarse la página","Solo vibración, sin sonido"] }
+    ]
+  },
+  {
+    letter:"S", title:"Cerrar y arrancar", note:"Lo último",
+    qs:[
+      { id:"p78", t:"La sesión: confirmemos cómo queda", key:true,
+        h:"En P46 pediste que pida sesión la primera vez. Así lo haré, pero con una condición para no romper lo de «instantánea»: se pide una sola vez, queda guardada, y a partir de ahí la app abre sin tocar la red aunque no haya internet.",
+        o:["Perfecto, así","Que me deje además cerrar sesión y volver a entrar cuando quiera","Que además me pregunte si quiero seguir sin cuenta"] },
+      { id:"p79", t:"El icono: ya te dejé el prompt escrito. ¿Cuál de las tres versiones generas?",
+        h:"Están en guia/prompts/icono.md, dentro del repositorio. Genera tres o cuatro variantes de la que elijas: los generadores fallan mucho con iconos.",
+        o:["La V trazada sobre la vitela|La más reconocible y la que mejor aguanta a 48 píxeles.",
+           "La hoja de pergamino con la esquina doblada",
+           "El libro abierto reducido a dos trapecios",
+           "Genero las tres y elegimos entre lo que salga"] },
+      { id:"p80", t:"¿En qué orden quieres verlo funcionando?", key:true,
+        h:"No construyo todo de golpe. Esto decide qué puedes tocar primero.",
+        o:["Leer antes que nada: importar un PDF y pasar páginas bien|Lo más importante funcionando en pocos días, aunque sea feo y sin nube.",
+           "La biblioteca primero: importar, etiquetar, ordenar, portadas",
+           "El traductor primero: la barra de abajo funcionando con Gemini",
+           "Decide tú el orden más sensato"] },
+      { id:"p81", t:"Última llamada: ¿algo que no te haya preguntado?", free:true,
+        h:"Cualquier cosa. Una manía, algo que odies de otros lectores de PDF, una función que hayas dado por hecha y no hayamos nombrado nunca. Después de esto empiezo a escribir código." }
+    ]
+  }
+];
+
+const KEY = "vellum-q4-v1";
+let state = {};
+try { state = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch(e) { state = {}; }
+
+const form = document.getElementById("form");
+let totalQs = 0;
+
+BLOCKS.forEach(function(b){
+  const sec = document.createElement("section");
+  sec.className = "block";
+  const head = document.createElement("div");
+  head.className = "block-head";
+  head.innerHTML = '<span class="block-letter">'+b.letter+'</span><h2 class="block-title"></h2><span class="block-note"></span>';
+  head.querySelector(".block-title").textContent = b.title;
+  head.querySelector(".block-note").textContent = b.note || "";
+  sec.appendChild(head);
+
+  if (b.intro){
+    const box = document.createElement("div");
+    box.className = "intro"; box.innerHTML = b.intro;
+    sec.appendChild(box);
+  }
+
+  b.qs.forEach(function(q){
+    totalQs++;
+    const card = document.createElement("article");
+    card.className = "q"; card.dataset.qid = q.id;
+
+    const qh = document.createElement("div");
+    qh.className = "q-head";
+    const num = document.createElement("span");
+    num.className = "q-num"; num.textContent = "P" + q.id.slice(1);
+    const title = document.createElement("h3");
+    title.className = "q-title"; title.textContent = q.t;
+    if (q.multi){ const t=document.createElement("span"); t.className="q-multi"; t.textContent="varias"; title.appendChild(t); }
+    if (q.flag){ const t=document.createElement("span"); t.className="q-flag"; t.textContent=q.flag; title.appendChild(t); }
+    else if (q.key){ const t=document.createElement("span"); t.className="q-flag"; t.textContent="clave"; title.appendChild(t); }
+    qh.appendChild(num); qh.appendChild(title);
+    card.appendChild(qh);
+
+    if (q.h){
+      const hint = document.createElement("p");
+      hint.className = "q-hint" + (q.flag ? " warn" : "");
+      hint.textContent = q.h;
+      card.appendChild(hint);
+    }
+
+    if (q.demo){
+      const dz = document.createElement("div");
+      dz.className = "demo-zone";
+      dz.innerHTML = '<span class="demo-lbl">'+(q.demoLbl||"Demo")+'</span>' + q.demo;
+      card.appendChild(dz);
+    }
+
+    if (q.free){
+      const wrap = document.createElement("div");
+      wrap.className = "free";
+      const ta = document.createElement("textarea");
+      ta.placeholder = "Tu respuesta…";
+      ta.dataset.role = "ans"; ta.dataset.qid = q.id;
+      ta.value = (state[q.id] && state[q.id].free) || "";
+      wrap.appendChild(ta); card.appendChild(wrap);
+    } else {
+      const opts = document.createElement("div");
+      opts.className = "opts";
+      q.o.forEach(function(raw){
+        const parts = raw.split("|");
+        const label = document.createElement("label");
+        label.className = "opt";
+        const inp = document.createElement("input");
+        inp.type = q.multi ? "checkbox" : "radio";
+        inp.name = q.id; inp.value = parts[0];
+        inp.dataset.role = "opt"; inp.dataset.qid = q.id;
+        const saved = (state[q.id] && state[q.id].sel) || [];
+        if (saved.indexOf(parts[0]) !== -1) inp.checked = true;
+        const txt = document.createElement("span");
+        txt.className = "opt-txt"; txt.textContent = parts[0];
+        if (parts[1]){ const em=document.createElement("em"); em.textContent=parts[1]; txt.appendChild(em); }
+        label.appendChild(inp); label.appendChild(txt);
+        opts.appendChild(label);
+      });
+      card.appendChild(opts);
+    }
+
+    const obs = document.createElement("div");
+    obs.className = "obs";
+    const lbl = document.createElement("label");
+    lbl.className = "obs-lbl"; lbl.textContent = "Observaciones";
+    const ota = document.createElement("textarea");
+    ota.placeholder = "Matices, excepciones, \"ninguna de las anteriores\"…";
+    ota.dataset.role = "obs"; ota.dataset.qid = q.id;
+    ota.value = (state[q.id] && state[q.id].obs) || "";
+    ota.id = q.id + "-obs";
+    lbl.setAttribute("for", q.id + "-obs");
+    obs.appendChild(lbl); obs.appendChild(ota);
+    card.appendChild(obs);
+
+    sec.appendChild(card);
+  });
+
+  form.appendChild(sec);
+});
+
+document.getElementById("total").textContent = totalQs;
+
+/* ---------- sonidos de papel ---------- */
+let AC = null;
+function ctx(){
+  if (!AC){
+    const C = window.AudioContext || window.webkitAudioContext;
+    if (!C) return null;
+    AC = new C();
+  }
+  if (AC.state === "suspended") AC.resume();
+  return AC;
+}
+function noiseBuffer(ac, secs){
+  const n = Math.floor(ac.sampleRate * secs);
+  const buf = ac.createBuffer(1, n, ac.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+  return buf;
+}
+// un roce de papel: ruido pasado por un filtro que barre en frecuencia,
+// con una envolvente que sube rápido y cae despacio
+function rustle(ac, t0, dur, f1, f2, q, vol){
+  const src = ac.createBufferSource();
+  src.buffer = noiseBuffer(ac, dur + .05);
+  const bp = ac.createBiquadFilter();
+  bp.type = "bandpass";
+  bp.Q.value = q;
+  bp.frequency.setValueAtTime(f1, t0);
+  bp.frequency.exponentialRampToValueAtTime(f2, t0 + dur);
+  const g = ac.createGain();
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(vol, t0 + dur * 0.22);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  src.connect(bp); bp.connect(g); g.connect(ac.destination);
+  src.start(t0); src.stop(t0 + dur + .05);
+}
+function thump(ac, t0, freq, dur, vol){
+  const o = ac.createOscillator();
+  o.type = "sine";
+  o.frequency.setValueAtTime(freq, t0);
+  o.frequency.exponentialRampToValueAtTime(freq * 0.55, t0 + dur);
+  const g = ac.createGain();
+  g.gain.setValueAtTime(vol, t0);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g); g.connect(ac.destination);
+  o.start(t0); o.stop(t0 + dur + .02);
+}
+function playSound(kind){
+  const ac = ctx();
+  if (!ac) return;
+  const t = ac.currentTime + 0.02;
+  if (kind === "fina"){
+    rustle(ac, t, 0.26, 1800, 5200, 1.1, 0.11);
+    rustle(ac, t + 0.13, 0.16, 3200, 1600, 1.6, 0.05);
+  } else if (kind === "gruesa"){
+    rustle(ac, t, 0.34, 700, 2600, 0.8, 0.15);
+    rustle(ac, t + 0.19, 0.22, 1900, 800, 1.2, 0.08);
+    thump(ac, t + 0.30, 150, 0.09, 0.05);
+  } else if (kind === "libro"){
+    rustle(ac, t, 0.20, 1200, 3400, 1.0, 0.10);
+    rustle(ac, t + 0.16, 0.30, 2800, 900, 0.9, 0.12);
+    thump(ac, t + 0.40, 110, 0.13, 0.09);
+  } else {
+    rustle(ac, t, 0.055, 2600, 4200, 2.4, 0.14);
+    thump(ac, t, 320, 0.045, 0.05);
+  }
+}
+document.querySelectorAll(".snd").forEach(function(btn){
+  btn.addEventListener("click", function(){
+    playSound(btn.dataset.s);
+    btn.classList.add("playing");
+    setTimeout(function(){ btn.classList.remove("playing"); }, 480);
+  });
+});
+
+/* ---------- estado ---------- */
+function collect(){
+  const out = {};
+  function slot(id){ if(!out[id]) out[id] = {sel:[], obs:"", free:""}; return out[id]; }
+  document.querySelectorAll('input[data-role="opt"]').forEach(function(i){
+    const s = slot(i.dataset.qid); if (i.checked) s.sel.push(i.value);
+  });
+  document.querySelectorAll('textarea[data-role="ans"]').forEach(function(t){ slot(t.dataset.qid).free = t.value.trim(); });
+  document.querySelectorAll('textarea[data-role="obs"]').forEach(function(t){ slot(t.dataset.qid).obs = t.value.trim(); });
+  return out;
+}
+function refresh(){
+  state = collect();
+  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e){}
+  let done = 0;
+  document.querySelectorAll(".q").forEach(function(card){
+    const s = state[card.dataset.qid] || {sel:[],obs:"",free:""};
+    const has = s.sel.length > 0 || s.free.length > 0 || s.obs.length > 0;
+    card.classList.toggle("answered", has);
+    if (has) done++;
+  });
+  document.getElementById("done").textContent = done;
+  document.getElementById("fill").style.width = (done / totalQs * 100) + "%";
+}
+form.addEventListener("change", refresh);
+form.addEventListener("input", refresh);
+refresh();
+
+function buildText(){
+  const s = collect();
+  const lines = ["CUESTIONARIO 4 — EL CIERRE", ""];
+  BLOCKS.forEach(function(b){
+    lines.push("== " + b.letter + ". " + b.title.toUpperCase() + " ==");
+    b.qs.forEach(function(q){
+      const a = s[q.id] || {sel:[],obs:"",free:""};
+      lines.push("P" + q.id.slice(1) + ". " + q.t);
+      if (q.free) lines.push("R: " + (a.free || "(sin responder)"));
+      else lines.push("R: " + (a.sel.length ? a.sel.join(" + ") : "(sin responder)"));
+      if (a.obs) lines.push("Obs: " + a.obs);
+      lines.push("");
+    });
+  });
+  return lines.join("\n");
+}
+function flash(btn, label){
+  const old = btn.textContent;
+  btn.textContent = label; btn.classList.add("done");
+  setTimeout(function(){ btn.textContent = old; btn.classList.remove("done"); }, 2200);
+}
+function doCopy(btn){
+  const txt = buildText();
+  const warn = document.getElementById("warn");
+  function fallback(){
+    const sink = document.getElementById("sink");
+    sink.value = txt; sink.style.left = "0"; sink.select();
+    let ok = false;
+    try { ok = document.execCommand("copy"); } catch(e){ ok = false; }
+    sink.style.left = "-9999px";
+    if (ok){ flash(btn, "Copiado ✓"); warn.textContent = ""; }
+    else {
+      warn.textContent = "El navegador bloqueó el copiado. Selecciona a mano el texto de abajo.";
+      sink.style.position = "static"; sink.style.left = "0"; sink.style.opacity = "1";
+      sink.style.minHeight = "12rem";
+      sink.setAttribute("aria-hidden","false"); sink.removeAttribute("tabindex");
+    }
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(function(){ flash(btn, "Copiado ✓"); warn.textContent=""; }).catch(fallback);
+  } else fallback();
+}
+document.getElementById("copy1").addEventListener("click", function(){ doCopy(this); });
+document.getElementById("copy2").addEventListener("click", function(){ doCopy(this); });
+</script>

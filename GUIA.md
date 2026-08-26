@@ -4,7 +4,7 @@ Documento vivo del proyecto. Todo lo que se decide queda aquí, y de aquí salen
 los parámetros para construir la app. Si algo no está en esta Guía, no está
 decidido.
 
-- **Estado:** ronda 3 de cuestionarios (arquitectura cerrada; falta la cara)
+- **Estado:** ronda 4 de cuestionarios (la última; luego se construye)
 - **Última actualización:** 2026-08-26
 - **Nombre:** **Infiniity Vellum** (P43)
 
@@ -50,12 +50,24 @@ descartan.
 | R25 | Pantalla de inicio: lo que estoy leyendo arriba y grande; la biblioteca debajo | P39 |
 | R26 | Portada = primera página del PDF, sustituible por una imagen mía | P40 |
 | R27 | Buscador por título | P41 |
+| R28 | Al pasar página, la hoja **voltea sobre el lomo**, con peso (450 ms) y siguiendo el dedo | P49 · P50 · P51 |
+| R29 | **Sonido de papel** al cambiar de página | P49 obs |
+| R30 | La burbuja es una **barra fija abajo**; muestra la traducción natural grande y el resto en pestañas | P54 · P55 |
+| R31 | Donde el PDF tenga texto, se puede seleccionar y traducir; donde no, se escribe | P56 |
+| R32 | Sesión con Google, **una sola vez**; después nunca vuelve a pedirla ni a hacer esperar | P45 · P46 |
+| R33 | Identidad visual **Vitela**: pergamino, tinta parda, ocre. Tema de lectura por defecto: papel | P58 · P59 |
+| R34 | Transiciones suaves pero muy cortas en toda la app | P60 |
+| R35 | Botón **Crear portada**: arma un prompt, lo copia y abre el generador de imágenes | P61 obs |
+| R36 | Todas las portadas comparten estilo, para que la biblioteca parezca una colección | P61 obs |
+| R37 | Al leer: todo oculto por defecto; la interfaz aparece al tocar el centro | P62 |
+| R38 | La orientación se puede bloquear desde la app | P64 |
+| R39 | Botón de respaldo de toda la biblioteca a un archivo | P44 |
 
 **No entra:** lectura en voz alta (P16), OCR de cómics (P8), traducción de
-página completa (P8), subrayados ni notas manuales (P15), sincronización
-automática de los **archivos** (P7 · imposible en Firebase gratuito),
-EPUB / CBZ / MOBI en la versión 1 (P4), colecciones y carpetas (P38),
-campo de autor (P42), agrupación por estado de lectura (P38).
+página completa (P8), subrayados ni notas manuales (P15), EPUB / CBZ / MOBI en
+la versión 1 (P4), colecciones y carpetas (P38), campo de autor (P42),
+agrupación por estado de lectura (P38), barra de progreso arrastrable con
+miniaturas (P52: solo salto por número).
 
 **R19 es la regla de desempate.** Cuando dos requisitos choquen, gana el que
 mantenga la app ligera e instantánea. Esto tiene un efecto inmediato sobre R22:
@@ -109,10 +121,11 @@ técnicas que descartan opciones desde el primer día. Implican, como mínimo:
   gratuito. Se deja constancia en vez de borrarla, para que quede claro qué
   cambió y por qué. La sustituye D-06.
 
-### D-06 · Firebase en plan Spark (gratuito) para sincronizar datos
-- **Decisión:** se usa Firebase, exclusivamente en el plan Spark. Nunca Blaze,
-  ni siquiera "vigilando el gasto": Blaze exige tarjeta y no corta solo al
-  llegar al límite, lo que rompe R11.
+### D-06 · Firebase — ~~Spark~~ → **Blaze**, revisada en la ronda 3
+- **Cambio:** en P61 pediste pasar a Blaze para poder subir también los PDF.
+  Lo respeto y lo anoto; ver D-12 con los números y el riesgo real. Lo que sigue
+  describe los servicios, que no cambian.
+- **Decisión original (ronda 2):** se usaba Firebase solo en plan Spark.
   - **Firestore** guarda progreso de lectura, vocabulario, etiquetas, títulos y
     ajustes. Cuota gratis: 1 GiB, 50.000 lecturas, 20.000 escrituras y 20.000
     borrados al día. Para cuatro personas y menos de cincuenta libros, sobra.
@@ -120,21 +133,16 @@ técnicas que descartan opciones desde el primer día. Implican, como mínimo:
     correo y contraseña. Se evita la verificación por SMS, que sí cuesta.
   - **Hosting** publica la app: 10 GB de almacenamiento, 360 MB de transferencia
     al día, dominio propio y certificado incluidos, sin tarjeta.
-  - **Cloud Storage NO se usa.** Desde el 3 de febrero de 2026 exige plan Blaze
-    con tarjeta vinculada. Es la razón de D-07.
-- **Origen:** P22, P33, P35.
+  - **Cloud Storage** pasa a estar disponible al entrar en Blaze (D-12).
+- **Origen:** P22, P33, P35, y revisión en P61.
 
-### D-07 · Los PDF nunca salen del aparato
-- **Decisión:** los archivos viven solo en el almacén local (D-03). Firebase
-  guarda los datos *sobre* los libros, no los libros.
-- **Por qué:** es una consecuencia forzada de D-06, no una preferencia. El plan
-  gratuito de Firebase no puede almacenar archivos.
-- **Consecuencia:** si pierdes el teléfono o borras los datos del navegador,
-  hay que volver a importar los PDF a mano, pero **el progreso, el vocabulario
-  y las etiquetas vuelven solos** al iniciar sesión. Coincide con lo que ya
-  querías: tú les pasas los archivos a las otras personas y ellos los importan
-  (P34).
-- **Pendiente de confirmar:** P44.
+### D-07 · Los PDF nunca salen del aparato — ~~REVOCADA~~
+- **Revocada en la ronda 3** por P61: con Blaze, los PDF sí pueden subirse.
+  La sustituye D-12. Se conserva la entrada para que quede el rastro del cambio.
+- **Lo que sí sobrevive de ella:** el almacén local sigue siendo la fuente
+  principal (D-03). La nube es respaldo y transporte, no el sitio desde donde se
+  lee. Un lector que descarga 80 MB antes de mostrar la primera página es lo
+  contrario de R19.
 
 ### D-08 · Local-first: la nube nunca hace esperar
 - **Decisión:** la app funciona entera sin sesión y sin internet. Firebase es
@@ -157,17 +165,61 @@ técnicas que descartan opciones desde el primer día. Implican, como mínimo:
   la facturación nunca**. Sin facturación activada no puede haber cobro: si se
   agota la cuota diaria, la API simplemente deja de responder hasta el día
   siguiente. Esto es lo que hace que R11 sea cierto y no una esperanza.
-- **Origen:** P25, P26, P27.
+- **⚠️ Consecuencia crítica de pasar a Blaze (D-12).** El nivel gratuito de
+  Gemini **solo existe mientras el proyecto de Google no tenga facturación
+  activada**. Blaze *es* activar facturación. Por lo tanto:
+
+  > **El proyecto de Firebase y el proyecto de la clave de Gemini tienen que ser
+  > dos proyectos de Google distintos.**
+
+  Si se usa el mismo, las 1.000 consultas diarias gratuitas desaparecen y cada
+  traducción pasa a facturarse. Es un error silencioso: nada falla, solo llega
+  la factura. Es la regla más importante de todo este documento.
+- **Origen:** P25, P26, P27, P48.
 
 ### D-10 · Nombre: Infiniity Vellum
 - **Origen:** P43. *Vellum* es la vitela: la piel fina y tratada sobre la que se
   escribían los manuscritos antes del papel.
 
-### D-11 · Modelo de datos de un libro
+### D-12 · Blaze, con los archivos en la nube y un tope de gasto
+- **Decisión:** se pasa al plan Blaze para poder subir los PDF (P61). El almacén
+  local sigue siendo la fuente principal; la nube es respaldo y transporte.
+- **Los números, verificados en la página oficial de Firebase.** En Blaze, Cloud
+  Storage no cobra hasta: **5 GB guardados**, **100 GB de descarga al mes**,
+  **5.000 subidas al mes** y **50.000 descargas al mes**. Con menos de cincuenta
+  PDF y dos personas, el único margen que se puede rozar es el de 5 GB, y solo
+  si son cómics muy pesados. Pasado eso son unos tres centavos de dólar por
+  gigabyte al mes.
+- **El riesgo real no son esos números, es que Blaze no tiene tope.** Cobra lo
+  que salga. Un error que suba en bucle, o un bucket mal configurado que alguien
+  descubra, genera cargos de verdad. Por eso el tope automático de facturación
+  no es opcional: se pregunta en P69 pero se recomienda con fuerza.
+- **Regla heredada:** ver el aviso crítico de D-09. Dos proyectos de Google
+  separados, o Gemini deja de ser gratis.
+- **Origen:** P61 obs.
+
+### D-13 · Las portadas se generan fuera y se traen a mano
+- **Decisión:** un botón **Crear portada** compone un prompt con el título, las
+  etiquetas, el tipo de obra y el nombre del archivo, lo copia al portapapeles y
+  abre el generador de imágenes. Tú generas allí y vuelves con el archivo.
+- **Por qué así y no generando dentro de la app:** generar imágenes por API
+  cuesta dinero de verdad y no tiene nivel gratuito comparable al de texto. Este
+  rodeo mantiene R11 intacto y además te deja elegir la que más te guste en vez
+  de aceptar la primera.
+- **La parte importante es la plantilla, no el botón.** El prompt es idéntico
+  para todos los libros salvo el sujeto, para que cincuenta portadas hechas en
+  cincuenta momentos distintos parezcan una colección. Está en
+  `guia/prompts/portadas.md`.
+- **Siempre hay portada:** si no generas ninguna, se usa la primera página del
+  PDF; si esa no sirve, una portada tipográfica con el título.
+- **Origen:** P61 obs.
+
+### D-14 · Modelo de datos de un libro
 - **Decisión:** un libro es un **título** escrito a mano, un conjunto de
-  **etiquetas**, una **portada** (primera página del PDF o imagen propia) y un
+  **etiquetas**, un **tipo** (libro o cómic, que necesita el prompt de portada),
+  una **portada** (generada, primera página del PDF, o tipográfica) y un
   **progreso**. No hay campo de autor.
-- **Origen:** P38, P40, P42.
+- **Origen:** P38, P40, P42, P61.
 
 ### D-05 · El repositorio se limpia
 - **Decisión:** se borra la app vieja "La corte del Rey" y se empieza limpio.
@@ -188,7 +240,12 @@ técnicas que descartan opciones desde el primer día. Implican, como mínimo:
 | T8 | P29 elige escribir a mano, pero P30 dice que parte de los PDF sí tienen texto seleccionable. En esos, seleccionar con el dedo sale prácticamente gratis y ahorra teclear. | **preguntada** en P56. |
 | T9 | P32 solo marca "la frase completa donde apareció". Una lista de vocabulario sin la traducción no sirve para nada. | **preguntada** en P57. |
 | T10 | P27 comparte una sola clave de Gemini entre cuatro personas: hay que decidir cómo se reparte sin exponerla, y las 1.000 consultas diarias pasan a ser comunes. | **preguntada** en P48. |
-| T11 | P28 pide una respuesta muy completa de la burbuja, pero R19 exige que nada se sienta lento. Una respuesta larga tarda unos segundos en generarse. | **preguntada** en P54: se resuelve mostrando lo natural primero y el resto detrás. |
+| T11 | P28 pide una respuesta muy completa de la burbuja, pero R19 exige que nada se sienta lento. | **resuelta** en P54: traducción natural grande, el resto en pestañas. |
+| T12 | **El nivel gratuito de Gemini muere si el proyecto de Google tiene facturación activada, y Blaze la activa.** | **resuelta por diseño**: dos proyectos de Google separados. Ver el aviso de D-09. No se pregunta; no hay alternativa razonable. |
+| T13 | Blaze no tiene tope de gasto. Un error puede generar cargos reales aunque el uso normal sea gratis. | **preguntada** en P69: corte automático de facturación. |
+| T14 | P46 pide sesión obligatoria la primera vez, pero R19 y D-08 exigen que nada haga esperar. | **resuelta**: la sesión se pide una sola vez y queda guardada; los arranques siguientes no tocan la red. Se confirma en P79. |
+| T15 | P47 no marcó las portadas entre lo que debe sincronizarse, pero P61 pide un sistema de portadas generadas que sería una lástima perder al cambiar de aparato. | **preguntada** en P67. |
+| T16 | Si los PDF viven en la nube, abrir un libro que no está en este aparato exige descargarlo, y eso puede ser 80 MB por datos móviles. Choca de frente con R19. | **preguntada** en P68. |
 
 ## 5. Investigación: motores de traducción sin costo
 
@@ -224,7 +281,28 @@ Verificado en agosto de 2026.
 | **Firestore** (datos) | 1 GiB guardado · 50.000 lecturas, 20.000 escrituras y 20.000 borrados al día · 10 GiB/mes de salida |
 | **Authentication** | incluido con Google y con correo y contraseña. La verificación por SMS sí cuesta: se evita. |
 | **Hosting** | 10 GB de almacenamiento · 360 MB/día de transferencia · dominio propio y certificado incluidos |
-| **Cloud Storage** (archivos) | **no disponible.** Desde el 3 de febrero de 2026 exige plan Blaze con tarjeta vinculada. |
+| **Cloud Storage** (archivos) | **no disponible en Spark.** Desde el 3 de febrero de 2026 exige plan Blaze con tarjeta vinculada. |
+
+### Y qué añade Blaze (adoptado en la ronda 3)
+
+Blaze mantiene intactas todas las cuotas gratuitas de arriba y añade Cloud
+Storage, que trae la suya propia:
+
+| Cloud Storage en Blaze | Sin costo hasta | Uso previsto de Vellum |
+|---|---|---|
+| Guardado | **5 GB** | 50 PDF de 20 MB son 1 GB. Solo se roza el límite con cómics muy pesados. |
+| Descarga | **100 GB al mes** | Inalcanzable entre dos personas. |
+| Operaciones de subida | **5.000 al mes** | Unas 50. |
+| Operaciones de descarga | **50.000 al mes** | Unas pocas decenas. |
+
+Pasado el límite, unos tres centavos de dólar por gigabyte al mes. Con este uso,
+la factura real es cero.
+
+**Lo que sí hay que vigilar** no está en esta tabla: Blaze no corta. Cobra lo que
+salga. El uso normal de Vellum no llega ni cerca de los límites, pero un fallo
+que suba archivos en bucle sí. De ahí el tope automático de facturación (D-12).
+
+Fuente: [precios oficiales de Firebase](https://firebase.google.com/pricing).
 
 **Por qué no se usa Blaze aunque su cuota gratuita sea la misma.** Blaze incluye
 las mismas cuotas sin costo, pero exige una tarjeta y **no corta el servicio al
@@ -241,9 +319,11 @@ Fuentes: [precios de Firebase](https://firebase.google.com/pricing),
 |---|---|---|---|
 | 01 | Decisiones grandes: plataforma, biblioteca, traductor, lectura, alcance | `guia/cuestionarios/01-decisiones-grandes.html` | respondido |
 | 02 | Cómo funciona: traductor, archivos, respaldo, organización, nombre | `guia/cuestionarios/02-como-funciona.html` | respondido |
-| 03 | Cómo se ve y se siente: sesión, animación de página, burbuja, identidad | `guia/cuestionarios/03-como-se-siente.html` | enviado |
+| 03 | Cómo se ve y se siente: sesión, animación de página, burbuja, identidad | `guia/cuestionarios/03-como-se-siente.html` | respondido |
+| 04 | Blaze, portadas generadas, sonido y cierre | `guia/cuestionarios/04-cierre.html` | enviado |
 
-Las respuestas están en `guia/respuestas/`.
+Las respuestas están en `guia/respuestas/`. Los prompts para generar el icono y
+las portadas, en `guia/prompts/`.
 
 ## 8. Bitácora
 
@@ -258,3 +338,10 @@ Las respuestas están en `guia/respuestas/`.
   que los PDF se quedan en el aparato. La prioridad número uno pasa a ser que
   la app se sienta ligera e instantánea, y eso obliga a que la sincronización
   nunca haga esperar. Se envía el cuestionario 3.
+- **2026-08-26** — Respondido el cuestionario 3. Tres cambios de rumbo: se pasa
+  a **Blaze** para poder subir los PDF (D-12), aparece un **sistema de portadas
+  generadas fuera de la app** (D-13) y se pide **sonido de papel** al pasar
+  página. Se detecta que el nivel gratuito de Gemini muere si el proyecto de
+  Google tiene facturación activada, lo que obliga a separar el proyecto de
+  Firebase del proyecto de la clave (aviso crítico en D-09). Se escriben los
+  prompts del icono y de las portadas. Se envía el cuestionario 4, el último.
