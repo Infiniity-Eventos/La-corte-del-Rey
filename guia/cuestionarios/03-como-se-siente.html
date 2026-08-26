@@ -1,0 +1,750 @@
+<title>Cuestionario 3 · La Cara de Vellum</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Karla:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+
+<style>
+  :root{
+    --ground:#E7E9F0; --surface:#F8F9FC; --sunken:#DFE2EC;
+    --ink:#14161E; --ink-2:#474D5F; --ink-3:#767D91;
+    --line:#CFD4E1; --line-soft:#DFE3EC;
+    --brass:#8F6416; --brass-ink:#6E4C0E; --brass-wash:#F3E7CC;
+    --alert:#8C2F2F; --alert-wash:#F6E2E2;
+    --shadow:0 1px 2px rgba(20,22,30,.05); --r:7px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ground:#0F1118; --surface:#171A23; --sunken:#12141C;
+      --ink:#E9EBF2; --ink-2:#A9AFC1; --ink-3:#798094;
+      --line:#2A2F3C; --line-soft:#232833;
+      --brass:#D9A24E; --brass-ink:#E8BC76; --brass-wash:#2C2416;
+      --alert:#E58B8B; --alert-wash:#2E1B1B;
+      --shadow:0 1px 2px rgba(0,0,0,.3);
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#0F1118; --surface:#171A23; --sunken:#12141C;
+    --ink:#E9EBF2; --ink-2:#A9AFC1; --ink-3:#798094;
+    --line:#2A2F3C; --line-soft:#232833;
+    --brass:#D9A24E; --brass-ink:#E8BC76; --brass-wash:#2C2416;
+    --alert:#E58B8B; --alert-wash:#2E1B1B;
+    --shadow:0 1px 2px rgba(0,0,0,.3);
+  }
+
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);
+    font-family:"Karla","Helvetica Neue",Arial,sans-serif;
+    font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:44rem;margin:0 auto;padding:0 1.25rem 8rem}
+
+  .bar{position:sticky;top:0;z-index:20;
+    background:color-mix(in srgb, var(--ground) 88%, transparent);
+    backdrop-filter:blur(10px);border-bottom:1px solid var(--line-soft);}
+  .bar-in{max-width:44rem;margin:0 auto;padding:.7rem 1.25rem;
+    display:flex;align-items:center;gap:1rem;justify-content:space-between;}
+  .bar-name{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.7rem;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);}
+  .bar-count{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.78rem;
+    color:var(--ink-2);font-variant-numeric:tabular-nums;}
+  .bar-count b{color:var(--brass-ink);font-weight:500}
+  .track{height:2px;background:var(--line-soft)}
+  .fill{height:2px;width:0%;background:var(--brass);transition:width .35s ease}
+
+  header.hero{padding:3.5rem 0 2.5rem}
+  .eyebrow{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.7rem;
+    letter-spacing:.16em;text-transform:uppercase;color:var(--brass-ink);margin:0 0 1.1rem;}
+  h1{font-family:"Fraunces",Georgia,serif;
+    font-variation-settings:"SOFT" 30,"WONK" 1,"opsz" 100;font-weight:600;
+    font-size:clamp(2.1rem,7vw,3.1rem);line-height:1.05;letter-spacing:-.015em;
+    margin:0 0 1rem;text-wrap:balance;}
+  .lede{color:var(--ink-2);font-size:1.02rem;margin:0 0 1.6rem;max-width:34rem}
+  .howto{background:var(--surface);border:1px solid var(--line-soft);
+    border-radius:var(--r);padding:1rem 1.1rem;font-size:.9rem;color:var(--ink-2);}
+  .howto ul{margin:.4rem 0 0;padding-left:1.1rem}
+  .howto li{margin:.28rem 0}
+  .howto strong{color:var(--ink)}
+
+  section.block{margin-top:3rem}
+  .block-head{display:flex;align-items:baseline;gap:.85rem;padding-bottom:.7rem;
+    border-bottom:1px solid var(--line);margin-bottom:1.6rem;}
+  .block-letter{font-family:"JetBrains Mono",ui-monospace,monospace;
+    font-size:.72rem;letter-spacing:.12em;color:var(--brass-ink);}
+  .block-title{font-family:"Fraunces",Georgia,serif;
+    font-variation-settings:"SOFT" 20,"opsz" 40;font-weight:600;font-size:1.22rem;
+    margin:0;letter-spacing:-.01em;}
+  .block-note{font-size:.86rem;color:var(--ink-3);margin-left:auto;text-align:right}
+
+  .intro{background:var(--surface);border:1px solid var(--line-soft);
+    border-radius:var(--r);padding:1.05rem 1.1rem;margin-bottom:1.3rem;
+    font-size:.9rem;color:var(--ink-2);}
+  .intro p{margin:0 0 .7rem}
+  .intro p:last-child{margin-bottom:0}
+  .intro strong{color:var(--ink)}
+
+  .q{background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--r);
+    padding:1.15rem 1.15rem 1rem;margin-bottom:1rem;box-shadow:var(--shadow);}
+  .q.answered{border-color:color-mix(in srgb, var(--brass) 40%, var(--line-soft))}
+  .q-head{display:flex;gap:.7rem;align-items:baseline;margin-bottom:.15rem}
+  .q-num{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.78rem;
+    color:var(--ink-3);flex:none;padding-top:.1rem;font-variant-numeric:tabular-nums;}
+  .q.answered .q-num{color:var(--brass-ink)}
+  .q-title{font-size:1.02rem;font-weight:700;margin:0;line-height:1.35;text-wrap:balance}
+  .q-hint{margin:.3rem 0 .9rem 1.48rem;font-size:.86rem;color:var(--ink-3)}
+  .q-hint.warn{color:var(--alert);background:var(--alert-wash);padding:.5rem .65rem;border-radius:5px}
+  .q-multi,.q-flag{display:inline-block;font-family:"JetBrains Mono",ui-monospace,monospace;
+    font-size:.63rem;letter-spacing:.1em;text-transform:uppercase;padding:.14rem .42rem;
+    border-radius:3px;margin-left:.5rem;vertical-align:.12em;}
+  .q-multi{color:var(--brass-ink);background:var(--brass-wash)}
+  .q-flag{color:var(--alert);background:var(--alert-wash)}
+
+  .opts{display:flex;flex-direction:column;gap:.4rem;margin-left:1.48rem}
+  .opt{display:flex;gap:.65rem;align-items:flex-start;border:1px solid var(--line-soft);
+    border-radius:5px;padding:.6rem .7rem;cursor:pointer;background:var(--ground);
+    transition:border-color .15s ease, background .15s ease;}
+  .opt:hover{border-color:var(--line)}
+  .opt input{appearance:none;-webkit-appearance:none;width:1.05rem;height:1.05rem;
+    flex:none;margin:.16rem 0 0;border:1.5px solid var(--ink-3);background:transparent;
+    display:grid;place-content:center;cursor:pointer;}
+  .opt input[type=radio]{border-radius:50%}
+  .opt input[type=checkbox]{border-radius:3px}
+  .opt input::after{content:"";width:.5rem;height:.5rem;transform:scale(0);
+    transition:transform .12s ease;background:var(--brass);}
+  .opt input[type=radio]::after{border-radius:50%}
+  .opt input:checked{border-color:var(--brass)}
+  .opt input:checked::after{transform:scale(1)}
+  .opt input:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+  .opt:has(input:checked){border-color:var(--brass);background:var(--brass-wash)}
+  .opt-txt{font-size:.94rem;line-height:1.4}
+  .opt-txt em{display:block;font-style:normal;color:var(--ink-3);font-size:.83rem;margin-top:.12rem}
+
+  textarea{width:100%;font-family:"Karla",Arial,sans-serif;font-size:.92rem;line-height:1.5;
+    color:var(--ink);background:var(--sunken);border:1px solid var(--line-soft);
+    border-radius:5px;padding:.6rem .7rem;resize:vertical;}
+  textarea:focus{outline:2px solid var(--brass);outline-offset:1px;border-color:transparent}
+  textarea::placeholder{color:var(--ink-3)}
+  .free{margin-left:1.48rem}
+  .obs{margin:.75rem 0 0 1.48rem}
+  .obs-lbl{display:block;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.65rem;
+    letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:.35rem;}
+  .obs textarea{min-height:2.6rem}
+  .free textarea{min-height:4.5rem}
+
+  /* ============ DEMOS ============ */
+  .demo-zone{margin:0 0 1rem 1.48rem}
+  .demo-lbl{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.63rem;
+    letter-spacing:.12em;text-transform:uppercase;color:var(--brass-ink);
+    margin:0 0 .6rem;display:block}
+
+  /* páginas */
+  .pgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(8.2rem,1fr));gap:.7rem}
+  .pdemo{display:flex;flex-direction:column;gap:.4rem}
+  .pstage{position:relative;aspect-ratio:3/4;border-radius:4px;overflow:hidden;
+    perspective:900px;touch-action:none;cursor:grab;
+    background:#B9BECB;user-select:none;-webkit-user-select:none}
+  .pdemo.dragging .pstage{cursor:grabbing}
+  .pg{position:absolute;inset:0;background:#FCFBF7;border-radius:4px;
+    padding:.55rem .5rem;display:flex;flex-direction:column;gap:.26rem;
+    backface-visibility:hidden;transform-origin:left center;will-change:transform}
+  .pg-next{z-index:1}
+  .pg-cur{z-index:2}
+  .pgn{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.6rem;
+    color:#9A937F;margin-bottom:.15rem;font-variant-numeric:tabular-nums}
+  .pg i{display:block;height:2px;background:#D6D0C0;border-radius:2px}
+  .pg i.s{width:62%}
+  .pg i.m{width:88%}
+  .pg i.g{width:44%;margin-top:.15rem}
+  .plabel{font-size:.82rem;font-weight:700;line-height:1.25}
+  .pdesc{font-size:.75rem;color:var(--ink-3);line-height:1.3}
+
+  /* burbuja */
+  .bgrid{display:grid;gap:.8rem}
+  .bub{background:#101319;color:#E7E9F0;border-radius:9px;padding:.8rem .85rem;
+    font-size:.82rem;line-height:1.45;border:1px solid #262C38}
+  .bub .src{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.66rem;
+    color:#7C8496;letter-spacing:.04em;margin:0 0 .5rem}
+  .bub .nat{font-size:.98rem;font-weight:700;margin:0 0 .1rem;color:#FFF}
+  .bub h6{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.6rem;
+    letter-spacing:.11em;text-transform:uppercase;color:#D9A24E;margin:.75rem 0 .2rem;font-weight:500}
+  .bub p{margin:0}
+  .bub .lit{color:#A9AFC1;font-style:italic}
+  .bub .warnbox{background:#2C2416;color:#E8BC76;border-radius:5px;padding:.4rem .55rem;
+    font-size:.76rem;margin-top:.6rem}
+  .btabs{display:flex;gap:.3rem;margin:.7rem 0 .55rem;flex-wrap:wrap}
+  .btab{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.62rem;letter-spacing:.06em;
+    text-transform:uppercase;background:#1B2029;color:#98A0B2;border:1px solid #2A3140;
+    border-radius:4px;padding:.28rem .5rem;cursor:pointer}
+  .btab[aria-selected="true"]{background:#D9A24E;color:#101319;border-color:#D9A24E;font-weight:500}
+  .bpanel{display:none}
+  .bpanel.on{display:block}
+  .bmore{width:100%;text-align:left;background:transparent;color:#D9A24E;border:none;
+    border-top:1px solid #262C38;margin-top:.65rem;padding:.5rem 0 0;cursor:pointer;
+    font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.64rem;
+    letter-spacing:.1em;text-transform:uppercase}
+  .bhidden{display:none}
+  .bhidden.on{display:block}
+
+  /* paletas */
+  .mgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr));gap:.8rem}
+  .mock{border-radius:7px;overflow:hidden;font-size:.7rem;border:1px solid rgba(0,0,0,.14)}
+  .mock-top{display:flex;align-items:center;justify-content:space-between;padding:.5rem .6rem;
+    font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:.78rem}
+  .mock-body{padding:0 .6rem .6rem}
+  .mock-hero{border-radius:4px;padding:.5rem;display:flex;gap:.45rem;align-items:center;margin-bottom:.5rem}
+  .mock-cov{width:1.5rem;height:2rem;border-radius:2px;flex:none}
+  .mock-t{font-weight:700;font-size:.68rem;line-height:1.2}
+  .mock-s{font-size:.6rem;opacity:.62;margin-top:.12rem}
+  .mock-row{display:flex;gap:.35rem}
+  .mock-tile{flex:1;height:2.3rem;border-radius:2px}
+  .mock-name{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.6rem;
+    letter-spacing:.1em;text-transform:uppercase;padding:.4rem .6rem;border-top:1px solid rgba(0,0,0,.1)}
+  .m1{background:#EDE6D6;color:#2E2822}
+  .m1 .mock-hero{background:#F6F1E5} .m1 .mock-cov,.m1 .mock-tile{background:#CBBB9B}
+  .m1 .mock-name{color:#8A5A2B;border-color:#DDD2BC}
+  .m2{background:#FFFFFF;color:#0A0A0A}
+  .m2 .mock-hero{background:#F4F4F5} .m2 .mock-cov,.m2 .mock-tile{background:#D9D9DE}
+  .m2 .mock-name{color:#1B4DE0;border-color:#E5E5E5}
+  .m3{background:#101319;color:#E7E9F0}
+  .m3 .mock-hero{background:#191D26} .m3 .mock-cov,.m3 .mock-tile{background:#2C3341}
+  .m3 .mock-name{color:#D9A24E;border-color:#232833}
+  .m4{background:#E8E9E3;color:#3A3F38}
+  .m4 .mock-hero{background:#F3F4EE} .m4 .mock-cov,.m4 .mock-tile{background:#C7CCBE}
+  .m4 .mock-name{color:#6E7F60;border-color:#D8DAD1}
+
+  /* temas de lectura */
+  .tgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(9rem,1fr));gap:.7rem}
+  .theme{border-radius:5px;padding:.7rem .75rem;font-size:.74rem;line-height:1.5;
+    border:1px solid rgba(0,0,0,.12)}
+  .theme b{display:block;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.6rem;
+    letter-spacing:.11em;text-transform:uppercase;opacity:.55;margin-bottom:.4rem;font-weight:500}
+  .t-dark{background:#0E0F12;color:#C9CBD1}
+  .t-sepia{background:#EFE3CC;color:#4A3F2E}
+  .t-paper{background:#FBFBF9;color:#1A1A1A}
+
+  .end{margin-top:3rem;background:var(--surface);border:1px solid var(--line);
+    border-radius:var(--r);padding:1.6rem 1.3rem;text-align:center;}
+  .end h2{font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:1.3rem;margin:0 0 .4rem}
+  .end p{color:var(--ink-2);font-size:.92rem;margin:0 auto 1.2rem;max-width:26rem}
+  button.copy{font-family:"Karla",Arial,sans-serif;font-size:.98rem;font-weight:700;
+    color:var(--ground);background:var(--ink);border:none;border-radius:6px;padding:.8rem 1.6rem;
+    cursor:pointer;transition:transform .12s ease, opacity .15s ease;}
+  button.copy:hover{opacity:.88}
+  button.copy:active{transform:translateY(1px)}
+  button.copy:focus-visible{outline:2px solid var(--brass);outline-offset:3px}
+  button.copy.done{background:var(--brass);color:#14161E}
+  .end small{display:block;margin-top:.9rem;color:var(--ink-3);font-size:.8rem}
+
+  .float{position:fixed;right:1rem;bottom:1rem;z-index:30;font-family:"Karla",Arial,sans-serif;
+    font-size:.88rem;font-weight:700;color:var(--ground);background:var(--ink);border:none;
+    border-radius:999px;padding:.72rem 1.15rem;cursor:pointer;box-shadow:0 4px 16px rgba(20,22,30,.22);}
+  .float.done{background:var(--brass);color:#14161E}
+  .float:focus-visible{outline:2px solid var(--brass);outline-offset:3px}
+
+  #sink{position:fixed;left:-9999px;top:0;opacity:0}
+
+  @media (prefers-reduced-motion: reduce){ *{transition:none !important} }
+  @media (max-width:520px){
+    .opts,.obs,.free,.q-hint,.demo-zone{margin-left:0}
+    .block-note{display:none}
+  }
+</style>
+
+<div class="bar">
+  <div class="bar-in">
+    <span class="bar-name">Cuestionario 03 · la cara de Vellum</span>
+    <span class="bar-count"><b id="done">0</b>/<span id="total">0</span></span>
+  </div>
+  <div class="track"><div class="fill" id="fill"></div></div>
+</div>
+
+<div class="wrap">
+  <header class="hero">
+    <p class="eyebrow">Ronda 3 · la última antes de construir</p>
+    <h1>Infiniity Vellum</h1>
+    <p class="lede">Ya está decidido qué hace la app. Falta cómo se siente, que en tu caso es la mitad del proyecto: dijiste que lo primero que se salva es que sea ligera e instantánea, y eso se juega en la animación de pasar página y en cuánto tarda la burbuja en responder.</p>
+    <div class="howto">
+      <strong>Esta ronda se toca, no se lee</strong>
+      <ul>
+        <li>La animación de página, la burbuja y la paleta vienen con <strong>demos reales</strong>: arrástralos con el dedo o el mouse antes de elegir.</li>
+        <li>Hay un bloque nuevo al principio: Firebase trajo consecuencias que hay que cerrar.</li>
+        <li>Como siempre: en blanco significa "decide tú", y <strong>Observaciones</strong> manda.</li>
+      </ul>
+    </div>
+  </header>
+
+  <main id="form"></main>
+
+  <div class="end">
+    <h2>Con esto arranco</h2>
+    <p>Al pegarme esto cierro la Guía completa y empiezo a construir Vellum.</p>
+    <button class="copy" id="copy1">Copiar respuestas</button>
+    <small id="warn"></small>
+  </div>
+</div>
+
+<button class="float" id="copy2">Copiar</button>
+<textarea id="sink" aria-hidden="true" tabindex="-1"></textarea>
+
+<script>
+function page(n){
+  return '<div class="pg pg-'+(n===0?'cur':'next')+'">'
+    +'<span class="pgn">'+(42+(n===0?0:1))+'</span>'
+    +'<i class="m"></i><i class="m"></i><i class="s"></i>'
+    +'<i class="m"></i><i class="m"></i><i class="m"></i><i class="s"></i>'
+    +'<i class="g"></i><i class="m"></i><i class="m"></i><i class="s"></i></div>';
+}
+function pcard(kind,label,desc){
+  return '<div class="pdemo" data-kind="'+kind+'">'
+    +'<div class="pstage">'+page(1)+page(0)+'</div>'
+    +'<div><div class="plabel">'+label+'</div><div class="pdesc">'+desc+'</div></div></div>';
+}
+
+const DEMO_PAGES = '<div class="pgrid">'
+  + pcard('book','Voltear como un libro','La hoja gira sobre el lomo. Es la que más se parece a un libro de verdad.')
+  + pcard('slide','Deslizar plana','La hoja se va de lado y entra la siguiente. Directa y sin adornos.')
+  + pcard('lift','Levantar y pasar','La hoja se despega, se encoge un poco y sale. Da sensación de capas.')
+  + pcard('fade','Desvanecer','Una se apaga mientras la otra aparece. La más discreta de todas.')
+  + pcard('none','Sin animación','Corte seco. Lo más rápido que existe.')
+  + '</div>';
+
+const DEMO_BUBBLE = '<div class="bgrid">'
+  // A — todo de una vez
+  + '<div><div class="pdesc" style="margin-bottom:.35rem"><b>A · Todo de una vez</b></div>'
+  + '<div class="bub"><p class="src">he was over the moon about it</p>'
+  + '<p class="nat">Estaba loquito de la dicha.</p>'
+  + '<h6>Literal</h6><p class="lit">Estaba sobre la luna por ello.</p>'
+  + '<h6>En contexto</h6><p>Expresa una alegría enorme y algo infantil, de las que no se disimulan.</p>'
+  + '<div class="warnbox">Es un modismo: «over the moon» no tiene nada que ver con la luna.</div></div></div>'
+  // B — pestañas
+  + '<div><div class="pdesc" style="margin-bottom:.35rem"><b>B · Lo natural grande, el resto en pestañas</b></div>'
+  + '<div class="bub" data-bub="tabs"><p class="src">he was over the moon about it</p>'
+  + '<p class="nat">Estaba loquito de la dicha.</p>'
+  + '<div class="btabs" role="tablist">'
+  + '<button class="btab" role="tab" aria-selected="true" data-p="0">Literal</button>'
+  + '<button class="btab" role="tab" aria-selected="false" data-p="1">Contexto</button>'
+  + '<button class="btab" role="tab" aria-selected="false" data-p="2">Aviso</button></div>'
+  + '<div class="bpanel on" data-p="0"><p class="lit">Estaba sobre la luna por ello.</p></div>'
+  + '<div class="bpanel" data-p="1"><p>Expresa una alegría enorme y algo infantil, de las que no se disimulan.</p></div>'
+  + '<div class="bpanel" data-p="2"><p>Es un modismo: «over the moon» no tiene nada que ver con la luna.</p></div>'
+  + '</div></div>'
+  // C — desplegable
+  + '<div><div class="pdesc" style="margin-bottom:.35rem"><b>C · Solo la respuesta; lo demás si lo pides</b></div>'
+  + '<div class="bub" data-bub="more"><p class="src">he was over the moon about it</p>'
+  + '<p class="nat">Estaba loquito de la dicha.</p>'
+  + '<button class="bmore" type="button">+ ver literal, contexto y avisos</button>'
+  + '<div class="bhidden"><h6>Literal</h6><p class="lit">Estaba sobre la luna por ello.</p>'
+  + '<h6>En contexto</h6><p>Expresa una alegría enorme y algo infantil, de las que no se disimulan.</p>'
+  + '<div class="warnbox">Es un modismo: «over the moon» no tiene nada que ver con la luna.</div></div>'
+  + '</div></div>'
+  + '</div>';
+
+function mock(cls,name,sub){
+  return '<div class="mock '+cls+'">'
+    +'<div class="mock-top"><span>Vellum</span><span style="opacity:.45;font-size:.62rem">12</span></div>'
+    +'<div class="mock-body">'
+    +'<div class="mock-hero"><div class="mock-cov"></div><div><div class="mock-t">Seguir leyendo</div>'
+    +'<div class="mock-s">página 42 · 38 %</div></div></div>'
+    +'<div class="mock-row"><div class="mock-tile"></div><div class="mock-tile"></div><div class="mock-tile"></div></div>'
+    +'</div><div class="mock-name">'+name+'</div></div>';
+}
+const DEMO_PALETTE = '<div class="mgrid">'
+  + mock('m1','Vitela') + mock('m2','Tinta') + mock('m3','Nocturna') + mock('m4','Papel japonés')
+  + '</div>';
+
+const DEMO_THEMES = '<div class="tgrid">'
+  + '<div class="theme t-dark"><b>Oscuro</b>El resto del camino lo hicieron en silencio, oyendo cómo el río bajaba crecido.</div>'
+  + '<div class="theme t-sepia"><b>Sepia</b>El resto del camino lo hicieron en silencio, oyendo cómo el río bajaba crecido.</div>'
+  + '<div class="theme t-paper"><b>Papel</b>El resto del camino lo hicieron en silencio, oyendo cómo el río bajaba crecido.</div>'
+  + '</div>';
+
+const BLOCKS = [
+  {
+    letter:"K", title:"Lo que Firebase trajo consigo", note:"Cerrar antes de tocar código",
+    intro:'<p>Verifiqué el plan gratuito de Firebase y <strong>tenías razón</strong>: no permite guardar archivos. Desde el <strong>3 de febrero de 2026</strong>, guardar archivos exige el plan Blaze con tarjeta. Lo que sí permite, y gratis para siempre sin tarjeta, es guardar <strong>datos</strong>: 50.000 lecturas y 20.000 escrituras al día, más de sobra para cuatro personas.</p>'
+      +'<p>Traducido a Vellum: <strong>tu progreso, tu vocabulario, tus etiquetas y tus títulos viajan solos entre el celular y el PC. Los PDF no.</strong> Los PDF se quedan en cada aparato y tú se los pasas a los demás, que es exactamente lo que dijiste en P34.</p>'
+      +'<p>Tampoco usaremos Blaze aunque su cuota gratuita sea idéntica: Blaze no corta al llegar al límite, sigue funcionando y cobra. Sin tarjeta vinculada no puede haber cobro, y eso es lo que hace que «cero costo» sea un hecho y no un deseo.</p>',
+    qs:[
+      { id:"p44", t:"¿Aceptas que los PDF no se sincronicen?", key:true,
+        h:"Si pierdes el teléfono: los PDF hay que volver a importarlos a mano, pero el progreso, el vocabulario y las etiquetas vuelven solos al iniciar sesión.",
+        o:["Sí, perfecto: los datos que viajen, los archivos los llevo yo",
+           "Sí, pero quiero además un botón que respalde toda la biblioteca a un archivo|Por si acaso. Es media tarde más de trabajo y te deja dormir tranquilo.",
+           "Entonces prefiero Blaze con tarjeta y vigilo el gasto|Contradice tu propio «cero costo, sin excepción». Si lo eliges, lo respeto y lo anoto.",
+           "Entonces quitemos Firebase: todo local, con exportar e importar a mano"] },
+      { id:"p45", t:"Para sincronizar hay que saber quién eres. ¿Cómo entras?", key:true,
+        o:["Con mi cuenta de Google, un toque|Lo más rápido y sin contraseñas que recordar. Los otros tres también usan la suya.",
+           "Correo y contraseña|Funciona sin depender de Google, pero hay que recordar una contraseña más.",
+           "Un código que yo genero y le paso a cada uno",
+           "Decide tú lo más simple"] },
+      { id:"p46", t:"¿La app se puede usar sin iniciar sesión?", key:true,
+        h:"Esto protege lo que dijiste que era prioridad número uno. Una app que arranca pidiendo sesión y esperando al servidor es justo lo contrario de instantánea.",
+        o:["Sí: funciona entera sin sesión, y si entro empieza a sincronizar|Recomendado. Abres y lees, punto. La sesión es un extra, no un peaje.",
+           "No: que pida sesión la primera vez y ya está",
+           "Que me lo ofrezca una vez y me deje decidir después"] },
+      { id:"p47", t:"¿Qué debe viajar entre tus aparatos?", multi:true,
+        o:["El progreso de cada libro","La lista de vocabulario","Las etiquetas","Los títulos que escribí","Las portadas que puse yo|Son imágenes. Firebase gratis no guarda imágenes, así que habría que encogerlas mucho o dejarlas locales.","Los ajustes: tema, tamaño, preferencias"] },
+      { id:"p48", t:"La clave de Gemini que compartes con los otros tres: ¿cómo les llega?", key:true,
+        h:"Aviso importante en cualquier caso: esa clave nunca irá escrita en el código, porque este repositorio es público y una clave subida a GitHub se detecta y se agota en minutos. Y en su proyecto de Google no se activará la facturación jamás: sin facturación no puede haber cobro, solo se acaba la cuota del día.",
+        o:["La guardo una vez y les llega sola al iniciar sesión|Ellos nunca ven la clave ni la teclean. Lo más cómodo y lo más limpio.",
+           "Se la paso por WhatsApp y cada quien la pega en sus ajustes",
+           "Que cada quien saque la suya|Cinco minutos por persona, pero cada uno tiene sus propias 1.000 consultas diarias en vez de repartirse las tuyas."] }
+    ]
+  },
+  {
+    letter:"L", title:"Pasar página", note:"Arrastra los demos con el dedo",
+    intro:'<p>Pediste animación al cambiar de página y que solo se cambie deslizando. Aquí están las cinco formas de hacerlo, funcionando. <strong>Arrástralas de derecha a izquierda</strong>, o tócalas para que pasen solas. Si sueltas antes de la mitad, la página vuelve.</p>',
+    qs:[
+      { id:"p49", t:"¿Cuál te gusta?", key:true, demo:DEMO_PAGES, demoLbl:"Pruébalas antes de responder",
+        o:["Voltear como un libro","Deslizar plana","Levantar y pasar","Desvanecer","Sin animación","Ninguna me convence: te digo qué quiero en observaciones"] },
+      { id:"p50", t:"¿A qué velocidad?",
+        h:"Al elegir aquí, los demos de arriba cambian de velocidad. Sube y pruébalos otra vez.",
+        o:["Rápida, casi instantánea|150 milésimas. Se siente eficiente; algunos la ven brusca.",
+           "Natural|300 milésimas. El punto medio, y lo que usan casi todos los lectores.",
+           "Con peso, que se note el papel|450 milésimas. Más bonita, pero se nota al pasar muchas páginas seguidas."] },
+      { id:"p51", t:"El gesto: ¿cómo se pasa página exactamente?", multi:true, key:true,
+        o:["Que la página siga mi dedo y se complete al soltar|Es lo que hacen los demos. Puedes arrepentirte a mitad de camino.",
+           "Un deslizamiento rápido y suelto, sin arrastre",
+           "Tocando el borde derecho o izquierdo de la pantalla",
+           "Con las flechas del teclado, en el PC",
+           "Con la rueda del mouse, en el PC"] },
+      { id:"p52", t:"El buscador de página que pediste: ¿cómo lo imaginas?",
+        o:["Escribo el número de página y salto ahí",
+           "Una barra que arrastro y voy viendo por dónde paso",
+           "Las dos cosas",
+           "Las dos, y además el índice del PDF cuando lo traiga|Muchos PDF traen capítulos dentro; si están, se pueden mostrar."] },
+      { id:"p53", t:"Mientras lees, ¿qué se ve además de la página?", multi:true,
+        h:"Dijiste modo sin distracciones. Marca solo lo que de verdad quieres ver mientras lees.",
+        o:["El número de página, discreto","Una línea finísima de progreso del libro","Cuánto falta para acabar el capítulo o el libro","La hora","Nada: la página y ya; todo aparece al tocar"] }
+    ]
+  },
+  {
+    letter:"M", title:"La burbuja", note:"Donde vive el traductor",
+    intro:'<p>Pediste que la burbuja devuelva cinco cosas: traducción natural, traducción literal, explicación en contexto, detalle de la palabra suelta y aviso de modismos. Todo eso cabe, pero <strong>llega en unos dos segundos</strong>, y tu prioridad es que nada se sienta lento.</p>'
+      +'<p>La solución es el orden: que lo primero que aparezca sea la traducción, y el resto llegue detrás sin que tengas que esperarlo. Aquí están las tres formas de organizarlo, con un caso real y difícil.</p>',
+    qs:[
+      { id:"p54", t:"¿Cómo se organiza la respuesta?", key:true, demo:DEMO_BUBBLE, demoLbl:"Las pestañas y el desplegable funcionan",
+        o:["A · Todo de una vez, apilado","B · Lo natural grande y el resto en pestañas","C · Solo la respuesta, y lo demás si lo pido|La más limpia y la más rápida de leer. El resto sigue ahí, a un toque.","Decide tú viendo los tres"] },
+      { id:"p55", t:"¿De dónde sale la burbuja?",
+        o:["Sube desde abajo, como una hoja|Se alcanza con el pulgar sin recolocar la mano.",
+           "Aparece flotando en el centro",
+           "Una barra fija abajo, siempre lista para escribir",
+           "Ocupa la mitad de abajo y la página sigue visible arriba|Útil para ir comparando con lo que estás leyendo."] },
+      { id:"p56", t:"Una cosa que sale gratis y no marcaste", flag:"vale la pena", key:true,
+        h:"En P29 elegiste escribir a mano, y en P30 dijiste que parte de tus PDF sí tienen texto de verdad. En esos, seleccionar una frase con el dedo y darle a traducir cuesta lo mismo de programar que el campo de escribir, y te ahorra teclear párrafos enteros. En los escaneados no funcionará, y ahí seguirás escribiendo.",
+        o:["Sí, añádelo donde se pueda|Escribir a mano se queda igual; esto es un atajo extra cuando el PDF lo permite.",
+           "No: prefiero escribir siempre, más simple y más predecible"] },
+      { id:"p57", t:"El vocabulario: confirmemos qué guarda cada entrada", key:true,
+        h:"En P32 marcaste solo «la frase completa donde apareció». Una lista con la frase pero sin la traducción no te sirve de nada después, así que sospecho que era un extra, no la lista entera.",
+        o:["La palabra o frase, su traducción, y la frase donde apareció|Lo que creo que querías decir.",
+           "Solo la frase donde apareció, como dije",
+           "Lo primero, y además de qué libro y qué página salió"] }
+    ]
+  },
+  {
+    letter:"N", title:"La cara de Vellum", note:"Vitela: la piel donde se escribía",
+    intro:'<p>Cuatro direcciones distintas para la misma app, cada una con su lógica. <strong>Vitela</strong> toma el nombre al pie de la letra: pergamino, tinta parda, calidez. <strong>Tinta</strong> hace lo contrario: blanco absoluto, negro absoluto, un solo azul, cero decoración, todo el peso en la tipografía. <strong>Nocturna</strong> es la de estos cuestionarios: gris azulado frío con latón cálido, como una lámpara sobre un escritorio. <strong>Papel japonés</strong> baja el contraste y desatura todo hasta un verde salvia apagado, muy reposado.</p>',
+    qs:[
+      { id:"p58", t:"¿Qué dirección visual?", key:true, demo:DEMO_PALETTE, demoLbl:"La pantalla de inicio en cada una",
+        o:["Vitela: pergamino y tinta parda","Tinta: blanco, negro y un azul","Nocturna: gris azulado y latón","Papel japonés: apagado y reposado","Mézclalas: te digo cómo en observaciones"] },
+      { id:"p59", t:"De los tres temas de lectura, ¿cuál se abre por defecto?", demo:DEMO_THEMES, demoLbl:"Los tres, con texto real",
+        o:["Oscuro","Sepia","Papel","Que siga al sistema del teléfono","Que cambie según la hora del día|De papel por la mañana a oscuro de noche, solo."] },
+      { id:"p60", t:"¿Cuánta animación en el resto de la app?", key:true,
+        h:"Tu prioridad número uno es que se sienta instantánea. Cada transición que añado es tiempo que esperas.",
+        o:["Solo al pasar página; todo lo demás instantáneo|Coherente con lo que pediste. Abrir un libro, cambiar de pantalla: inmediato.",
+           "Transiciones suaves pero muy cortas, en todo",
+           "Que se sienta vivo: movimiento en toda la app|Más bonito de ver la primera vez, más lento a partir de la décima."] },
+      { id:"p61", t:"El icono de la app",
+        h:"Es lo que vas a ver en la pantalla de inicio del teléfono todos los días.",
+        o:["Una V, tipográfica y sobria","Una hoja de vitela con una esquina irregular","Un libro abierto, muy simplificado","Una página con la esquina doblada","Propón tú tres opciones"] }
+    ]
+  },
+  {
+    letter:"O", title:"Los últimos detalles", note:"Y lo que se me haya escapado",
+    qs:[
+      { id:"p62", t:"El modo sin distracciones: ¿cómo se entra y se sale?",
+        o:["Que sea el estado normal: todo oculto, y aparece al tocar el centro|La más limpia y la que mejor encaja con lo que pediste.",
+           "Toco el centro y desaparece todo; toco otra vez y vuelve",
+           "Un botón en el menú",
+           "Deslizando hacia abajo desde arriba"] },
+      { id:"p63", t:"Al abrir un libro que ya venías leyendo",
+        o:["Que vaya directo a mi página, sin preguntar",
+           "Que vaya y me deje un aviso pequeño para volver al principio si quiero",
+           "Que me pregunte cada vez"] },
+      { id:"p64", t:"¿Orientación de pantalla?",
+        o:["Solo vertical","Vertical y horizontal","Que yo pueda bloquearla desde la app"] },
+      { id:"p65", t:"¿Algo que no te haya preguntado y que para ti sea importante?", free:true,
+        h:"Última oportunidad antes de que empiece a construir. Cualquier cosa: una manía, algo que odies de otros lectores de PDF, una función que diste por hecha." }
+    ]
+  }
+];
+
+const KEY = "vellum-q3-v1";
+let state = {};
+try { state = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch(e) { state = {}; }
+
+const form = document.getElementById("form");
+let totalQs = 0;
+
+BLOCKS.forEach(function(b){
+  const sec = document.createElement("section");
+  sec.className = "block";
+  const head = document.createElement("div");
+  head.className = "block-head";
+  head.innerHTML = '<span class="block-letter">'+b.letter+'</span>'
+    + '<h2 class="block-title"></h2><span class="block-note"></span>';
+  head.querySelector(".block-title").textContent = b.title;
+  head.querySelector(".block-note").textContent = b.note || "";
+  sec.appendChild(head);
+
+  if (b.intro){
+    const box = document.createElement("div");
+    box.className = "intro"; box.innerHTML = b.intro;
+    sec.appendChild(box);
+  }
+
+  b.qs.forEach(function(q){
+    totalQs++;
+    const card = document.createElement("article");
+    card.className = "q"; card.dataset.qid = q.id;
+
+    const qh = document.createElement("div");
+    qh.className = "q-head";
+    const num = document.createElement("span");
+    num.className = "q-num"; num.textContent = "P" + q.id.slice(1);
+    const title = document.createElement("h3");
+    title.className = "q-title"; title.textContent = q.t;
+    if (q.multi){ const t=document.createElement("span"); t.className="q-multi"; t.textContent="varias"; title.appendChild(t); }
+    if (q.flag){ const t=document.createElement("span"); t.className="q-flag"; t.textContent=q.flag; title.appendChild(t); }
+    else if (q.key){ const t=document.createElement("span"); t.className="q-flag"; t.textContent="clave"; title.appendChild(t); }
+    qh.appendChild(num); qh.appendChild(title);
+    card.appendChild(qh);
+
+    if (q.h){
+      const hint = document.createElement("p");
+      hint.className = "q-hint" + (q.flag ? " warn" : "");
+      hint.textContent = q.h;
+      card.appendChild(hint);
+    }
+
+    if (q.demo){
+      const dz = document.createElement("div");
+      dz.className = "demo-zone";
+      dz.innerHTML = '<span class="demo-lbl">'+(q.demoLbl||"Demo")+'</span>' + q.demo;
+      card.appendChild(dz);
+    }
+
+    if (q.free){
+      const wrap = document.createElement("div");
+      wrap.className = "free";
+      const ta = document.createElement("textarea");
+      ta.placeholder = "Tu respuesta…";
+      ta.dataset.role = "ans"; ta.dataset.qid = q.id;
+      ta.value = (state[q.id] && state[q.id].free) || "";
+      wrap.appendChild(ta); card.appendChild(wrap);
+    } else {
+      const opts = document.createElement("div");
+      opts.className = "opts";
+      q.o.forEach(function(raw){
+        const parts = raw.split("|");
+        const label = document.createElement("label");
+        label.className = "opt";
+        const inp = document.createElement("input");
+        inp.type = q.multi ? "checkbox" : "radio";
+        inp.name = q.id; inp.value = parts[0];
+        inp.dataset.role = "opt"; inp.dataset.qid = q.id;
+        const saved = (state[q.id] && state[q.id].sel) || [];
+        if (saved.indexOf(parts[0]) !== -1) inp.checked = true;
+        const txt = document.createElement("span");
+        txt.className = "opt-txt"; txt.textContent = parts[0];
+        if (parts[1]){ const em=document.createElement("em"); em.textContent=parts[1]; txt.appendChild(em); }
+        label.appendChild(inp); label.appendChild(txt);
+        opts.appendChild(label);
+      });
+      card.appendChild(opts);
+    }
+
+    const obs = document.createElement("div");
+    obs.className = "obs";
+    const lbl = document.createElement("label");
+    lbl.className = "obs-lbl"; lbl.textContent = "Observaciones";
+    const ota = document.createElement("textarea");
+    ota.placeholder = "Matices, excepciones, \"ninguna de las anteriores\"…";
+    ota.dataset.role = "obs"; ota.dataset.qid = q.id;
+    ota.value = (state[q.id] && state[q.id].obs) || "";
+    ota.id = q.id + "-obs";
+    lbl.setAttribute("for", q.id + "-obs");
+    obs.appendChild(lbl); obs.appendChild(ota);
+    card.appendChild(obs);
+
+    sec.appendChild(card);
+  });
+
+  form.appendChild(sec);
+});
+
+document.getElementById("total").textContent = totalQs;
+
+/* ---------- demo: pasar página ---------- */
+let SPEED = 300;
+
+document.querySelectorAll(".pdemo").forEach(function(root){
+  const kind = root.dataset.kind;
+  const stage = root.querySelector(".pstage");
+  const cur = root.querySelector(".pg-cur");
+  const nxt = root.querySelector(".pg-next");
+  let n = 42, dragging = false, x0 = 0, p = 0, w = 1, busy = false;
+
+  function paint(v){
+    if (kind === "slide"){ cur.style.transform = "translateX(" + (-v*104) + "%)"; cur.style.opacity = 1; }
+    else if (kind === "book"){ cur.style.transform = "rotateY(" + (-v*180) + "deg)"; cur.style.opacity = 1; }
+    else if (kind === "lift"){
+      cur.style.transform = "translateX(" + (-v*108) + "%) scale(" + (1-v*0.14) + ") rotate(" + (-v*4) + "deg)";
+      cur.style.opacity = 1;
+    }
+    else if (kind === "fade"){ cur.style.transform = "none"; cur.style.opacity = 1-v; }
+    else { cur.style.transform = "none"; cur.style.opacity = v >= 1 ? 0 : 1; }
+    cur.style.boxShadow = v > .02 ? "0 0 22px rgba(0,0,0," + (.3*(1-v)) + ")" : "none";
+  }
+
+  function settle(done){
+    const ms = kind === "none" ? 0 : SPEED;
+    cur.style.transition = ms ? ("transform " + ms + "ms cubic-bezier(.22,.61,.36,1), opacity " + ms + "ms linear") : "none";
+    busy = true;
+    paint(done ? 1 : 0);
+    setTimeout(function(){
+      cur.style.transition = "none";
+      if (done){
+        n++;
+        cur.querySelector(".pgn").textContent = n;
+        nxt.querySelector(".pgn").textContent = n + 1;
+      }
+      paint(0);
+      root.classList.remove("dragging");
+      busy = false;
+    }, ms + 20);
+  }
+
+  stage.addEventListener("pointerdown", function(e){
+    if (busy) return;
+    dragging = true; x0 = e.clientX; w = stage.offsetWidth || 1;
+    cur.style.transition = "none";
+    root.classList.add("dragging");
+    try { stage.setPointerCapture(e.pointerId); } catch(err){}
+  });
+  stage.addEventListener("pointermove", function(e){
+    if (!dragging) return;
+    p = Math.max(0, Math.min(1, (x0 - e.clientX) / w));
+    paint(p);
+  });
+  function release(e){
+    if (!dragging) return;
+    dragging = false;
+    const moved = Math.abs(x0 - e.clientX);
+    settle(moved < 7 ? true : p > .3);
+  }
+  stage.addEventListener("pointerup", release);
+  stage.addEventListener("pointercancel", function(){ if(dragging){ dragging=false; settle(false);} });
+});
+
+const speedInputs = document.querySelectorAll('input[name="p50"]');
+speedInputs.forEach(function(i){
+  i.addEventListener("change", function(){
+    if (i.value.indexOf("Rápida") === 0) SPEED = 150;
+    else if (i.value.indexOf("Natural") === 0) SPEED = 300;
+    else SPEED = 450;
+  });
+});
+
+/* ---------- demo: burbuja ---------- */
+document.querySelectorAll('[data-bub="tabs"]').forEach(function(b){
+  b.querySelectorAll(".btab").forEach(function(tab){
+    tab.addEventListener("click", function(){
+      b.querySelectorAll(".btab").forEach(function(t){ t.setAttribute("aria-selected", t === tab ? "true" : "false"); });
+      b.querySelectorAll(".bpanel").forEach(function(pn){ pn.classList.toggle("on", pn.dataset.p === tab.dataset.p); });
+    });
+  });
+});
+document.querySelectorAll('[data-bub="more"]').forEach(function(b){
+  const btn = b.querySelector(".bmore"), box = b.querySelector(".bhidden");
+  btn.addEventListener("click", function(){
+    const on = box.classList.toggle("on");
+    btn.textContent = on ? "− ocultar" : "+ ver literal, contexto y avisos";
+  });
+});
+
+/* ---------- estado ---------- */
+function collect(){
+  const out = {};
+  function slot(id){ if(!out[id]) out[id] = {sel:[], obs:"", free:""}; return out[id]; }
+  document.querySelectorAll('input[data-role="opt"]').forEach(function(i){
+    const s = slot(i.dataset.qid); if (i.checked) s.sel.push(i.value);
+  });
+  document.querySelectorAll('textarea[data-role="ans"]').forEach(function(t){ slot(t.dataset.qid).free = t.value.trim(); });
+  document.querySelectorAll('textarea[data-role="obs"]').forEach(function(t){ slot(t.dataset.qid).obs = t.value.trim(); });
+  return out;
+}
+
+function refresh(){
+  state = collect();
+  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e){}
+  let done = 0;
+  document.querySelectorAll(".q").forEach(function(card){
+    const s = state[card.dataset.qid] || {sel:[],obs:"",free:""};
+    const has = s.sel.length > 0 || s.free.length > 0 || s.obs.length > 0;
+    card.classList.toggle("answered", has);
+    if (has) done++;
+  });
+  document.getElementById("done").textContent = done;
+  document.getElementById("fill").style.width = (done / totalQs * 100) + "%";
+}
+
+form.addEventListener("change", refresh);
+form.addEventListener("input", refresh);
+refresh();
+
+function buildText(){
+  const s = collect();
+  const lines = ["CUESTIONARIO 3 — LA CARA DE VELLUM", ""];
+  BLOCKS.forEach(function(b){
+    lines.push("== " + b.letter + ". " + b.title.toUpperCase() + " ==");
+    b.qs.forEach(function(q){
+      const a = s[q.id] || {sel:[],obs:"",free:""};
+      lines.push("P" + q.id.slice(1) + ". " + q.t);
+      if (q.free) lines.push("R: " + (a.free || "(sin responder)"));
+      else lines.push("R: " + (a.sel.length ? a.sel.join(" + ") : "(sin responder)"));
+      if (a.obs) lines.push("Obs: " + a.obs);
+      lines.push("");
+    });
+  });
+  return lines.join("\n");
+}
+
+function flash(btn, label){
+  const old = btn.textContent;
+  btn.textContent = label; btn.classList.add("done");
+  setTimeout(function(){ btn.textContent = old; btn.classList.remove("done"); }, 2200);
+}
+
+function doCopy(btn){
+  const txt = buildText();
+  const warn = document.getElementById("warn");
+  function fallback(){
+    const sink = document.getElementById("sink");
+    sink.value = txt; sink.style.left = "0"; sink.select();
+    let ok = false;
+    try { ok = document.execCommand("copy"); } catch(e){ ok = false; }
+    sink.style.left = "-9999px";
+    if (ok){ flash(btn, "Copiado ✓"); warn.textContent = ""; }
+    else {
+      warn.textContent = "El navegador bloqueó el copiado. Selecciona a mano el texto de abajo.";
+      sink.style.position = "static"; sink.style.left = "0"; sink.style.opacity = "1";
+      sink.style.minHeight = "12rem";
+      sink.setAttribute("aria-hidden","false"); sink.removeAttribute("tabindex");
+    }
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(function(){ flash(btn, "Copiado ✓"); warn.textContent=""; }).catch(fallback);
+  } else fallback();
+}
+
+document.getElementById("copy1").addEventListener("click", function(){ doCopy(this); });
+document.getElementById("copy2").addEventListener("click", function(){ doCopy(this); });
+</script>

@@ -4,16 +4,17 @@ Documento vivo del proyecto. Todo lo que se decide queda aquí, y de aquí salen
 los parámetros para construir la app. Si algo no está en esta Guía, no está
 decidido.
 
-- **Estado:** ronda 2 de cuestionarios (arquitectura mayormente cerrada)
+- **Estado:** ronda 3 de cuestionarios (arquitectura cerrada; falta la cara)
 - **Última actualización:** 2026-08-26
-- **Nombre:** pendiente (P42)
+- **Nombre:** **Infiniity Vellum** (P43)
 
 ---
 
 ## 1. Qué es
 
-Una app personal para leer PDF de forma cómoda en el celular y en el PC, con un
-traductor inglés → español integrado, sin costo de operación y sin nubes.
+**Infiniity Vellum.** Una app para leer PDF de forma cómoda en el celular y en
+el PC, con un traductor inglés → español integrado. Cuatro personas la usan,
+cada una con su progreso. Costo de operación: cero.
 
 ## 2. Requisitos fijos
 
@@ -39,11 +40,26 @@ descartan.
 | R15 | Modo sin distracciones | P14 |
 | R16 | Recuerda automáticamente dónde quedé | P15 |
 | R17 | Lista de vocabulario con lo traducido | P12 |
-| R18 | La usarán 3 o 4 personas | P17 |
+| R18 | La usarán 4 personas, cada una con su progreso | P17 · P34 |
+| R19 | **Lo primero que se salva si hay que sacrificar: que se sienta ligera e instantánea** | P23 |
+| R20 | El traductor devuelve traducción natural + literal, explicación en contexto, detalle de palabra suelta y aviso de modismos | P28 |
+| R21 | El texto se escribe a mano en la burbuja | P29 |
+| R22 | Sincronización automática de progreso entre aparatos, con Firebase gratuito | P22 · P35 |
+| R23 | Un libro se identifica por un título que yo escribo, más etiquetas. Sin autor. | P42 |
+| R24 | Al importar un PDF repetido, avisa y no lo duplica | P37 |
+| R25 | Pantalla de inicio: lo que estoy leyendo arriba y grande; la biblioteca debajo | P39 |
+| R26 | Portada = primera página del PDF, sustituible por una imagen mía | P40 |
+| R27 | Buscador por título | P41 |
 
 **No entra:** lectura en voz alta (P16), OCR de cómics (P8), traducción de
 página completa (P8), subrayados ni notas manuales (P15), sincronización
-automática de archivos (P7), EPUB / CBZ / MOBI en la versión 1 (P4).
+automática de los **archivos** (P7 · imposible en Firebase gratuito),
+EPUB / CBZ / MOBI en la versión 1 (P4), colecciones y carpetas (P38),
+campo de autor (P42), agrupación por estado de lectura (P38).
+
+**R19 es la regla de desempate.** Cuando dos requisitos choquen, gana el que
+mantenga la app ligera e instantánea. Esto tiene un efecto inmediato sobre R22:
+la sincronización nunca puede hacer esperar a la app.
 
 ### Cómo se leen R3 y R4
 
@@ -88,11 +104,70 @@ técnicas que descartan opciones desde el primer día. Implican, como mínimo:
   teléfono, la biblioteca desaparece. Hay que resolverlo con respaldo (P32).
 - **Origen:** P5, P6.
 
-### D-04 · Sin cuentas, sin servidor, sin nube
-- **Decisión:** la app no tiene backend. Todo ocurre en el aparato.
-- **Por qué:** R6 y R11. Un servidor, aunque sea gratis, es algo que mantener
-  y que se puede caer.
-- **Pendiente:** qué significa exactamente "yo y 2 o 3 personas más" (P34).
+### D-04 · Sin cuentas, sin servidor, sin nube — ~~REVOCADA~~
+- **Revocada en la ronda 2** por P22, P33 y P35: se usará Firebase en su plan
+  gratuito. Se deja constancia en vez de borrarla, para que quede claro qué
+  cambió y por qué. La sustituye D-06.
+
+### D-06 · Firebase en plan Spark (gratuito) para sincronizar datos
+- **Decisión:** se usa Firebase, exclusivamente en el plan Spark. Nunca Blaze,
+  ni siquiera "vigilando el gasto": Blaze exige tarjeta y no corta solo al
+  llegar al límite, lo que rompe R11.
+  - **Firestore** guarda progreso de lectura, vocabulario, etiquetas, títulos y
+    ajustes. Cuota gratis: 1 GiB, 50.000 lecturas, 20.000 escrituras y 20.000
+    borrados al día. Para cuatro personas y menos de cincuenta libros, sobra.
+  - **Authentication** identifica a cada persona. Gratis con Google o con
+    correo y contraseña. Se evita la verificación por SMS, que sí cuesta.
+  - **Hosting** publica la app: 10 GB de almacenamiento, 360 MB de transferencia
+    al día, dominio propio y certificado incluidos, sin tarjeta.
+  - **Cloud Storage NO se usa.** Desde el 3 de febrero de 2026 exige plan Blaze
+    con tarjeta vinculada. Es la razón de D-07.
+- **Origen:** P22, P33, P35.
+
+### D-07 · Los PDF nunca salen del aparato
+- **Decisión:** los archivos viven solo en el almacén local (D-03). Firebase
+  guarda los datos *sobre* los libros, no los libros.
+- **Por qué:** es una consecuencia forzada de D-06, no una preferencia. El plan
+  gratuito de Firebase no puede almacenar archivos.
+- **Consecuencia:** si pierdes el teléfono o borras los datos del navegador,
+  hay que volver a importar los PDF a mano, pero **el progreso, el vocabulario
+  y las etiquetas vuelven solos** al iniciar sesión. Coincide con lo que ya
+  querías: tú les pasas los archivos a las otras personas y ellos los importan
+  (P34).
+- **Pendiente de confirmar:** P44.
+
+### D-08 · Local-first: la nube nunca hace esperar
+- **Decisión:** la app funciona entera sin sesión y sin internet. Firebase es
+  una capa que sincroniza en segundo plano. Ninguna pantalla espera a la red,
+  ningún botón se bloquea mientras sube algo, y no hay pantalla de inicio de
+  sesión obligatoria al abrir.
+- **Por qué:** R19 es la prioridad número uno y R4 prohíbe las esperas. Una app
+  que arranca pidiendo sesión y esperando a un servidor es exactamente lo que
+  no quieres.
+- **Consecuencia técnica:** todo se escribe primero en local y se sincroniza
+  después; los conflictos se resuelven por fecha de modificación más reciente.
+- **Pendiente de confirmar:** P46.
+
+### D-09 · La clave de Gemini vive en el aparato, nunca en el código
+- **Decisión:** la clave se pega en los ajustes y se guarda en el aparato (o en
+  Firestore, según P48). **Jamás** se escribe en el código ni se sube al
+  repositorio: este repositorio es público y una clave subida a GitHub se
+  detecta y se explota en minutos.
+- **Regla asociada:** en el proyecto de Google Cloud de esa clave **no se activa
+  la facturación nunca**. Sin facturación activada no puede haber cobro: si se
+  agota la cuota diaria, la API simplemente deja de responder hasta el día
+  siguiente. Esto es lo que hace que R11 sea cierto y no una esperanza.
+- **Origen:** P25, P26, P27.
+
+### D-10 · Nombre: Infiniity Vellum
+- **Origen:** P43. *Vellum* es la vitela: la piel fina y tratada sobre la que se
+  escribían los manuscritos antes del papel.
+
+### D-11 · Modelo de datos de un libro
+- **Decisión:** un libro es un **título** escrito a mano, un conjunto de
+  **etiquetas**, una **portada** (primera página del PDF o imagen propia) y un
+  **progreso**. No hay campo de autor.
+- **Origen:** P38, P40, P42.
 
 ### D-05 · El repositorio se limpia
 - **Decisión:** se borra la app vieja "La corte del Rey" y se empieza limpio.
@@ -103,12 +178,17 @@ técnicas que descartan opciones desde el primer día. Implican, como mínimo:
 
 | # | Tensión | Estado |
 |---|---|---|
-| T1 | P19 dice que la prioridad #1 es organizar una biblioteca **grande**, pero P6 dice **menos de 50 libros**. Con 50 libros organizar es trivial. La respuesta de desempate está mal calibrada. | **preguntada en P23** |
-| T2 | P10 pide un traductor bueno y P11 prohíbe todo costo. El traductor integrado de Chrome resolvería ambas cosas, pero **no existe en Chrome de Android**, que es el aparato principal. | **preguntada en P25–P27** |
-| T3 | P7 pide sincronizar el progreso entre celular y PC, pero R6 y D-04 excluyen nubes y servidores. | **preguntada en P35** |
-| T4 | P17 dice "yo y 2 o 3 personas más". Si comparten biblioteca hace falta servidor y cuentas, lo que rompe D-04. Si cada quien tiene la suya, no hace falta nada. | **preguntada en P34** |
-| T5 | D-03 implica que la biblioteca se puede perder al borrar los datos del navegador. | **preguntada en P32** |
-| T6 | P8 dice "yo pego el texto". Si los PDF tienen texto seleccionable, seleccionar es mucho mejor que copiar a mano. Si son escaneos, ni siquiera se puede copiar. | **preguntada en P29–P30** |
+| T1 | P19 priorizaba organizar una biblioteca grande mientras P6 declaraba menos de 50 libros. | **resuelta** en P23: la prioridad real es que se sienta ligera e instantánea (R19). |
+| T2 | Traductor bueno contra costo cero, con el traductor de Chrome descartado por no existir en Android. | **resuelta** en P25: Gemini con clave gratuita propia (D-09). |
+| T3 | Sincronizar el progreso sin nube ni servidor. | **resuelta** en P22/P35: Firebase gratuito (D-06). El "sin nubes" original se cambia por "sin nubes de pago". |
+| T4 | Qué significaba "yo y 2 o 3 personas más". | **resuelta** en P34: comparten los archivos a mano, cada quien con su progreso. |
+| T5 | La biblioteca se puede perder al borrar los datos del navegador. | **parcial**: Firebase salva los datos, no los PDF (D-07). Confirmación en P44. |
+| T6 | ¿Los PDF tienen texto o son escaneos? | **resuelta** en P30: mezcla de los dos. Ver T9. |
+| T7 | Sincronizar exige identificar a cada persona, pero R19 y R4 prohíben una pantalla de sesión que haga esperar. | **preguntada** en P45 y P46. |
+| T8 | P29 elige escribir a mano, pero P30 dice que parte de los PDF sí tienen texto seleccionable. En esos, seleccionar con el dedo sale prácticamente gratis y ahorra teclear. | **preguntada** en P56. |
+| T9 | P32 solo marca "la frase completa donde apareció". Una lista de vocabulario sin la traducción no sirve para nada. | **preguntada** en P57. |
+| T10 | P27 comparte una sola clave de Gemini entre cuatro personas: hay que decidir cómo se reparte sin exponerla, y las 1.000 consultas diarias pasan a ser comunes. | **preguntada** en P48. |
+| T11 | P28 pide una respuesta muy completa de la burbuja, pero R19 exige que nada se sienta lento. Una respuesta larga tarda unos segundos en generarse. | **preguntada** en P54: se resuelve mostrando lo natural primero y el resto detrás. |
 
 ## 5. Investigación: motores de traducción sin costo
 
@@ -135,20 +215,46 @@ Fuentes: [Chrome for Developers · Translator API](https://developer.chrome.com/
 [Comparativa de APIs gratuitas 2026](https://langbly.com/blog/best-free-translation-api-2026/),
 [Límites del nivel gratuito de Gemini](https://tokenmix.ai/blog/gemini-api-free-tier-limits).
 
-## 6. Cuestionarios
+## 6. Investigación: qué permite Firebase gratis
+
+Verificado en agosto de 2026.
+
+| Servicio | En el plan Spark (gratis, sin tarjeta) |
+|---|---|
+| **Firestore** (datos) | 1 GiB guardado · 50.000 lecturas, 20.000 escrituras y 20.000 borrados al día · 10 GiB/mes de salida |
+| **Authentication** | incluido con Google y con correo y contraseña. La verificación por SMS sí cuesta: se evita. |
+| **Hosting** | 10 GB de almacenamiento · 360 MB/día de transferencia · dominio propio y certificado incluidos |
+| **Cloud Storage** (archivos) | **no disponible.** Desde el 3 de febrero de 2026 exige plan Blaze con tarjeta vinculada. |
+
+**Por qué no se usa Blaze aunque su cuota gratuita sea la misma.** Blaze incluye
+las mismas cuotas sin costo, pero exige una tarjeta y **no corta el servicio al
+llegar al límite**: sigue funcionando y cobra la diferencia. R11 dice cero costo
+sin excepción, y la única forma de garantizarlo es no tener forma de cobrar.
+
+Fuentes: [precios de Firebase](https://firebase.google.com/pricing),
+[Firebase Hosting en el plan gratuito](https://freetier.co/directory/products/firebase-hosting),
+[qué cambió en el nivel gratuito en 2026](https://unanswered.io/guide/is-firebase-free-pricing-free-tier).
+
+## 7. Cuestionarios
 
 | Ronda | Tema | Archivo | Estado |
 |---|---|---|---|
 | 01 | Decisiones grandes: plataforma, biblioteca, traductor, lectura, alcance | `guia/cuestionarios/01-decisiones-grandes.html` | respondido |
-| 02 | Cómo funciona: traductor, archivos, respaldo, organización, nombre | `guia/cuestionarios/02-como-funciona.html` | enviado |
-| 03 | Cómo se ve y se siente: animación de página, gestos, temas, tipografía | — | pendiente |
+| 02 | Cómo funciona: traductor, archivos, respaldo, organización, nombre | `guia/cuestionarios/02-como-funciona.html` | respondido |
+| 03 | Cómo se ve y se siente: sesión, animación de página, burbuja, identidad | `guia/cuestionarios/03-como-se-siente.html` | enviado |
 
-Las respuestas de la ronda 1 están en `guia/respuestas/01-respuestas.md`.
+Las respuestas están en `guia/respuestas/`.
 
-## 7. Bitácora
+## 8. Bitácora
 
 - **2026-08-26** — Se reutiliza el repositorio de "La corte del Rey". Se crea la
   Guía y se envía el cuestionario 1.
 - **2026-08-26** — Respondido el cuestionario 1. Se fijan D-01 a D-05, se
   detectan 6 tensiones, se investigan los motores de traducción sin costo y se
   borra la app vieja. Se envía el cuestionario 2.
+- **2026-08-26** — Respondido el cuestionario 2. La app se llama **Infiniity
+  Vellum**. Entra Firebase gratuito, lo que revoca D-04 y añade D-06 a D-11. Se
+  confirma que el plan gratuito de Firebase ya no puede guardar archivos, así
+  que los PDF se quedan en el aparato. La prioridad número uno pasa a ser que
+  la app se sienta ligera e instantánea, y eso obliga a que la sincronización
+  nunca haga esperar. Se envía el cuestionario 3.
