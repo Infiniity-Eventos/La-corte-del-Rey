@@ -1,0 +1,228 @@
+<title>Prompts de Vellum</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Karla:wght@400;500;700&display=swap">
+
+<style>
+  /* La página usa la identidad Vitela de la app, no un tema aparte: es la
+     primera vez que la ves fuera de una captura. Se queda en un solo mundo
+     visual a propósito — el pergamino no tiene versión oscura. */
+  :root{
+    --pergamino:#EDE6D6; --vitela:#F6F1E5; --vitela-alta:#FCF9F1;
+    --tinta:#2E2822; --tinta-2:#6B5F4E; --tinta-3:#9A8E79;
+    --ocre:#8A5A2B; --ocre-claro:#B07C42; --linea:#DDD2BC; --linea-tenue:#E7DEC9;
+    --r:8px;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  body{
+    margin:0;background:var(--pergamino);color:var(--tinta);
+    font-family:'Karla',ui-sans-serif,system-ui,sans-serif;font-size:16px;line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .env{max-width:42rem;margin:0 auto;padding:0 1.15rem 5rem}
+
+  header{padding:3.2rem 0 2rem}
+  .ceja{font-family:ui-monospace,Menlo,monospace;font-size:.68rem;letter-spacing:.17em;
+    text-transform:uppercase;color:var(--ocre);margin:0 0 1rem}
+  h1{font-family:'Fraunces',Georgia,serif;font-variation-settings:'SOFT' 30,'WONK' 1,'opsz' 100;
+    font-weight:600;font-size:clamp(2rem,7.5vw,2.9rem);line-height:1.03;letter-spacing:-.015em;
+    margin:0 0 .9rem;text-wrap:balance}
+  h1 em{font-style:normal;color:var(--ocre)}
+  .entrada{color:var(--tinta-2);font-size:1rem;margin:0;max-width:32rem}
+
+  h2{font-family:'Fraunces',Georgia,serif;font-variation-settings:'SOFT' 20,'opsz' 40;
+    font-weight:600;font-size:1.3rem;margin:0;letter-spacing:-.01em}
+  .cabeza{display:flex;align-items:baseline;gap:.8rem;border-bottom:1px solid var(--linea);
+    padding-bottom:.6rem;margin:2.8rem 0 1.2rem}
+  .cabeza span{font-family:ui-monospace,Menlo,monospace;font-size:.68rem;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--ocre);margin-left:auto}
+
+  p{margin:0 0 .9rem}
+  .nota{color:var(--tinta-2);font-size:.92rem}
+  strong{color:var(--tinta)}
+
+  .bloque{background:var(--vitela);border:1px solid var(--linea);border-radius:var(--r);
+    overflow:hidden;margin-bottom:1.1rem}
+  .bloque-top{display:flex;align-items:center;gap:.7rem;padding:.7rem .9rem;
+    border-bottom:1px solid var(--linea-tenue);background:var(--vitela-alta)}
+  .bloque-nom{font-weight:700;font-size:.92rem;flex:1;min-width:0}
+  .bloque-sub{display:block;font-weight:400;font-size:.78rem;color:var(--tinta-3);margin-top:.1rem}
+  pre{margin:0;padding:.9rem;font-family:ui-monospace,'JetBrains Mono',Menlo,monospace;
+    font-size:.76rem;line-height:1.62;white-space:pre-wrap;word-break:break-word;color:var(--tinta)}
+  pre b{color:var(--ocre);font-weight:500}
+
+  .copiar{flex:none;font:inherit;font-size:.82rem;font-weight:700;background:var(--tinta);
+    color:var(--pergamino);border:none;border-radius:6px;padding:.44rem .9rem;cursor:pointer;
+    transition:opacity .14s ease,background .14s ease}
+  .copiar:hover{opacity:.87}
+  .copiar.ok{background:var(--ocre)}
+  .copiar:focus-visible{outline:2px solid var(--ocre);outline-offset:2px}
+
+  .lista{list-style:none;padding:0;margin:0;counter-reset:p}
+  .lista li{counter-increment:p;position:relative;padding-left:2rem;margin-bottom:.75rem;
+    color:var(--tinta-2);font-size:.94rem}
+  .lista li::before{content:counter(p);position:absolute;left:0;top:0;
+    font-family:ui-monospace,Menlo,monospace;font-size:.72rem;color:var(--ocre);
+    border:1px solid var(--linea);border-radius:50%;width:1.35rem;height:1.35rem;
+    display:grid;place-items:center;background:var(--vitela)}
+  .lista li b{color:var(--tinta)}
+
+  .aviso{background:#F3E4D4;border:1px solid #DCC0A0;border-radius:var(--r);
+    padding:1rem 1.05rem;margin:1.2rem 0}
+  .aviso h3{font-family:'Fraunces',Georgia,serif;font-size:1rem;font-weight:600;margin:0 0 .45rem;color:#8C3F1D}
+  .aviso p{font-size:.9rem;color:var(--tinta-2);margin-bottom:.5rem}
+  .aviso p:last-child{margin:0}
+
+  footer{margin-top:3rem;padding-top:1.2rem;border-top:1px solid var(--linea);
+    font-size:.84rem;color:var(--tinta-3)}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="env">
+  <header>
+    <p class="ceja">Infiniity Vellum · material de trabajo</p>
+    <h1>Los prompts de <em>Vellum</em></h1>
+    <p class="entrada">Todo lo que tienes que generar tú, con el botón de copiar al lado. Esta página va vestida con la identidad Vitela de la app, así que de paso la ves en grande y no en una captura de móvil.</p>
+  </header>
+
+  <div class="cabeza"><h2>El icono</h2><span>3 versiones</span></div>
+  <p class="nota">Genera <strong>tres o cuatro variantes de cada una</strong> y quédate con la mejor. Los generadores fallan mucho en iconos: es normal descartar la mitad.</p>
+
+  <div class="bloque">
+    <div class="bloque-top">
+      <span class="bloque-nom">1 · La V sobre la vitela<span class="bloque-sub">La más reconocible, y la que mejor aguanta a 48 píxeles</span></span>
+      <button class="copiar" data-c="i1">Copiar</button>
+    </div>
+    <pre id="i1">Icono de aplicación para un lector de libros llamado Vellum.
+
+Sujeto: una hoja de vitela (pergamino) vista de frente, ligeramente curvada, con el borde inferior derecho irregular y recortado a mano, como piel cortada. Sobre ella, una letra V mayúscula trazada con tinta parda, de caligrafía ancha y seca, con la presión del cálamo visible en el trazo.
+
+Estilo: ilustración plana y editorial, contornos limpios, textura de papel muy sutil, como un sello de imprenta antiguo a dos tintas. Sin sombras dramáticas, sin degradados brillantes, sin relieve 3D, sin brillos metálicos.
+
+Paleta estricta: fondo pergamino cálido #EDE6D6, vitela #F6F1E5, tinta parda #6B4423, un único acento de ocre #8A5A2B.
+
+Composición: centrada, con mucho aire alrededor; la figura ocupa el 60 % del cuadro. Formato cuadrado 1:1. Fondo sólido, no transparente.
+
+Debe leerse con claridad reducido a 48 píxeles: formas grandes, pocos detalles, alto contraste entre la tinta y el pergamino.
+
+Sin ningún texto salvo la letra V. Sin marco. Sin borde.</pre>
+  </div>
+
+  <div class="bloque">
+    <div class="bloque-top">
+      <span class="bloque-nom">2 · La esquina doblada<span class="bloque-sub">Sin letra: la forma sola</span></span>
+      <button class="copiar" data-c="i2">Copiar</button>
+    </div>
+    <pre id="i2">Icono de aplicación para un lector de libros llamado Vellum.
+
+Sujeto: una hoja de pergamino cuadrada con la esquina superior derecha doblada hacia adelante, revelando el reverso en un tono ligeramente más oscuro. El pliegue es limpio y geométrico. Sin letra, sin texto: la forma sola.
+
+Estilo: ilustración plana y editorial, contornos limpios, textura de papel muy sutil, como un sello de imprenta antiguo a dos tintas. Sin sombras dramáticas, sin degradados brillantes, sin relieve 3D.
+
+Paleta estricta: fondo pergamino cálido #EDE6D6, vitela #F6F1E5, tinta parda #6B4423, un único acento de ocre #8A5A2B.
+
+Composición: centrada, con mucho aire alrededor; la figura ocupa el 60 % del cuadro. Formato cuadrado 1:1. Fondo sólido, no transparente.
+
+Debe leerse con claridad reducido a 48 píxeles.
+
+Sin ningún texto. Sin marco. Sin borde.</pre>
+  </div>
+
+  <div class="bloque">
+    <div class="bloque-top">
+      <span class="bloque-nom">3 · El libro abierto<span class="bloque-sub">Reducido hasta ser casi un símbolo</span></span>
+      <button class="copiar" data-c="i3">Copiar</button>
+    </div>
+    <pre id="i3">Icono de aplicación para un lector de libros llamado Vellum.
+
+Sujeto: un libro abierto visto desde arriba, reducido a dos trapecios de pergamino separados por una línea de lomo en tinta parda. Geometría simple y simétrica, casi un símbolo. Sin páginas dibujadas, sin líneas de texto.
+
+Estilo: ilustración plana y editorial, contornos limpios, textura de papel muy sutil, como un sello de imprenta antiguo a dos tintas. Sin sombras dramáticas, sin degradados brillantes, sin relieve 3D.
+
+Paleta estricta: fondo pergamino cálido #EDE6D6, vitela #F6F1E5, tinta parda #6B4423, un único acento de ocre #8A5A2B.
+
+Composición: centrada, con mucho aire alrededor; la figura ocupa el 60 % del cuadro. Formato cuadrado 1:1. Fondo sólido, no transparente.
+
+Debe leerse con claridad reducido a 48 píxeles.
+
+Sin ningún texto. Sin marco. Sin borde.</pre>
+  </div>
+
+  <div class="cabeza"><h2>Antes de mandármelo</h2><span>4 comprobaciones</span></div>
+  <ol class="lista">
+    <li><b>Achícalo a 48 píxeles</b> y mira si se sigue entendiendo. Es la prueba que más iconos falla, y la que nadie hace.</li>
+    <li><b>Que no tenga letras inventadas.</b> Los generadores meten texto falso casi siempre. Si aparece, descarta esa variante.</li>
+    <li><b>Cuadrado exacto</b>, sin marco ni esquinas redondeadas: el sistema recorta la forma él solo.</li>
+    <li><b>PNG de 1024 × 1024 como mínimo.</b> De ahí saco todos los tamaños que necesita la app.</li>
+  </ol>
+
+  <div class="cabeza"><h2>Las portadas</h2><span>plantilla</span></div>
+  <p class="nota">Esto es lo que el botón <strong>Crear portada</strong> pondrá en el portapapeles. Lo que está en ocre lo rellena la app con los datos de cada libro. Puedes copiarlo ya y probarlo a mano con cualquier libro tuyo.</p>
+  <p class="nota">Lo que hace el trabajo aquí no es el prompt: es que sea <strong>idéntico para todos los libros salvo el sujeto</strong>. Esa línea de «ningún otro color» es la que hace que cincuenta portadas creadas en cincuenta momentos distintos parezcan una colección y no un cajón.</p>
+
+  <div class="bloque">
+    <div class="bloque-top">
+      <span class="bloque-nom">Plantilla de portada<span class="bloque-sub">Con los huecos sin rellenar, para probarla a mano</span></span>
+      <button class="copiar" data-c="pc">Copiar</button>
+    </div>
+    <pre id="pc">Ilustración de portada para <b>{libro | cómic}</b> de una biblioteca personal.
+
+Obra: «<b>{título}</b>»
+Temas: <b>{etiquetas}</b>
+Nombre del archivo original: <b>{nombre-del-archivo}</b>
+
+Si conoces esta obra, recoge sus motivos propios —su iconografía, sus símbolos, los objetos que la identifican— y tradúcelos a nuestro formato. El formato manda siempre; de la obra tomas el contenido, nunca el estilo.
+
+Estilo obligatorio, idéntico para toda la colección:
+ilustración plana y editorial impresa a dos tintas sobre pergamino cálido.
+Paleta estricta: fondo #EDE6D6, pergamino #F6F1E5, tinta parda #6B4423, un único acento de ocre #8A5A2B. Ningún otro color.
+Textura de papel muy sutil, como un grabado antiguo.
+Sin degradados brillantes, sin efectos 3D, sin sombras dramáticas, sin marcos, sin bordes.
+
+Composición: vertical 2:3, centrada, con amplio margen alrededor.
+Una sola imagen simbólica y sencilla que evoque los temas del libro.
+Nada de escenas recargadas. Nada de personajes con rostro.
+Si hay figura humana, que sea silueta o esté de espaldas.
+
+Deja el tercio inferior despejado y sin detalle: ahí va el título.
+
+No escribas ningún texto en la imagen. Ni el título, ni el autor, ni nada.</pre>
+  </div>
+
+  <p class="nota">La última línea contradice lo que pediste en P73, así que te explico por qué está: <strong>el título sí va escrito en la portada, pero no lo escribe la IA.</strong> El generador deja el tercio inferior despejado y <strong>Vellum compone el título encima</strong> con la tipografía de la casa. Pedírselo al generador tiene dos defectos conocidos: escribe mal a menudo, y cada portada saldría con una letra distinta, que es justo lo contrario de que la biblioteca parezca una colección. Así el título está siempre bien escrito, siempre en el mismo sitio y siempre con la misma letra.</p>
+
+  <div class="aviso">
+    <h3>Lo que no se puede olvidar nunca</h3>
+    <p>Ahora que vas con Blaze: <strong>el proyecto de Firebase y el proyecto de la clave de Gemini tienen que ser dos proyectos de Google distintos.</strong></p>
+    <p>El nivel gratuito de Gemini solo existe mientras ese proyecto no tenga facturación activada, y Blaze <em>es</em> activarla. Si son el mismo proyecto, cada traducción pasa a facturarse y nada te avisa: solo llega el cobro.</p>
+  </div>
+
+  <footer>Sale de la Guía del proyecto · rondas 3 y 4 · decisiones D-09, D-13, D-15 y D-16.</footer>
+</div>
+
+<script>
+  document.querySelectorAll('.copiar').forEach(function (b) {
+    b.addEventListener('click', function () {
+      // textContent y no innerHTML: el <b> del resaltado no puede acabar
+      // pegado dentro del prompt.
+      var texto = document.getElementById(b.dataset.c).textContent
+      var listo = function () {
+        var antes = b.textContent
+        b.textContent = 'Copiado'
+        b.classList.add('ok')
+        setTimeout(function () { b.textContent = antes; b.classList.remove('ok') }, 1800)
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(texto).then(listo, manual)
+      } else manual()
+      function manual () {
+        var a = document.createElement('textarea')
+        a.value = texto
+        document.body.appendChild(a)
+        a.select()
+        try { document.execCommand('copy'); listo() } catch (e) { b.textContent = 'Selecciónalo a mano' }
+        document.body.removeChild(a)
+      }
+    })
+  })
+</script>

@@ -8,12 +8,29 @@ p.on('pageerror', e => errs.push(String(e.message)))
 p.on('console', m => { if (m.type() === 'error') errs.push(m.text()) })
 
 await p.goto('http://127.0.0.1:4173/', { waitUntil: 'networkidle' })
-await p.setInputFiles('input[type=file]', `${SC}/Prueba_de_Lectura.pdf`)
-await p.waitForSelector('.rejilla .libro', { timeout: 20000 })
-await p.waitForTimeout(600)
+const T = '.campo input[placeholder="Cómo se llama"]'
+const E = '.campo input[placeholder^="Escribe"]'
+const libro = async (archivo, titulo, tipo, etiquetas, portada) => {
+  await p.setInputFiles('input[type=file]:not(.ficha input)', `${SC}/${archivo}`)
+  await p.waitForSelector('.ficha', { timeout: 25000 })
+  await p.fill(T, titulo)
+  if (tipo === 'comic') await p.click('.segmento-op:nth-child(2)')
+  for (const e of etiquetas) { await p.fill(E, e); await p.keyboard.press('Enter') }
+  if (portada) { await p.setInputFiles('.ficha input[type=file]', `${SC}/${portada}`); await p.waitForTimeout(400) }
+  await p.waitForTimeout(300)
+  if (archivo.startsWith('Cronica')) await p.screenshot({ path: `${SC}/v-ficha.png` })
+  await p.click('.ficha-pie .btn:last-child')
+  await p.waitForSelector('.ficha', { state: 'detached' })
+  await p.waitForTimeout(400)
+}
+await libro('Cronica_de_una_prueba.pdf', 'Crónica de una prueba', 'comic', ['aventura', 'pendiente'], 'portada.png')
+await libro('Manual_de_vuelo.pdf', 'Manual de vuelo', 'libro', ['técnico'])
+await libro('El_jardin_de_al_lado.pdf', 'El jardín de al lado', 'libro', ['novela', 'pendiente'])
+await libro('Notas_sueltas.pdf', 'Notas sueltas', 'libro', ['apuntes'])
+await p.waitForTimeout(700)
 await p.screenshot({ path: `${SC}/v-biblioteca.png` })
 
-await p.click('.rejilla .libro')
+await p.click('.rejilla .libro:first-child .libro-abrir')
 await p.waitForSelector('.hoja.debajo canvas', { timeout: 20000 })
 await p.waitForTimeout(700)
 await p.screenshot({ path: `${SC}/v-leyendo.png` })
@@ -37,7 +54,7 @@ await p.screenshot({ path: `${SC}/v-oscuro.png` })
 
 // aviso de retomar
 await p.click('.chrome.arriba .icono:first-child')
-await p.waitForSelector('.seguir'); await p.click('.seguir')
+await p.waitForSelector('.seguir'); await p.click('.seguir-abrir')
 await p.waitForSelector('.aviso', { timeout: 15000 }); await p.waitForTimeout(500)
 await p.screenshot({ path: `${SC}/v-aviso.png` })
 

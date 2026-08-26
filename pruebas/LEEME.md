@@ -6,12 +6,18 @@ usan la app como la usarías tú y dicen si algo se rompió.
 ```bash
 npm run build
 npx vite preview --port 4173 --host 127.0.0.1 &
-node pruebas/lectura.mjs    # 20 comprobaciones sobre el hito 1
-node pruebas/capturas.mjs   # capturas de cada estado
+node pruebas/lectura.mjs      # 21 comprobaciones · hito 1, leer
+node pruebas/biblioteca.mjs   # 33 comprobaciones · hito 2, la estantería
+node pruebas/capturas.mjs     # capturas de cada estado
 ```
 
 `SC` es la carpeta donde están el PDF de prueba y donde se guardan las
 capturas. Por defecto, `/tmp`.
+
+Los PDF de prueba se generan con `gen_pdf.py`. Cada uno lleva su nombre escrito
+dentro: si no, dos archivos con el mismo número de páginas salen byte a byte
+idénticos y Vellum los toma por repetidos — cosa que, dicho sea de paso,
+demuestra que la detección de repetidos funciona.
 
 ## Qué comprueba `lectura.mjs`
 
@@ -38,6 +44,30 @@ vea de dónde sale y no parezca una prueba puesta por costumbre.
 | Guarda por dónde ibas | R16 · P15 |
 | La biblioteca sobrevive a recargar | D-03 |
 | Ofrece volver al principio | P63 |
+
+## Qué comprueba `biblioteca.mjs`
+
+| Comprueba | Requisito |
+|---|---|
+| Traer varios PDF de una vez | R5 |
+| Traer uno solo abre su ficha para ponerle título | P42 |
+| Con varios no interroga | — |
+| Escribir el título, y que se vea en la portada | R23 · P42 |
+| Marcar si es libro o cómic | D-17 · P61 |
+| Poner y quitar etiquetas, normalizadas a minúsculas | R38 · P38 |
+| No repetir una etiqueta ya puesta | — |
+| Salir con Escape no guarda | — |
+| Sugerir etiquetas que ya usaste | P38 |
+| Filtrar por etiqueta, y quitar el filtro | R38 · P38 |
+| Buscar por título, sin tildes y sin distinguir mayúsculas | R27 · P41 |
+| Buscar por etiqueta | P41 |
+| Decir con palabras que no hay resultados | R8 |
+| Poner una portada propia | R26 · P40 |
+| Componer el título encima de la imagen | D-15 · P73 |
+| Lo empezado sube arriba del todo | R25 · P39 |
+| Al buscar no se destaca nada | — |
+| Preguntar antes de borrar, y borrar de verdad | — |
+| Que todo sobreviva a recargar | D-03 |
 
 ## Lo que estas pruebas no cubren
 

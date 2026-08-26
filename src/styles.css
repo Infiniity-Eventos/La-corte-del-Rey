@@ -99,12 +99,15 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 /* Seguir leyendo (R25 / P39) */
 .seguir {
-  display: flex; gap: var(--e3); align-items: stretch; text-align: left; width: 100%;
-  background: var(--vitela); border: 1px solid var(--linea); border-radius: var(--r);
-  padding: var(--e3); margin-bottom: var(--e4); box-shadow: var(--sombra);
+  position: relative; background: var(--vitela); border: 1px solid var(--linea);
+  border-radius: var(--r); margin-bottom: var(--e4); box-shadow: var(--sombra);
   transition: border-color var(--paso) var(--curva);
 }
 .seguir:hover { border-color: var(--ocre); }
+.seguir-abrir {
+  display: flex; gap: var(--e3); align-items: stretch; text-align: left; width: 100%;
+  background: none; border: none; padding: var(--e3);
+}
 .seguir-cuerpo { display: flex; flex-direction: column; justify-content: center; gap: .3rem; min-width: 0; flex: 1; }
 .seguir-eti { font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--ocre); }
 .seguir-tit { font-size: 1.15rem; }
@@ -112,9 +115,61 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .barra { height: 3px; background: var(--ocre-suave); border-radius: 2px; overflow: hidden; margin-top: var(--e1); }
 .barra i { display: block; height: 100%; background: var(--ocre); border-radius: 2px; }
 
-.rejilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr)); gap: var(--e3); }
-.libro { background: none; border: none; padding: 0; text-align: left; display: flex; flex-direction: column; gap: var(--e1); }
+/* Tres por fila en un teléfono. Con hasta cincuenta libros, ver nueve de un
+   vistazo vale más que verlos más grandes. */
+.rejilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(6.2rem, 1fr)); gap: var(--e2) var(--e2); }
+.libro { position: relative; display: flex; flex-direction: column; gap: var(--e1); }
+.libro-abrir { background: none; border: none; padding: 0; text-align: left; display: block; width: 100%; }
+.libro-abrir[disabled] { opacity: .45; cursor: default; }
 .libro-sub { font-size: .72rem; color: var(--tinta-3); padding-left: .1rem; }
+
+/* El botón de ficha. Tocar el libro es leerlo —lo que haces el 90 % de las
+   veces—; los tres puntos son para lo demás. */
+.mas {
+  position: absolute; top: .3rem; right: .3rem; z-index: 2;
+  width: 1.7rem; height: 1.7rem; border-radius: 50%; line-height: 1;
+  background: var(--vitela-alta); border: 1px solid var(--linea); color: var(--tinta-2);
+  font-size: .82rem; display: grid; place-items: center; padding: 0;
+  opacity: 0; transition: opacity var(--paso) var(--curva), border-color var(--paso) var(--curva);
+}
+.libro:hover .mas, .seguir:hover .mas, .mas:focus-visible { opacity: 1; }
+.mas:hover { border-color: var(--ocre); color: var(--ocre); }
+/* En pantalla táctil no hay «hover»: si dependiera de él, el botón no
+   existiría en el teléfono, que es donde más se usa. */
+@media (hover: none) { .mas { opacity: 1; } }
+
+.buscador { margin-bottom: var(--e3); }
+.buscador input {
+  width: 100%; font: inherit; font-size: .94rem; color: var(--tinta);
+  background: var(--vitela); border: 1px solid var(--linea); border-radius: var(--r);
+  padding: .6rem .85rem; transition: border-color var(--paso) var(--curva);
+}
+.buscador input::placeholder { color: var(--tinta-3); }
+.buscador input:focus { outline: none; border-color: var(--ocre); }
+.buscador input::-webkit-search-cancel-button { filter: grayscale(1) opacity(.5); }
+
+.sin-nada { color: var(--tinta-3); font-size: .92rem; text-align: center; padding: var(--e4) 0; }
+
+.fichas { display: flex; flex-wrap: wrap; gap: .35rem; }
+.fichas.sueltas { margin-top: .45rem; }
+/* Los filtros no se apilan: con veinte etiquetas empujarían la estantería
+   fuera de la pantalla. Se deslizan de lado. */
+.filtros {
+  margin: 0 -1.15rem var(--e3); padding: .15rem 1.15rem .4rem;
+  flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.filtros::-webkit-scrollbar { display: none; }
+.filtros .ficha-eti { flex: none; }
+.ficha-eti {
+  font-size: .78rem; line-height: 1; border-radius: 999px; padding: .35rem .7rem;
+  background: var(--ocre); color: var(--vitela-alta); border: 1px solid var(--ocre);
+  transition: background var(--paso) var(--curva), color var(--paso) var(--curva), border-color var(--paso) var(--curva);
+}
+.ficha-eti span { opacity: .7; margin-left: .1rem; }
+.ficha-eti.fantasma { background: transparent; color: var(--tinta-2); border-color: var(--linea); }
+.ficha-eti.fantasma:hover { border-color: var(--ocre); color: var(--ocre); }
+.ficha-eti.fantasma[aria-pressed='true'] { background: var(--ocre); color: var(--vitela-alta); border-color: var(--ocre); }
 
 /* Portada tipográfica (R46 / P74): siempre, nunca la primera página del PDF */
 .portada {
@@ -133,11 +188,12 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .portada-glifo {
   position: absolute; top: 12%; left: 0; right: 0; text-align: center;
   font-family: 'Fraunces', Georgia, serif; font-weight: 700;
-  font-size: 2.4rem; color: var(--marca-color, #CBBB9B); opacity: .85; line-height: 1;
+  font-size: 1.9rem; color: var(--marca-color, #CBBB9B); opacity: .85; line-height: 1;
 }
+.portada.grande .portada-glifo { font-size: 1.5rem; }
 .portada-tit {
   position: relative; font-family: 'Fraunces', Georgia, serif; font-weight: 600;
-  font-size: .78rem; line-height: 1.22; color: var(--tinta);
+  font-size: .72rem; line-height: 1.2; color: var(--tinta);
   display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
 }
 .portada-regla { position: relative; width: 1.4rem; height: 1px; background: var(--ocre); margin-bottom: .4rem; }
@@ -264,3 +320,82 @@ button { font: inherit; color: inherit; cursor: pointer; }
 /* El marco centrado que sostiene las dos hojas. Sin él, el giro en 3D
    no tiene un plano común y las páginas se desalinean. */
 .marco { position: absolute; transform-style: preserve-3d; }
+
+
+/* ------------------------------------------------------------------ */
+/* Ficha del libro                                                     */
+/* ------------------------------------------------------------------ */
+
+.telon {
+  position: fixed; inset: 0; z-index: 50; background: rgba(46, 40, 34, .34);
+  backdrop-filter: blur(3px); display: flex; align-items: flex-end; justify-content: center;
+  animation: aparece var(--paso) var(--curva);
+}
+@keyframes aparece { from { opacity: 0; } }
+
+.ficha {
+  width: 100%; max-width: 32rem; max-height: 92vh; overflow-y: auto;
+  background: var(--pergamino); border: 1px solid var(--linea);
+  border-radius: var(--r) var(--r) 0 0;
+  padding: .5rem var(--e3) calc(var(--safe-b) + var(--e3));
+  display: flex; flex-direction: column; gap: var(--e3);
+  animation: sube-ficha 200ms var(--curva);
+}
+@keyframes sube-ficha { from { transform: translateY(14px); } }
+@media (min-width: 34rem) {
+  .telon { align-items: center; }
+  .ficha { border-radius: var(--r); animation-name: aparece; }
+}
+
+.ficha-asa {
+  width: 2.4rem; height: 3px; border-radius: 2px; background: var(--linea);
+  margin: .2rem auto .4rem; flex: none;
+}
+@media (min-width: 34rem) { .ficha-asa { display: none; } }
+
+.ficha-cabeza { display: flex; gap: var(--e3); align-items: flex-start; }
+.ficha-acciones { display: flex; flex-direction: column; gap: var(--e1); align-items: flex-start; }
+.ficha-pista { font-size: .78rem; color: var(--tinta-3); margin: .2rem 0 0; }
+
+.campo { display: flex; flex-direction: column; gap: .35rem; }
+.campo-eti {
+  font-family: ui-monospace, Menlo, monospace; font-size: .65rem; letter-spacing: .13em;
+  text-transform: uppercase; color: var(--tinta-3);
+}
+.campo input {
+  width: 100%; font: inherit; font-size: .96rem; color: var(--tinta);
+  background: var(--vitela); border: 1px solid var(--linea); border-radius: 6px;
+  padding: .55rem .75rem; transition: border-color var(--paso) var(--curva);
+}
+.campo input::placeholder { color: var(--tinta-3); }
+.campo input:focus { outline: none; border-color: var(--ocre); }
+
+.segmento { display: inline-flex; border: 1px solid var(--linea); border-radius: 6px; overflow: hidden; align-self: flex-start; }
+.segmento-op {
+  background: var(--vitela); border: none; padding: .45rem 1.1rem; font-size: .9rem; color: var(--tinta-2);
+  transition: background var(--paso) var(--curva), color var(--paso) var(--curva);
+}
+.segmento-op + .segmento-op { border-left: 1px solid var(--linea); }
+.segmento-op[aria-pressed='true'] { background: var(--ocre); color: var(--vitela-alta); font-weight: 700; }
+
+.ficha-pie {
+  display: flex; align-items: center; gap: var(--e2); flex-wrap: wrap;
+  border-top: 1px solid var(--linea-tenue); padding-top: var(--e3); margin-top: var(--e1);
+}
+.ficha-pie .btn:last-child { margin-left: auto; }
+.ficha-datos { font-size: .76rem; color: var(--tinta-3); margin-left: auto; }
+.ficha-pregunta { font-size: .86rem; color: var(--tinta-2); flex: 1; min-width: 10rem; }
+.btn.peq { padding: .45rem .9rem; font-size: .86rem; }
+.btn.peligro { background: #8C3F1D; border-color: #8C3F1D; color: var(--vitela-alta); }
+
+/* Portada con imagen: la ilustración la hace la IA, el título lo compone
+   Vellum encima (D-15). Así está siempre bien escrito y siempre con la misma
+   letra, que es lo que hace que la estantería parezca una colección. */
+.portada.conImagen { padding: 0; }
+.portada.conImagen::before { content: none; }
+.portada-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.portada.conImagen .portada-tit {
+  position: absolute; left: 0; right: 0; bottom: 0; padding: 1.6rem .55rem .5rem;
+  color: #FCF9F1; text-shadow: 0 1px 3px rgba(0, 0, 0, .5);
+  background: linear-gradient(to top, rgba(20, 16, 12, .78), rgba(20, 16, 12, 0));
+}

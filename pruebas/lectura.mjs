@@ -18,8 +18,10 @@ await page.goto('http://127.0.0.1:4173/', { waitUntil: 'networkidle' })
 await page.waitForSelector('.vacio', { timeout: 8000 })
 paso('la biblioteca vacía aparece', true)
 
-// 2. Importar
+// 2. Importar. Al traer uno solo, la ficha se abre sola (P42); se cierra sin tocar nada.
 await page.setInputFiles('input[type=file]', PDF)
+await page.waitForSelector('.ficha', { timeout: 20000 })
+await page.keyboard.press('Escape')
 await page.waitForSelector('.rejilla .libro', { timeout: 20000 })
 const titulo = await page.textContent('.rejilla .libro .portada-tit')
 paso('importa el PDF', true, `título: "${titulo}"`)
@@ -31,13 +33,14 @@ paso('cuenta las páginas', paginas.trim() === '6 pág.', `dice "${paginas.trim(
 // 3. Repetido (R24 / P37)
 await page.setInputFiles('input[type=file]', PDF)
 await page.waitForTimeout(2500)
+paso('un repetido no abre la ficha', (await page.locator('.ficha').count()) === 0)
 const cuantos = await page.locator('.rejilla .libro').count()
 paso('no duplica un PDF repetido', cuantos === 2, `${cuantos - 1} libro(s) + botón de traer`)
 const aviso = await page.textContent('.aviso').catch(() => '')
 paso('avisa del repetido', /ya estaba/.test(aviso), `aviso: "${aviso.trim()}"`)
 
 // 4. Abrir y renderizar
-await page.click('.rejilla .libro')
+await page.click('.rejilla .libro .libro-abrir')
 await page.waitForSelector('.lector .hoja.debajo canvas', { timeout: 20000 })
 const dims = await page.$eval('.hoja.debajo canvas', c => ({ w: c.width, h: c.height }))
 paso('dibuja la página 1', dims.w > 100 && dims.h > 100, `lienzo ${dims.w}×${dims.h}`)
@@ -107,7 +110,7 @@ await page.reload({ waitUntil: 'networkidle' })
 await page.waitForSelector('.seguir', { timeout: 10000 })
 paso('la biblioteca sobrevive a recargar', /página 5 de 6/.test((await page.textContent('.seguir-sub'))))
 
-await page.click('.seguir')
+await page.click('.seguir-abrir')
 await page.waitForSelector('.aviso', { timeout: 10000 })
 paso('ofrece volver al principio (P63)', /Vas por la página 5/.test(await page.textContent('.aviso')))
 

@@ -1,9 +1,10 @@
-import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react'
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Ajustes, Libro } from './lib/tipos'
 import { AJUSTES_POR_DEFECTO } from './lib/tipos'
-import { actualizarLibro, guardarAjustes, leerAjustes, listarLibros } from './lib/almacen'
+import { actualizarLibro, borrarLibro, guardarAjustes, leerAjustes, listarLibros } from './lib/almacen'
 import { importarPdf } from './lib/importar'
 import { Biblioteca } from './components/Biblioteca'
+import { FichaLibro } from './components/FichaLibro'
 
 /**
  * pdf.js pesa medio megabyte. Si entra en el paquete principal, la biblioteca
@@ -17,6 +18,7 @@ export default function App() {
   const [libros, setLibros] = useState<Libro[]>([])
   const [ajustes, setAjustes] = useState<Ajustes>(AJUSTES_POR_DEFECTO)
   const [abierto, setAbierto] = useState<Libro | null>(null)
+  const [enFicha, setEnFicha] = useState<Libro | null>(null)
   const [importando, setImportando] = useState(false)
   const [nota, setNota] = useState<string | null>(null)
   const [arrancando, setArrancando] = useState(true)
@@ -53,9 +55,10 @@ export default function App() {
     let nuevos = 0
     let repetidos = 0
     let fallos = 0
+    let ultimo: Libro | null = null
     for (const archivo of Array.from(archivos)) {
       const r = await importarPdf(archivo)
-      if (r.estado === 'anadido') nuevos++
+      if (r.estado === 'anadido') { nuevos++; ultimo = r.libro }
       else if (r.estado === 'repetido') repetidos++
       else fallos++
     }
@@ -68,6 +71,12 @@ export default function App() {
     if (repetidos) partes.push(`${repetidos} ya ${repetidos === 1 ? 'estaba' : 'estaban'} en la estantería`)
     if (fallos) partes.push(`${fallos} no se ${fallos === 1 ? 'pudo abrir' : 'pudieron abrir'}`)
     setNota(partes.join(' · ') || null)
+
+    // El título sale del nombre del archivo, que casi siempre es un desastre.
+    // En P42 pediste control total, así que si has traído uno solo, la ficha se
+    // abre sola para que lo dejes como quieras. Con varios sería un
+    // interrogatorio, y ahí no se abre.
+    if (nuevos === 1 && ultimo) setEnFicha(ultimo)
   }, [])
 
   // El progreso se guarda solo, sin escribir en disco en cada página (R16).
@@ -109,6 +118,26 @@ export default function App() {
     setLibros(await listarLibros())
   }, [])
 
+  const guardarFicha = useCallback(async (libro: Libro) => {
+    await actualizarLibro(libro)
+    setLibros(await listarLibros())
+    setEnFicha(null)
+    setNota('Guardado')
+  }, [])
+
+  const quitar = useCallback(async (libro: Libro) => {
+    await borrarLibro(libro)
+    setLibros(await listarLibros())
+    setEnFicha(null)
+    setNota(`«${libro.titulo}» ya no está en la estantería`)
+  }, [])
+
+  const etiquetasConocidas = useMemo(() => {
+    const todas = new Set<string>()
+    for (const l of libros) for (const e of l.etiquetas) todas.add(e)
+    return [...todas].sort()
+  }, [libros])
+
   // La única espera de toda la app, y solo mientras se lee el índice local.
   if (arrancando) return null
 
@@ -128,7 +157,23 @@ export default function App() {
 
   return (
     <>
-      <Biblioteca libros={libros} importando={importando} onImportar={importar} onAbrir={abrir} />
+      <Biblioteca
+        libros={libros}
+        importando={importando}
+        onImportar={importar}
+        onAbrir={abrir}
+        onEditar={setEnFicha}
+      />
+      {enFicha && (
+        <FichaLibro
+          key={enFicha.id}
+          libro={enFicha}
+          etiquetasConocidas={etiquetasConocidas}
+          onGuardar={guardarFicha}
+          onBorrar={quitar}
+          onCerrar={() => setEnFicha(null)}
+        />
+      )}
       {importando && (
         <div className="importando">
           <div>

@@ -4,7 +4,7 @@ Documento vivo del proyecto. Todo lo que se decide queda aquí, y de aquí salen
 los parámetros para construir la app. Si algo no está en esta Guía, no está
 decidido.
 
-- **Estado:** Guía cerrada. **Hito 1 (leer) terminado y verificado.**
+- **Estado:** Guía cerrada. **Hitos 1 y 2 terminados y verificados.**
 - **Última actualización:** 2026-08-26
 - **Nombre:** **Infiniity Vellum** (P43)
 
@@ -364,8 +364,8 @@ El orden lo fijó P80: **leer antes que nada**.
 
 | Hito | Qué incluye | Estado |
 |---|---|---|
-| **1 · Leer** | Importar un PDF, guardarlo en el aparato, pasar páginas con el volteo de libro, sonido y vibración, número de página y progreso, saltar a una página, los tres temas, modo sin distracciones | **hecho** · 20 comprobaciones en `pruebas/` |
-| 2 · Biblioteca | Títulos, etiquetas, portadas tipográficas, buscador, "seguir leyendo", detección de repetidos | pendiente |
+| **1 · Leer** | Importar un PDF, guardarlo en el aparato, pasar páginas con el volteo de libro, sonido y vibración, número de página y progreso, saltar a una página, los tres temas, modo sin distracciones | **hecho** · 21 comprobaciones en `pruebas/` |
+| **2 · Biblioteca** | Títulos, tipo, etiquetas con filtro, buscador, portada propia, "seguir leyendo", quitar libros | **hecho** · 33 comprobaciones en `pruebas/` |
 | 3 · Traductor | La barra de abajo, Gemini con clave propia, pestañas, vocabulario, selección de texto donde el PDF lo permita | pendiente |
 | 4 · Nube | Sesión con Google, Firestore, subida de PDF con la regla de wifi, tope de facturación | pendiente |
 | 5 · Portadas | Botón Crear portada, plantilla de prompt, composición del título | pendiente |
@@ -396,6 +396,16 @@ construir lo que viene:
   dejado de abrir libros justo cuando no hubiera red.
 - **Las páginas vecinas se dibujan por adelantado.** Es lo que hace que el volteo
   no tenga espera. Sin eso, R4 no se cumple por mucho que la animación sea bonita.
+- **Media parte de D-15 ya está construida.** La app compone el título sobre la
+  portada, con la tipografía de la casa. Cuando llegue el hito 5, ese botón solo
+  tiene que armar el prompt y abrir Gemini: traer la imagen de vuelta y ponerle
+  el título ya funciona.
+- **En pantalla táctil no existe el «hover».** El botón de la ficha de cada libro
+  se revela al pasar el ratón en el escritorio, pero en el teléfono tiene que
+  estar siempre visible o no existiría donde más se usa.
+- **Buscar sin tildes no es un adorno.** Nadie escribe «crónica» con tilde en un
+  buscador, y sin normalizar el texto la búsqueda no encuentra la mitad de una
+  biblioteca en español.
 
 ## 10. Bitácora
 
@@ -429,3 +439,9 @@ construir lo que viene:
   por número y el progreso guardándose solo. Verificado con 20 comprobaciones
   en Chromium sobre la versión compilada. Cinco hallazgos técnicos quedan
   anotados arriba; dos de ellos condicionan los hitos 3 y 4.
+- **2026-08-26** — **Hito 2 terminado.** La estantería: títulos que escribes tú,
+  tipo libro o cómic, etiquetas con filtro, buscador por título y etiqueta,
+  portada propia con el título compuesto encima, y quitar libros. Al traer un
+  solo PDF se abre su ficha para que le pongas nombre; con varios, no. 33
+  comprobaciones más. Se publica una página con los prompts del icono y de las
+  portadas, con botones de copiar, en `guia/paginas/prompts.html`.
