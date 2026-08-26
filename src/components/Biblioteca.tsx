@@ -8,6 +8,9 @@ interface Props {
   onImportar: (archivos: FileList) => void
   onAbrir: (libro: Libro) => void
   onEditar: (libro: Libro) => void
+  vocabulario: number
+  onAjustes: () => void
+  onVocabulario: () => void
 }
 
 function porcentaje(l: Libro): number {
@@ -20,7 +23,9 @@ function plano(s: string): string {
   return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
 }
 
-export function Biblioteca({ libros, importando, onImportar, onAbrir, onEditar }: Props) {
+export function Biblioteca({
+  libros, importando, onImportar, onAbrir, onEditar, vocabulario, onAjustes, onVocabulario,
+}: Props) {
   const input = useRef<HTMLInputElement>(null)
   const [busqueda, setBusqueda] = useState('')
   const [filtro, setFiltro] = useState<string | null>(null)
@@ -52,9 +57,14 @@ export function Biblioteca({ libros, importando, onImportar, onAbrir, onEditar }
     <div className="biblio">
       <div className="biblio-top">
         <h1 className="marca display">Infiniity <em>Vellum</em></h1>
-        {libros.length > 0 && (
-          <span className="cuenta mono">{libros.length} {libros.length === 1 ? 'libro' : 'libros'}</span>
-        )}
+        <div className="fila">
+          {vocabulario > 0 && (
+            <button className="icono" onClick={onVocabulario}>
+              Vocabulario <span className="mono">{vocabulario}</span>
+            </button>
+          )}
+          <button className="icono" onClick={onAjustes}>Ajustes</button>
+        </div>
       </div>
 
       <input

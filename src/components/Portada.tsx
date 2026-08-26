@@ -63,7 +63,8 @@ export function Portada({ libro, grande = false }: { libro: Libro; grande?: bool
           <span className="portada-regla" aria-hidden="true" />
         </>
       )}
-      <span className="portada-tit">{libro.titulo}</span>
+      {/* Si la imagen ya trae el título escrito, componerlo encima lo duplica. */}
+      {!(url && libro.tituloEnPortada) && <span className="portada-tit">{libro.titulo}</span>}
     </div>
   )
 }

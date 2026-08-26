@@ -33,6 +33,7 @@ export function FichaLibro({ libro, etiquetasConocidas, onGuardar, onBorrar, onC
   const [tipo, setTipo] = useState(libro.tipo)
   const [etiquetas, setEtiquetas] = useState<string[]>(libro.etiquetas)
   const [portada, setPortada] = useState<Blob | undefined>(libro.portada)
+  const [tituloEnPortada, setTituloEnPortada] = useState(libro.tituloEnPortada ?? false)
   const [nueva, setNueva] = useState('')
   const [confirmando, setConfirmando] = useState(false)
   const imagen = useRef<HTMLInputElement>(null)
@@ -64,11 +65,17 @@ export function FichaLibro({ libro, etiquetasConocidas, onGuardar, onBorrar, onC
       tipo,
       etiquetas,
       portada,
+      tituloEnPortada: portada ? tituloEnPortada : false,
     })
   }
 
   const sugerencias = etiquetasConocidas.filter(e => !etiquetas.includes(e)).slice(0, 8)
-  const vistaPrevia: Libro = { ...libro, titulo: titulo.trim() || libro.titulo, portada }
+  const vistaPrevia: Libro = {
+    ...libro,
+    titulo: titulo.trim() || libro.titulo,
+    portada,
+    tituloEnPortada: portada ? tituloEnPortada : false,
+  }
 
   return (
     <div className="telon" onPointerDown={e => { if (e.target === e.currentTarget) onCerrar() }}>
@@ -86,11 +93,24 @@ export function FichaLibro({ libro, etiquetasConocidas, onGuardar, onBorrar, onC
                 Quitar portada
               </button>
             )}
-            <p className="ficha-pista">
-              {portada
-                ? 'El título lo escribe Vellum encima, no la imagen.'
-                : 'Sin imagen, la portada se compone con el título.'}
-            </p>
+            {portada ? (
+              <label className="casilla">
+                <input
+                  type="checkbox"
+                  checked={tituloEnPortada}
+                  onChange={e => setTituloEnPortada(e.target.checked)}
+                />
+                <span>
+                  El título ya está en la imagen
+                  <em>
+                    Normalmente lo compone Vellum encima, para que todas las portadas
+                    lleven la misma letra. Marca esto si esta lo trae ya escrito.
+                  </em>
+                </span>
+              </label>
+            ) : (
+              <p className="ficha-pista">Sin imagen, la portada se compone con el título.</p>
+            )}
           </div>
         </div>
 

@@ -8,6 +8,7 @@ npm run build
 npx vite preview --port 4173 --host 127.0.0.1 &
 node pruebas/lectura.mjs      # 21 comprobaciones · hito 1, leer
 node pruebas/biblioteca.mjs   # 33 comprobaciones · hito 2, la estantería
+node pruebas/traductor.mjs    # 27 comprobaciones · hito 3, el traductor
 node pruebas/capturas.mjs     # capturas de cada estado
 ```
 
@@ -69,6 +70,29 @@ vea de dónde sale y no parezca una prueba puesta por costumbre.
 | Preguntar antes de borrar, y borrar de verdad | — |
 | Que todo sobreviva a recargar | D-03 |
 
+## Qué comprueba `traductor.mjs`
+
+No gasta cuota de Gemini: sustituye `fetch` dentro de la página y construye la
+respuesta a mano, en trozos y con retardos reales. Así se ejerce el cliente
+entero —lector del cuerpo, troceado SSE, parseo a medias— y se puede comprobar
+lo único que justifica todo ese trabajo: que la traducción sale antes que el
+resto.
+
+| Comprueba | Requisito |
+|---|---|
+| La barra del traductor está siempre visible | R30 · P55 |
+| Sin clave lo explica y ofrece ir a los ajustes | P31 · D-09 |
+| La clave se guarda, sobrevive a recargar y llega oculta | D-09 · P26 |
+| **La traducción aparece antes que las pestañas** | R19 · R20 · P28 |
+| Con un modismo, la pestaña de aviso va primero y se abre sola | R20 · P28 |
+| Con una palabra suelta, su ficha va primero, con pronunciación y ejemplo | R20 · P28 |
+| Las pestañas de literal y contexto | R30 · P54 |
+| Guardar en vocabulario, con libro y página | R17 · P57 |
+| Cuota agotada: lo dice y a qué hora vuelve | P31 |
+| Clave inválida, servidor saturado y sin red, cada uno con su mensaje | R8 |
+| El modo selección avisa de cómo funciona | D-18 · P56 |
+| Seleccionar sobre la página rellena la burbuja | R31 · P56 |
+
 ## Lo que estas pruebas no cubren
 
 Se dice aquí para que nadie las lea como una garantía que no son:
@@ -81,3 +105,8 @@ Se dice aquí para que nadie las lea como una garantía que no son:
   200 MB es otro asunto, y hay que medirlo con uno real.
 - **Sin internet.** El service worker está configurado, pero comprobar que la
   app abre sin red pide un escenario aparte.
+- **Gemini de verdad.** La API está simulada. Lo que no se puede probar así es
+  si el modelo devuelve buenas traducciones: eso hay que verlo con una clave
+  real y libros reales.
+- **Seleccionar con el dedo.** La selección se provoca por código. El gesto real
+  sobre una capa de texto en un móvil hay que probarlo a mano.

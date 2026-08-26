@@ -13,17 +13,43 @@ export interface Libro {
   /** Página por la que va, 1-based. Se guarda sola (R16 / P15). */
   pagina: number
   abiertoEn: number
-  /** Portada generada fuera y traída a mano (D-13). Aún no en el hito 1. */
+  /** Portada generada fuera y traída a mano (D-13). */
   portada?: Blob
+  /** Cuando la propia imagen ya trae el título escrito, Vellum no lo compone. */
+  tituloEnPortada?: boolean
 }
 
 export type Tema = 'papel' | 'sepia' | 'oscuro'
+
+/** Una entrada del vocabulario, con todo lo que pediste en P57. */
+export interface Palabra {
+  id: string
+  /** Lo que mandaste a traducir. */
+  texto: string
+  /** La traducción natural. */
+  traduccion: string
+  /** La frase entera donde apareció, si la mandaste completa. */
+  frase: string
+  libroId: string
+  libroTitulo: string
+  pagina: number
+  fecha: number
+}
 
 export interface Ajustes {
   tema: Tema
   sonido: boolean
   vibracion: boolean
 }
+
+/**
+ * La clave de Gemini se guarda aparte de los ajustes a propósito.
+ *
+ * En el hito 4 los ajustes se sincronizan con Firebase (P47). La clave no tiene
+ * por qué viajar —en P48 dijiste que la repartes tú por WhatsApp— y guardarla
+ * en el mismo saco haría fácil que acabara subiendo sin querer. Separarla hace
+ * que eso no pueda pasar por descuido.
+ */
 
 export const AJUSTES_POR_DEFECTO: Ajustes = {
   // P59: el que se abre por defecto es papel

@@ -4,7 +4,7 @@ Documento vivo del proyecto. Todo lo que se decide queda aquí, y de aquí salen
 los parámetros para construir la app. Si algo no está en esta Guía, no está
 decidido.
 
-- **Estado:** Guía cerrada. **Hitos 1 y 2 terminados y verificados.**
+- **Estado:** Guía cerrada. **Hitos 1, 2 y 3 terminados y verificados.**
 - **Última actualización:** 2026-08-26
 - **Nombre:** **Infiniity Vellum** (P43)
 
@@ -244,7 +244,31 @@ técnicas que descartan opciones desde el primer día. Implican, como mínimo:
   exacto entre "que se vean iguales" y "que se vean únicos".
 - **Origen:** P73 obs.
 
-### D-17 · Modelo de datos de un libro
+### D-18 · La selección de texto es un modo, no un gesto más
+- **Decisión:** seleccionar texto sobre la página se activa con un botón. Con el
+  modo puesto, arrastrar selecciona y ya no pasa página; se cambia de página por
+  el número.
+- **Por qué:** arrastrar para pasar página y arrastrar para seleccionar son
+  exactamente el mismo gesto. Si compiten, gana el que no querías, y las dos
+  cosas se sienten rotas. Un modo explícito es predecible; adivinar la intención
+  no lo es.
+- **Además:** en un PDF escaneado no hay texto que seleccionar. El modo lo dice
+  con palabras en vez de dejarte intentándolo (R31 / P30).
+- **Origen:** P51, P56.
+
+### D-19 · El título en la portada, con una excepción
+- **Decisión:** se mantiene D-15 —la ilustración la hace la IA, el título lo
+  compone Vellum— pero la ficha de cada libro tiene una casilla, **«el título ya
+  está en la imagen»**, que desactiva la composición para ese libro.
+- **Por qué:** en la ronda 4 confirmaste que Gemini ya escribe bien el texto
+  dentro de las imágenes, así que el primer motivo de D-15 deja de valer. El
+  segundo sigue en pie y es el fuerte: si cada portada trae su propia letra, la
+  biblioteca deja de parecer una colección. Y hay un tercero que apareció al
+  construir: **el título es editable**. Si lo cambias, uno escrito dentro de la
+  imagen se queda antiguo y hay que regenerar el dibujo entero.
+- **Origen:** P73, y tu observación de la ronda 4.
+
+### D-20 · Modelo de datos de un libro
 - **Decisión:** un libro es un **título** escrito a mano, un conjunto de
   **etiquetas**, un **tipo** (libro o cómic, que necesita el prompt de portada),
   una **portada** (generada, primera página del PDF, o tipográfica) y un
@@ -366,7 +390,7 @@ El orden lo fijó P80: **leer antes que nada**.
 |---|---|---|
 | **1 · Leer** | Importar un PDF, guardarlo en el aparato, pasar páginas con el volteo de libro, sonido y vibración, número de página y progreso, saltar a una página, los tres temas, modo sin distracciones | **hecho** · 21 comprobaciones en `pruebas/` |
 | **2 · Biblioteca** | Títulos, tipo, etiquetas con filtro, buscador, portada propia, "seguir leyendo", quitar libros | **hecho** · 33 comprobaciones en `pruebas/` |
-| 3 · Traductor | La barra de abajo, Gemini con clave propia, pestañas, vocabulario, selección de texto donde el PDF lo permita | pendiente |
+| **3 · Traductor** | La barra de abajo, Gemini con clave propia, pestañas, vocabulario, selección de texto donde el PDF lo permita | **hecho** · 27 comprobaciones en `pruebas/` |
 | 4 · Nube | Sesión con Google, Firestore, subida de PDF con la regla de wifi, tope de facturación | pendiente |
 | 5 · Portadas | Botón Crear portada, plantilla de prompt, composición del título | pendiente |
 
@@ -406,6 +430,20 @@ construir lo que viene:
 - **Buscar sin tildes no es un adorno.** Nadie escribe «crónica» con tilde en un
   buscador, y sin normalizar el texto la búsqueda no encuentra la mitad de una
   biblioteca en español.
+- **La traducción se lee mientras llega.** La respuesta de Gemini es un JSON, y
+  un JSON no se puede leer hasta que está entero: son dos segundos de pantalla
+  quieta. Vellum va sacando el campo `natural` del trozo que ya llegó, así que
+  la traducción aparece mientras el contexto y el literal siguen en camino. Es
+  la única forma de cumplir P28 y R19 a la vez.
+- **La burbuja y los controles del lector querían los dos el borde de abajo.**
+  Se mide lo que ocupa la burbuja y todo lo demás se apoya encima. Se mide en
+  lugar de calcularse porque la burbuja cambia de alto al escribir y al abrirse.
+- **La capa de texto no puede vivir dentro de la hoja.** Al redibujar la página
+  se reemplazan los hijos de la hoja, y ahí dentro la capa desaparecía en
+  silencio. Va como hermana, encima.
+- **Un error de cuota no es un número.** Cuando se agotan las 1.000 traducciones
+  del día, la app dice a qué hora vuelven, calculado desde la medianoche del
+  Pacífico que es cuando Google las repone (P31).
 
 ## 10. Bitácora
 
@@ -445,3 +483,12 @@ construir lo que viene:
   solo PDF se abre su ficha para que le pongas nombre; con varios, no. 33
   comprobaciones más. Se publica una página con los prompts del icono y de las
   portadas, con botones de copiar, en `guia/paginas/prompts.html`.
+- **2026-08-26** — **Hito 3 terminado.** El traductor: barra fija abajo, Gemini
+  con clave propia guardada aparte de los ajustes, la traducción natural
+  apareciendo mientras el resto sigue llegando, pestañas de contexto, literal,
+  aviso de modismo y ficha de palabra suelta, y vocabulario con libro y página.
+  Los errores se explican con palabras, incluida la hora a la que vuelve la
+  cuota. Se añade D-18 (la selección de texto es un modo) y D-19 (la casilla
+  para portadas que ya traen el título). Llega el icono definitivo: se le quita
+  la marca del generador, se recorta y se reduce de 422 kB a 84 sin que se note.
+  27 comprobaciones más, con la API de Gemini simulada para no gastar cuota.

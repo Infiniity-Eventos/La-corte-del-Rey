@@ -1,10 +1,22 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { Ajustes, Libro } from './lib/tipos'
+import type { Ajustes, Libro, Palabra } from './lib/tipos'
 import { AJUSTES_POR_DEFECTO } from './lib/tipos'
-import { actualizarLibro, borrarLibro, guardarAjustes, leerAjustes, listarLibros } from './lib/almacen'
+import {
+  actualizarLibro,
+  borrarLibro,
+  borrarPalabra,
+  guardarAjustes,
+  guardarClave,
+  leerAjustes,
+  leerClave,
+  listarLibros,
+  listarVocabulario,
+} from './lib/almacen'
 import { importarPdf } from './lib/importar'
 import { Biblioteca } from './components/Biblioteca'
 import { FichaLibro } from './components/FichaLibro'
+import { Ajustes as PantallaAjustes } from './components/Ajustes'
+import { Vocabulario } from './components/Vocabulario'
 
 /**
  * pdf.js pesa medio megabyte. Si entra en el paquete principal, la biblioteca
@@ -19,15 +31,25 @@ export default function App() {
   const [ajustes, setAjustes] = useState<Ajustes>(AJUSTES_POR_DEFECTO)
   const [abierto, setAbierto] = useState<Libro | null>(null)
   const [enFicha, setEnFicha] = useState<Libro | null>(null)
+  const [clave, setClave] = useState('')
+  const [vocabulario, setVocabulario] = useState<Palabra[]>([])
+  const [pantalla, setPantalla] = useState<'biblioteca' | 'ajustes' | 'vocabulario'>('biblioteca')
   const [importando, setImportando] = useState(false)
   const [nota, setNota] = useState<string | null>(null)
   const [arrancando, setArrancando] = useState(true)
 
   useEffect(() => {
     ;(async () => {
-      const [ls, aj] = await Promise.all([listarLibros(), leerAjustes()])
+      const [ls, aj, cl, voc] = await Promise.all([
+        listarLibros(),
+        leerAjustes(),
+        leerClave(),
+        listarVocabulario(),
+      ])
       setLibros(ls)
       setAjustes(aj)
+      setClave(cl)
+      setVocabulario(voc)
       setArrancando(false)
     })()
   }, [])
@@ -108,6 +130,17 @@ export default function App() {
     }
   }, [abierto])
 
+  const cambiarClave = useCallback(async (nueva: string) => {
+    await guardarClave(nueva)
+    setClave(nueva.trim())
+    setNota(nueva.trim() ? 'Clave guardada' : 'Clave borrada')
+  }, [])
+
+  const quitarPalabra = useCallback(async (id: string) => {
+    await borrarPalabra(id)
+    setVocabulario(await listarVocabulario())
+  }, [])
+
   const abrir = useCallback((libro: Libro) => {
     setAbierto(libro)
     void actualizarLibro({ ...libro, abiertoEn: Date.now() })
@@ -115,7 +148,9 @@ export default function App() {
 
   const cerrar = useCallback(async () => {
     setAbierto(null)
-    setLibros(await listarLibros())
+    const [ls, voc] = await Promise.all([listarLibros(), listarVocabulario()])
+    setLibros(ls)
+    setVocabulario(voc)
   }, [])
 
   const guardarFicha = useCallback(async (libro: Libro) => {
@@ -147,11 +182,36 @@ export default function App() {
         <Lector
           libro={abierto}
           ajustes={ajustes}
+          clave={clave}
           onAjustes={cambiarAjustes}
           onPagina={guardarPagina}
           onCerrar={cerrar}
+          onIrAAjustes={() => { void cerrar(); setPantalla('ajustes') }}
         />
       </Suspense>
+    )
+  }
+
+  if (pantalla === 'ajustes') {
+    return (
+      <>
+        <PantallaAjustes
+          clave={clave}
+          onGuardar={c => void cambiarClave(c)}
+          onCerrar={() => setPantalla('biblioteca')}
+        />
+        {nota && <div className="aviso" style={{ bottom: '1.4rem' }}><span>{nota}</span></div>}
+      </>
+    )
+  }
+
+  if (pantalla === 'vocabulario') {
+    return (
+      <Vocabulario
+        palabras={vocabulario}
+        onBorrar={id => void quitarPalabra(id)}
+        onCerrar={() => setPantalla('biblioteca')}
+      />
     )
   }
 
@@ -163,6 +223,9 @@ export default function App() {
         onImportar={importar}
         onAbrir={abrir}
         onEditar={setEnFicha}
+        vocabulario={vocabulario.length}
+        onAjustes={() => setPantalla('ajustes')}
+        onVocabulario={() => setPantalla('vocabulario')}
       />
       {enFicha && (
         <FichaLibro

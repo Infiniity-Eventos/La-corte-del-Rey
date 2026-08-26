@@ -255,7 +255,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   transition: transform var(--paso) var(--curva), opacity var(--paso) var(--curva);
 }
 .chrome.arriba { top: 0; padding: calc(var(--safe-t) + .55rem) var(--e3) .55rem; border-bottom: 1px solid rgba(138, 90, 43, .16); }
-.chrome.abajo  { bottom: 0; padding: .55rem var(--e3) calc(var(--safe-b) + .55rem); border-top: 1px solid rgba(138, 90, 43, .16); }
+.chrome.abajo  { bottom: var(--alto-burbuja, 0px); padding: .55rem var(--e3); border-top: 1px solid rgba(138, 90, 43, .16); }
 .chrome[data-visible='false'] { opacity: 0; pointer-events: none; }
 .chrome[data-visible='false'].arriba { transform: translateY(-100%); }
 .chrome[data-visible='false'].abajo  { transform: translateY(100%); }
@@ -283,17 +283,17 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .salto input[type=number] { -moz-appearance: textfield; }
 
 /* La línea finísima de progreso (R53 / P53) */
-.progreso { position: absolute; left: 0; right: 0; bottom: 0; height: 1.5px; background: rgba(138, 90, 43, .16); z-index: 4; }
+.progreso { position: absolute; left: 0; right: 0; bottom: var(--alto-burbuja, 0px); height: 1.5px; background: rgba(138, 90, 43, .16); z-index: 4; }
 .progreso i { display: block; height: 100%; background: var(--tinta-lectura); opacity: .45; transition: width var(--paso) linear; }
 
 /* El número de página, discreto (R53 / P53) */
 .folio {
-  position: absolute; left: 0; right: 0; bottom: calc(var(--safe-b) + .5rem);
+  position: absolute; left: 0; right: 0; bottom: calc(var(--alto-burbuja, 0px) + .45rem);
   text-align: center; font-size: .7rem; color: var(--tinta-lectura); opacity: .38;
   z-index: 6; pointer-events: none; font-variant-numeric: tabular-nums;
   transition: transform var(--paso) var(--curva);
 }
-.lector[data-chrome='true'] .folio { transform: translateY(-3.1rem); }
+.lector[data-chrome='true'] .folio { transform: translateY(-2.6rem); }
 
 .aviso {
   position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(var(--safe-b) + 2.4rem);
@@ -399,3 +399,165 @@ button { font: inherit; color: inherit; cursor: pointer; }
   color: #FCF9F1; text-shadow: 0 1px 3px rgba(0, 0, 0, .5);
   background: linear-gradient(to top, rgba(20, 16, 12, .78), rgba(20, 16, 12, 0));
 }
+
+/* ------------------------------------------------------------------ */
+/* La burbuja del traductor                                            */
+/* ------------------------------------------------------------------ */
+
+/* Barra fija abajo, siempre lista (P55). No desaparece con el resto de la
+   interfaz: es justo mientras lees cuando hace falta.
+   Los controles del lector se apoyan encima de esta zona, no debajo: ver el
+   comentario del ResizeObserver en Lector.tsx. */
+.zona-burbuja {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 8;
+  max-height: 78%; display: flex;
+}
+.burbuja {
+  flex: 1; min-width: 0; display: flex; flex-direction: column;
+  background: var(--chrome); backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(138, 90, 43, .18);
+  color: var(--tinta-lectura);
+}
+
+.barra-burbuja {
+  display: flex; gap: var(--e2); align-items: flex-end;
+  padding: .5rem var(--e3) calc(var(--safe-b) + .5rem);
+}
+.barra-burbuja textarea {
+  flex: 1; min-width: 0; resize: none; font: inherit; font-size: .92rem; line-height: 1.4;
+  max-height: 5.5rem; color: var(--tinta-lectura);
+  background: color-mix(in srgb, var(--tinta-lectura) 7%, transparent);
+  border: 1px solid rgba(138, 90, 43, .22); border-radius: 18px;
+  padding: .5rem .85rem; transition: border-color var(--paso) var(--curva);
+}
+.barra-burbuja textarea::placeholder { color: currentColor; opacity: .45; }
+.barra-burbuja textarea:focus { outline: none; border-color: var(--ocre); }
+.burbuja.abierta .barra-burbuja textarea { min-height: 2.5rem; }
+
+.panel {
+  overflow-y: auto; padding: var(--e3) var(--e3) 0;
+  border-bottom: 1px solid rgba(138, 90, 43, .12);
+  animation: sube-panel 180ms var(--curva);
+}
+@keyframes sube-panel { from { opacity: 0; transform: translateY(6px); } }
+
+.panel-top { display: flex; align-items: flex-start; gap: var(--e2); margin-bottom: .5rem; }
+.panel-src {
+  flex: 1; min-width: 0; font-size: .74rem; opacity: .5; line-height: 1.4;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+
+/* Lo primero que se lee y lo único que se lee con prisa. */
+.panel-natural {
+  font-family: 'Fraunces', Georgia, serif; font-variation-settings: 'SOFT' 24, 'opsz' 48;
+  font-weight: 600; font-size: 1.22rem; line-height: 1.3; margin: 0 0 var(--e2);
+  text-wrap: balance;
+}
+.panel-natural.esperando { opacity: .4; font-style: italic; font-weight: 400; }
+
+.solapas { display: flex; gap: .3rem; flex-wrap: wrap; margin-bottom: .55rem; }
+.solapa {
+  font-family: ui-monospace, Menlo, monospace; font-size: .64rem; letter-spacing: .08em;
+  text-transform: uppercase; border-radius: 4px; padding: .3rem .55rem;
+  background: transparent; color: currentColor; opacity: .55;
+  border: 1px solid rgba(138, 90, 43, .28);
+  transition: opacity var(--paso) var(--curva), background var(--paso) var(--curva);
+}
+.solapa[aria-selected='true'] {
+  background: var(--ocre); border-color: var(--ocre); color: var(--vitela-alta); opacity: 1;
+}
+
+.hoja-solapa { font-size: .92rem; line-height: 1.5; min-height: 3.2rem; }
+.hoja-solapa p { margin: 0 0 .4rem; }
+.hoja-solapa .literal { font-style: italic; opacity: .78; }
+.hoja-solapa .ojo { color: var(--ocre); }
+.palabra .pron { font-size: .8rem; opacity: .6; margin-bottom: .3rem; }
+.palabra .ejemplo { display: flex; flex-direction: column; gap: .1rem; margin-top: .5rem; font-size: .86rem; }
+.palabra .ejemplo span:first-child { font-style: italic; opacity: .75; }
+.palabra .ejemplo-es { opacity: .95; }
+
+.guardar-voc { margin: var(--e2) 0 var(--e3); }
+.btn.fantasma.peq[disabled] { opacity: 1; border-color: var(--ocre); color: var(--ocre); }
+
+.panel-fallo { padding-bottom: var(--e3); }
+.fallo-tit { font-weight: 700; margin: 0 0 .25rem; }
+.fallo-det { font-size: .88rem; opacity: .75; margin: 0 0 var(--e2); }
+
+/* La capa de texto seleccionable, encima del dibujo de la página (R31). */
+.capaTexto {
+  position: absolute; inset: 0; overflow: clip; line-height: 1;
+  text-align: initial; transform-origin: 0 0; text-size-adjust: none;
+  forced-color-adjust: none; z-index: 4; opacity: 1;
+}
+.escena:not(.seleccionando) .capaTexto { pointer-events: none; }
+/* La escena tiene «user-select: none» para que arrastrar pase página sin
+   seleccionar sin querer. En modo selección hay que devolverlo, o el navegador
+   deja marcar el texto pero no entrega nada. */
+.escena.seleccionando {
+  touch-action: auto; cursor: text;
+  user-select: text; -webkit-user-select: text;
+}
+.capaTexto { user-select: text; -webkit-user-select: text; }
+.capaTexto :is(span, br) {
+  color: transparent; position: absolute; white-space: pre; cursor: text; transform-origin: 0% 0%;
+}
+.capaTexto ::selection { background: rgba(138, 90, 43, .35); }
+
+.aviso.modo { bottom: auto; top: calc(var(--safe-t) + 3.4rem); }
+
+/* ------------------------------------------------------------------ */
+/* Ajustes y vocabulario                                               */
+/* ------------------------------------------------------------------ */
+
+.titulo-pantalla { font-size: 1.8rem; margin-bottom: var(--e4); }
+.icono.volver { opacity: .8; padding-left: 0; }
+.biblio-top .icono { border-color: var(--linea); }
+
+.tarjeta {
+  background: var(--vitela); border: 1px solid var(--linea); border-radius: var(--r);
+  padding: var(--e3); margin-bottom: var(--e3); box-shadow: var(--sombra);
+  display: flex; flex-direction: column; gap: var(--e2);
+}
+.tarjeta-tit { font-size: 1.1rem; }
+.tarjeta-txt { color: var(--tinta-2); font-size: .92rem; margin: 0; }
+.tarjeta-nota { font-size: .82rem; color: var(--tinta-3); }
+.campo-fila { display: flex; gap: var(--e2); align-items: center; }
+.campo-fila input { flex: 1; min-width: 0; font-family: ui-monospace, Menlo, monospace; font-size: .86rem; }
+.campo-fila .icono { border: 1px solid var(--linea); flex: none; }
+.fila-botones { display: flex; gap: var(--e2); align-items: center; flex-wrap: wrap; }
+
+.comoseSaca { font-size: .9rem; color: var(--tinta-2); }
+.comoseSaca summary { cursor: pointer; color: var(--ocre); font-weight: 700; font-size: .88rem; }
+.lista-pasos { margin: var(--e2) 0 0; padding-left: 1.2rem; display: flex; flex-direction: column; gap: .35rem; }
+.lista-pasos strong { color: var(--tinta); }
+
+.alerta { background: #F3E4D4; border: 1px solid #DCC0A0; border-radius: 6px; padding: .85rem .95rem; }
+.alerta p { font-size: .88rem; color: var(--tinta-2); margin: 0 0 .5rem; }
+.alerta p:last-child { margin: 0; }
+.alerta-tit { font-weight: 700; color: #8C3F1D !important; }
+.alerta strong { color: var(--tinta); }
+
+.voc { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--e2); }
+.voc-fila {
+  position: relative; background: var(--vitela); border: 1px solid var(--linea-tenue);
+  border-radius: var(--r); padding: var(--e3); box-shadow: var(--sombra);
+}
+.voc-en { font-family: 'Fraunces', Georgia, serif; font-weight: 600; font-size: 1rem; margin: 0 0 .2rem; padding-right: 1.6rem; }
+.voc-es { margin: 0 0 .45rem; color: var(--tinta); font-size: .95rem; }
+.voc-de { font-size: .72rem; color: var(--tinta-3); margin: 0; }
+.mas.suelto { opacity: .55; top: .5rem; right: .5rem; }
+.voc-fila:hover .mas.suelto { opacity: 1; }
+
+.casilla { display: flex; gap: .55rem; align-items: flex-start; cursor: pointer; font-size: .84rem; }
+.casilla input {
+  appearance: none; -webkit-appearance: none; width: 1rem; height: 1rem; flex: none; margin: .18rem 0 0;
+  border: 1.5px solid var(--tinta-3); border-radius: 3px; background: transparent;
+  display: grid; place-content: center; cursor: pointer;
+}
+.casilla input::after {
+  content: ''; width: .5rem; height: .5rem; background: var(--ocre); transform: scale(0);
+  transition: transform var(--paso) var(--curva);
+}
+.casilla input:checked { border-color: var(--ocre); }
+.casilla input:checked::after { transform: scale(1); }
+.casilla em { display: block; font-style: normal; color: var(--tinta-3); font-size: .78rem; margin-top: .15rem; }

@@ -9,14 +9,15 @@
  * La nube (D-12) es el hito 4. Aquí no aparece: la fuente principal siempre es
  * el aparato, y esto no cambia cuando llegue Firebase.
  */
-import type { Ajustes, Libro } from './tipos'
+import type { Ajustes, Libro, Palabra } from './tipos'
 import { AJUSTES_POR_DEFECTO } from './tipos'
 
 const BD = 'vellum'
-const VERSION = 1
+const VERSION = 2
 const LIBROS = 'libros'
 const ARCHIVOS = 'archivos'
 const AJUSTES = 'ajustes'
+const VOCABULARIO = 'vocabulario'
 
 let cache: Promise<IDBDatabase> | null = null
 
@@ -31,6 +32,9 @@ function abrir(): Promise<IDBDatabase> {
       }
       if (!db.objectStoreNames.contains(ARCHIVOS)) db.createObjectStore(ARCHIVOS)
       if (!db.objectStoreNames.contains(AJUSTES)) db.createObjectStore(AJUSTES)
+      if (!db.objectStoreNames.contains(VOCABULARIO)) {
+        db.createObjectStore(VOCABULARIO, { keyPath: 'id' }).createIndex('fecha', 'fecha')
+      }
     }
     req.onsuccess = () => res(req.result)
     req.onerror = () => rej(req.error)
@@ -151,4 +155,30 @@ export async function leerAjustes(): Promise<Ajustes> {
 
 export async function guardarAjustes(a: Ajustes): Promise<void> {
   await tx(AJUSTES, 'readwrite', s => s.put(a, 'ajustes'))
+}
+
+/* --------------------------------- Clave --------------------------------- */
+
+/** Va en su propio cajón, no en los ajustes: ver el comentario en tipos.ts. */
+export async function leerClave(): Promise<string> {
+  return (await tx<string | undefined>(AJUSTES, 'readonly', s => s.get('claveGemini'))) ?? ''
+}
+
+export async function guardarClave(clave: string): Promise<void> {
+  await tx(AJUSTES, 'readwrite', s => s.put(clave.trim(), 'claveGemini'))
+}
+
+/* ------------------------------ Vocabulario ------------------------------ */
+
+export async function listarVocabulario(): Promise<Palabra[]> {
+  const todas = await tx<Palabra[]>(VOCABULARIO, 'readonly', s => s.getAll())
+  return todas.sort((a, b) => b.fecha - a.fecha)
+}
+
+export async function guardarPalabra(p: Palabra): Promise<void> {
+  await tx(VOCABULARIO, 'readwrite', s => s.put(p))
+}
+
+export async function borrarPalabra(id: string): Promise<void> {
+  await tx(VOCABULARIO, 'readwrite', s => s.delete(id))
 }

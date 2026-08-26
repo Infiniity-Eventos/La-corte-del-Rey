@@ -3,6 +3,7 @@ import type { Ajustes, Libro, Tema } from '../lib/tipos'
 import { leerArchivo } from '../lib/almacen'
 import { Cuaderno } from '../lib/pdf'
 import { clicDePagina, despertarSonido, toqueCorto } from '../lib/sonido'
+import { Burbuja } from './Burbuja'
 
 const TEMAS: Tema[] = ['papel', 'sepia', 'oscuro']
 const NOMBRE_TEMA: Record<Tema, string> = { papel: 'Papel', sepia: 'Sepia', oscuro: 'Oscuro' }
@@ -17,12 +18,14 @@ type Direccion = 'siguiente' | 'anterior' | null
 interface Props {
   libro: Libro
   ajustes: Ajustes
+  clave: string
   onAjustes: (a: Ajustes) => void
   onPagina: (pagina: number) => void
   onCerrar: () => void
+  onIrAAjustes: () => void
 }
 
-export function Lector({ libro, ajustes, onAjustes, onPagina, onCerrar }: Props) {
+export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, onIrAAjustes }: Props) {
   const escenaRef = useRef<HTMLDivElement>(null)
   const movilRef = useRef<HTMLDivElement>(null)
   const debajoRef = useRef<HTMLDivElement>(null)
@@ -39,6 +42,15 @@ export function Lector({ libro, ajustes, onAjustes, onPagina, onCerrar }: Props)
   // efecto que cuelga los lienzos, sin meter los lienzos en el estado.
   const [sello, setSello] = useState(0)
   const [volverAlInicio, setVolverAlInicio] = useState(libro.pagina > 1)
+  // Modo de selección. Va aparte del leer normal a propósito: arrastrar para
+  // pasar página y arrastrar para seleccionar son el mismo gesto, y si compiten
+  // gana el que no querías. Se elige uno.
+  const [seleccionando, setSeleccionando] = useState(false)
+  const [hayTexto, setHayTexto] = useState<boolean | null>(null)
+  const [seleccion, setSeleccion] = useState('')
+  const textoRef = useRef<HTMLDivElement>(null)
+  const zonaRef = useRef<HTMLDivElement>(null)
+  const lectorRef = useRef<HTMLDivElement>(null)
 
   // El arrastre vive en refs, no en el estado: mover el dedo no puede provocar
   // un renderizado de React por fotograma o se nota el tirón.
@@ -133,6 +145,49 @@ export function Lector({ libro, ajustes, onAjustes, onPagina, onCerrar }: Props)
     montar(movilRef.current, arriba)
   }, [cuales, hoja, sello, montar])
 
+  /**
+   * La burbuja y los controles del lector quieren los dos el borde de abajo.
+   * En vez de que uno tape al otro, se mide lo que ocupa la burbuja y todo lo
+   * demás se apoya encima. Se mide en vez de calcularse porque la burbuja
+   * cambia de alto: crece al escribir y mucho más al abrirse el panel.
+   */
+  useEffect(() => {
+    const zona = zonaRef.current
+    const lector = lectorRef.current
+    if (!zona || !lector) return
+    const ro = new ResizeObserver(([e]) => {
+      lector.style.setProperty('--alto-burbuja', `${Math.round(e.contentRect.height)}px`)
+    })
+    ro.observe(zona)
+    return () => ro.disconnect()
+  }, [])
+
+  /* ------------------------ seleccionar texto ------------------------ */
+
+  useEffect(() => {
+    const capa = textoRef.current
+    if (!capa) return
+    if (!seleccionando || dir) {
+      capa.replaceChildren()
+      return
+    }
+    let vivo = true
+    void cuadernoRef.current?.capaDeTexto(pagina, capa).then(ok => {
+      if (vivo) setHayTexto(ok)
+    })
+    return () => { vivo = false }
+  }, [seleccionando, pagina, dir, sello])
+
+  useEffect(() => {
+    if (!seleccionando) return
+    const mirar = () => {
+      const s = window.getSelection()?.toString().trim() ?? ''
+      if (s.length > 1) setSeleccion(s)
+    }
+    document.addEventListener('selectionchange', mirar)
+    return () => document.removeEventListener('selectionchange', mirar)
+  }, [seleccionando])
+
   /* ---------------------------- el volteo ---------------------------- */
 
   const aplicar = useCallback((p: number, d: Direccion) => {
@@ -180,7 +235,7 @@ export function Lector({ libro, ajustes, onAjustes, onPagina, onCerrar }: Props)
 
   const alBajar = (e: React.PointerEvent) => {
     const g = gesto.current
-    if (!lista || g.asentando) return
+    if (!lista || g.asentando || seleccionando) return
     despertarSonido()
     g.activo = true
     g.x0 = e.clientX
@@ -266,7 +321,7 @@ export function Lector({ libro, ajustes, onAjustes, onPagina, onCerrar }: Props)
   const avance = libro.paginas > 1 ? ((pagina - 1) / (libro.paginas - 1)) * 100 : 100
 
   return (
-    <div className="lector" data-tema={ajustes.tema} data-chrome={chrome}>
+    <div className="lector" ref={lectorRef} data-tema={ajustes.tema} data-chrome={chrome}>
       <div className="chrome arriba" data-visible={chrome}>
         <div className="fila entre">
           <button className="icono" onClick={onCerrar}>← Biblioteca</button>
@@ -276,7 +331,7 @@ export function Lector({ libro, ajustes, onAjustes, onPagina, onCerrar }: Props)
       </div>
 
       <div
-        className="escena"
+        className={`escena${seleccionando ? ' seleccionando' : ''}`}
         ref={escenaRef}
         onPointerDown={alBajar}
         onPointerMove={alMover}
@@ -305,6 +360,10 @@ export function Lector({ libro, ajustes, onAjustes, onPagina, onCerrar }: Props)
                 transform: dir === 'anterior' ? 'rotateY(-180deg)' : 'rotateY(0deg)',
               }}
             />
+            {/* Hermana de las hojas, no hija: al redibujar la página se
+                reemplazan los hijos de la hoja, y ahí dentro la capa de texto
+                desaparecía en silencio. */}
+            <div className="capaTexto" ref={textoRef} />
           </div>
         )}
       </div>
@@ -312,12 +371,34 @@ export function Lector({ libro, ajustes, onAjustes, onPagina, onCerrar }: Props)
       <div className="folio">{pagina} / {libro.paginas}</div>
       <div className="progreso"><i style={{ width: `${avance}%` }} /></div>
 
+      {seleccionando && (
+        <div className="aviso modo">
+          <span>
+            {hayTexto === false
+              ? 'Esta página es una imagen: no tiene texto que seleccionar.'
+              : 'Selecciona y se va a la burbuja. Para pasar página, usa el número.'}
+          </span>
+          <button onClick={() => setSeleccionando(false)}>Salir</button>
+        </div>
+      )}
+
       {volverAlInicio && (
         <div className="aviso">
           <span>Vas por la página {libro.pagina}</span>
           <button onClick={() => { irA(1); setVolverAlInicio(false) }}>Al principio</button>
         </div>
       )}
+
+      <div className="zona-burbuja" ref={zonaRef}>
+        <Burbuja
+          clave={clave}
+          libro={libro}
+          pagina={pagina}
+          seleccion={seleccion}
+          onUsarSeleccion={() => setSeleccion('')}
+          onIrAAjustes={onIrAAjustes}
+        />
+      </div>
 
       <div className="chrome abajo" data-visible={chrome}>
         <div className="fila entre">
@@ -335,6 +416,13 @@ export function Lector({ libro, ajustes, onAjustes, onPagina, onCerrar }: Props)
             <button className="icono" type="submit">Ir</button>
           </form>
           <div className="fila">
+            <button
+              className="icono"
+              aria-pressed={seleccionando}
+              onClick={() => { setSeleccionando(v => !v); setHayTexto(null) }}
+            >
+              Seleccionar
+            </button>
             <button
               className="icono"
               aria-pressed={ajustes.sonido}

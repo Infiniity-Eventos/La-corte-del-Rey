@@ -7,7 +7,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg'],
+      includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
         name: 'Infiniity Vellum',
         short_name: 'Vellum',
@@ -19,9 +19,15 @@ export default defineConfig({
         orientation: 'any',
         background_color: '#EDE6D6',
         theme_color: '#EDE6D6',
-        // Provisional hasta que lleguen los PNG generados (P79). Chrome acepta
-        // SVG como icono de manifiesto, así que la app ya es instalable.
-        icons: [{ src: 'favicon.svg', sizes: 'any', type: 'image/svg+xml' }],
+        icons: [
+          { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'icon-512.png', sizes: '512x512', type: 'image/png' },
+          // El «maskable» lleva más margen a propósito: Android recorta hasta un
+          // 20 % por lado para encajarlo en la forma del sistema, y con el
+          // recorte del normal se comería la vitela.
+          { src: 'icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          { src: 'favicon.svg', sizes: 'any', type: 'image/svg+xml' },
+        ],
       },
       workbox: {
         // El worker de pdf.js es un .mjs de 1,4 MB. Sin incluir la extensión y

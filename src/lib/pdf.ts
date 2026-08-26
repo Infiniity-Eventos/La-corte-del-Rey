@@ -7,7 +7,7 @@
  * volteo no se entrecorta.
  */
 import * as pdfjs from 'pdfjs-dist'
-import type { PDFDocumentProxy } from 'pdfjs-dist'
+import type { PageViewport, PDFDocumentProxy } from 'pdfjs-dist'
 import trabajador from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 
 pdfjs.GlobalWorkerOptions.workerSrc = trabajador
@@ -16,6 +16,8 @@ export interface Pagina {
   lienzo: HTMLCanvasElement
   ancho: number
   alto: number
+  /** Hace falta para colocar la capa de texto justo encima del dibujo. */
+  vista: PageViewport
 }
 
 const TOPE_CACHE = 6
@@ -102,9 +104,32 @@ export class Cuaderno {
     ctx.fillRect(0, 0, lienzo.width, lienzo.height)
 
     await pag.render({ canvasContext: ctx, viewport: vista, transform: [dpr, 0, 0, dpr, 0, 0] }).promise
-    pag.cleanup()
 
-    return { lienzo, ancho: vista.width, alto: vista.height }
+    return { lienzo, ancho: vista.width, alto: vista.height, vista }
+  }
+
+  /**
+   * Dibuja el texto invisible encima de la página, para poder seleccionarlo
+   * (R31 / P56). Solo funciona donde el PDF lleva texto de verdad; en un
+   * escaneado no hay nada que colocar y devuelve falso, que es lo que la
+   * interfaz necesita saber para decirlo con palabras.
+   */
+  async capaDeTexto(n: number, contenedor: HTMLElement): Promise<boolean> {
+    const p = this.cache.get(n)
+    if (!p) return false
+    const pag = await this.doc.getPage(n)
+    const contenido = await pag.getTextContent()
+    if (contenido.items.length === 0) return false
+
+    contenedor.replaceChildren()
+    contenedor.style.setProperty('--scale-factor', String(p.vista.scale))
+    const capa = new pdfjs.TextLayer({
+      textContentSource: contenido,
+      container: contenedor,
+      viewport: p.vista,
+    })
+    await capa.render()
+    return true
   }
 
   /** Prepara las vecinas sin bloquear nada. Si fallan, no pasa nada. */
