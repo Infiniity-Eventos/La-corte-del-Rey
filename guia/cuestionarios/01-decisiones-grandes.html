@@ -1,0 +1,601 @@
+<title>Cuestionario 1 · Decisiones Grandes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Karla:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+
+<style>
+  :root{
+    --ground:#E7E9F0;
+    --surface:#F8F9FC;
+    --sunken:#DFE2EC;
+    --ink:#14161E;
+    --ink-2:#474D5F;
+    --ink-3:#767D91;
+    --line:#CFD4E1;
+    --line-soft:#DFE3EC;
+    --brass:#8F6416;
+    --brass-ink:#6E4C0E;
+    --brass-wash:#F3E7CC;
+    --shadow:0 1px 2px rgba(20,22,30,.05);
+    --r:7px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ground:#0F1118;
+      --surface:#171A23;
+      --sunken:#12141C;
+      --ink:#E9EBF2;
+      --ink-2:#A9AFC1;
+      --ink-3:#798094;
+      --line:#2A2F3C;
+      --line-soft:#232833;
+      --brass:#D9A24E;
+      --brass-ink:#E8BC76;
+      --brass-wash:#2C2416;
+      --shadow:0 1px 2px rgba(0,0,0,.3);
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#0F1118;
+    --surface:#171A23;
+    --sunken:#12141C;
+    --ink:#E9EBF2;
+    --ink-2:#A9AFC1;
+    --ink-3:#798094;
+    --line:#2A2F3C;
+    --line-soft:#232833;
+    --brass:#D9A24E;
+    --brass-ink:#E8BC76;
+    --brass-wash:#2C2416;
+    --shadow:0 1px 2px rgba(0,0,0,.3);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    background:var(--ground);
+    color:var(--ink);
+    font-family:"Karla","Helvetica Neue",Arial,sans-serif;
+    font-size:16px;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:44rem;margin:0 auto;padding:0 1.25rem 8rem}
+
+  /* ---- barra superior ---- */
+  .bar{
+    position:sticky;top:0;z-index:20;
+    background:color-mix(in srgb, var(--ground) 88%, transparent);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line-soft);
+  }
+  .bar-in{
+    max-width:44rem;margin:0 auto;padding:.7rem 1.25rem;
+    display:flex;align-items:center;gap:1rem;justify-content:space-between;
+  }
+  .bar-name{
+    font-family:"JetBrains Mono",ui-monospace,monospace;
+    font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);
+  }
+  .bar-count{
+    font-family:"JetBrains Mono",ui-monospace,monospace;
+    font-size:.78rem;color:var(--ink-2);font-variant-numeric:tabular-nums;
+  }
+  .bar-count b{color:var(--brass-ink);font-weight:500}
+  .track{height:2px;background:var(--line-soft)}
+  .fill{height:2px;width:0%;background:var(--brass);transition:width .35s ease}
+
+  /* ---- portada ---- */
+  header.hero{padding:3.5rem 0 2.5rem}
+  .eyebrow{
+    font-family:"JetBrains Mono",ui-monospace,monospace;
+    font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--brass-ink);margin:0 0 1.1rem;
+  }
+  h1{
+    font-family:"Fraunces",Georgia,serif;
+    font-variation-settings:"SOFT" 30,"WONK" 1,"opsz" 100;
+    font-weight:600;
+    font-size:clamp(2.1rem,7vw,3.1rem);
+    line-height:1.05;letter-spacing:-.015em;
+    margin:0 0 1rem;text-wrap:balance;
+  }
+  .lede{color:var(--ink-2);font-size:1.02rem;margin:0 0 1.6rem;max-width:34rem}
+  .howto{
+    background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--r);
+    padding:1rem 1.1rem;font-size:.9rem;color:var(--ink-2);
+  }
+  .howto ul{margin:.4rem 0 0;padding-left:1.1rem}
+  .howto li{margin:.28rem 0}
+  .howto strong{color:var(--ink)}
+
+  /* ---- bloques ---- */
+  section.block{margin-top:3rem}
+  .block-head{
+    display:flex;align-items:baseline;gap:.85rem;
+    padding-bottom:.7rem;border-bottom:1px solid var(--line);
+    margin-bottom:1.6rem;
+  }
+  .block-letter{
+    font-family:"JetBrains Mono",ui-monospace,monospace;
+    font-size:.72rem;letter-spacing:.12em;color:var(--brass-ink);
+  }
+  .block-title{
+    font-family:"Fraunces",Georgia,serif;
+    font-variation-settings:"SOFT" 20,"opsz" 40;
+    font-weight:600;font-size:1.22rem;margin:0;letter-spacing:-.01em;
+  }
+  .block-note{font-size:.86rem;color:var(--ink-3);margin-left:auto;text-align:right}
+
+  /* ---- pregunta ---- */
+  .q{
+    background:var(--surface);
+    border:1px solid var(--line-soft);
+    border-radius:var(--r);
+    padding:1.15rem 1.15rem 1rem;
+    margin-bottom:1rem;
+    box-shadow:var(--shadow);
+  }
+  .q.answered{border-color:color-mix(in srgb, var(--brass) 40%, var(--line-soft))}
+  .q-head{display:flex;gap:.7rem;align-items:baseline;margin-bottom:.15rem}
+  .q-num{
+    font-family:"JetBrains Mono",ui-monospace,monospace;
+    font-size:.78rem;color:var(--ink-3);flex:none;padding-top:.1rem;
+    font-variant-numeric:tabular-nums;
+  }
+  .q.answered .q-num{color:var(--brass-ink)}
+  .q-title{font-size:1.02rem;font-weight:700;margin:0;line-height:1.35;text-wrap:balance}
+  .q-hint{
+    margin:.3rem 0 .9rem 1.48rem;font-size:.86rem;color:var(--ink-3);
+  }
+  .q-multi{
+    display:inline-block;
+    font-family:"JetBrains Mono",ui-monospace,monospace;
+    font-size:.63rem;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--brass-ink);background:var(--brass-wash);
+    padding:.14rem .42rem;border-radius:3px;margin-left:.5rem;vertical-align:.12em;
+  }
+  .opts{display:flex;flex-direction:column;gap:.4rem;margin-left:1.48rem}
+  .opt{
+    display:flex;gap:.65rem;align-items:flex-start;
+    border:1px solid var(--line-soft);border-radius:5px;
+    padding:.6rem .7rem;cursor:pointer;
+    background:var(--ground);
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .opt:hover{border-color:var(--line)}
+  .opt input{
+    appearance:none;-webkit-appearance:none;
+    width:1.05rem;height:1.05rem;flex:none;margin:.16rem 0 0;
+    border:1.5px solid var(--ink-3);background:transparent;
+    display:grid;place-content:center;cursor:pointer;
+  }
+  .opt input[type=radio]{border-radius:50%}
+  .opt input[type=checkbox]{border-radius:3px}
+  .opt input::after{
+    content:"";width:.5rem;height:.5rem;transform:scale(0);
+    transition:transform .12s ease;background:var(--brass);
+  }
+  .opt input[type=radio]::after{border-radius:50%}
+  .opt input:checked{border-color:var(--brass)}
+  .opt input:checked::after{transform:scale(1)}
+  .opt input:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+  .opt:has(input:checked){
+    border-color:var(--brass);
+    background:var(--brass-wash);
+  }
+  .opt-txt{font-size:.94rem;line-height:1.4}
+  .opt-txt em{display:block;font-style:normal;color:var(--ink-3);font-size:.83rem;margin-top:.12rem}
+
+  textarea{
+    width:100%;
+    font-family:"Karla",Arial,sans-serif;font-size:.92rem;line-height:1.5;
+    color:var(--ink);background:var(--sunken);
+    border:1px solid var(--line-soft);border-radius:5px;
+    padding:.6rem .7rem;resize:vertical;
+  }
+  textarea:focus{outline:2px solid var(--brass);outline-offset:1px;border-color:transparent}
+  textarea::placeholder{color:var(--ink-3)}
+  .free{margin-left:1.48rem}
+  .obs{margin:.75rem 0 0 1.48rem}
+  .obs-lbl{
+    display:block;
+    font-family:"JetBrains Mono",ui-monospace,monospace;
+    font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--ink-3);margin-bottom:.35rem;
+  }
+  .obs textarea{min-height:2.6rem}
+  .free textarea{min-height:4.5rem}
+
+  /* ---- cierre ---- */
+  .end{
+    margin-top:3rem;background:var(--surface);
+    border:1px solid var(--line);border-radius:var(--r);
+    padding:1.6rem 1.3rem;text-align:center;
+  }
+  .end h2{
+    font-family:"Fraunces",Georgia,serif;font-weight:600;
+    font-size:1.3rem;margin:0 0 .4rem;
+  }
+  .end p{color:var(--ink-2);font-size:.92rem;margin:0 auto 1.2rem;max-width:26rem}
+  button.copy{
+    font-family:"Karla",Arial,sans-serif;font-size:.98rem;font-weight:700;
+    color:var(--ground);background:var(--ink);
+    border:none;border-radius:6px;padding:.8rem 1.6rem;cursor:pointer;
+    transition:transform .12s ease, opacity .15s ease;
+  }
+  button.copy:hover{opacity:.88}
+  button.copy:active{transform:translateY(1px)}
+  button.copy:focus-visible{outline:2px solid var(--brass);outline-offset:3px}
+  button.copy.done{background:var(--brass);color:#14161E}
+  .end small{display:block;margin-top:.9rem;color:var(--ink-3);font-size:.8rem}
+
+  .float{
+    position:fixed;right:1rem;bottom:1rem;z-index:30;
+    font-family:"Karla",Arial,sans-serif;font-size:.88rem;font-weight:700;
+    color:var(--ground);background:var(--ink);
+    border:none;border-radius:999px;padding:.72rem 1.15rem;cursor:pointer;
+    box-shadow:0 4px 16px rgba(20,22,30,.22);
+  }
+  .float.done{background:var(--brass);color:#14161E}
+  .float:focus-visible{outline:2px solid var(--brass);outline-offset:3px}
+
+  #sink{position:fixed;left:-9999px;top:0;opacity:0}
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important}
+  }
+  @media (max-width:520px){
+    .opts,.obs,.free,.q-hint{margin-left:0}
+    .block-note{display:none}
+  }
+</style>
+
+<div class="bar">
+  <div class="bar-in">
+    <span class="bar-name">Cuestionario 01 · decisiones grandes</span>
+    <span class="bar-count"><b id="done">0</b>/<span id="total">0</span></span>
+  </div>
+  <div class="track"><div class="fill" id="fill"></div></div>
+</div>
+
+<div class="wrap">
+  <header class="hero">
+    <p class="eyebrow">Ronda 1 de N · lo que no se puede cambiar después</p>
+    <h1>Antes de escribir una sola línea</h1>
+    <p class="lede">Estas 21 preguntas deciden la arquitectura: en qué corre, dónde viven tus libros y cómo funciona el traductor. Todo lo demás (colores, animaciones, atajos) se decide en las rondas siguientes, ya sabiendo esto.</p>
+    <div class="howto">
+      <strong>Cómo llenarlo</strong>
+      <ul>
+        <li>Si una pregunta no te importa, déjala en blanco. <strong>No inventes.</strong> Vacío me dice "decide tú".</li>
+        <li>Si ninguna opción encaja, escríbelo en <strong>Observaciones</strong> — esa casilla manda sobre la opción marcada.</li>
+        <li>Al final: botón <strong>Copiar respuestas</strong> y me lo pegas en el chat.</li>
+        <li>Se guarda solo en este navegador; puedes cerrar y volver.</li>
+      </ul>
+    </div>
+  </header>
+
+  <main id="form"></main>
+
+  <div class="end">
+    <h2>Listo</h2>
+    <p>Copia y pega el resultado en el chat. Con eso escribo la Guía y armo el cuestionario 2, ya específico.</p>
+    <button class="copy" id="copy1">Copiar respuestas</button>
+    <small id="warn"></small>
+  </div>
+</div>
+
+<button class="float" id="copy2">Copiar</button>
+<textarea id="sink" aria-hidden="true" tabindex="-1"></textarea>
+
+<script>
+const BLOCKS = [
+  {
+    letter: "A", title: "Plataforma", note: "Dónde corre y cómo llega a tu mano",
+    qs: [
+      { id:"p1", t:"¿En qué aparatos tiene que funcionar de verdad?",
+        h:"El celular es seguro. Lo que decides aquí es cuánto esfuerzo va a lo demás.",
+        o:["Solo mi celular Android",
+           "Android + PC, con el mismo código",
+           "Cualquier navegador, sin instalar nada",
+           "Android + PC + iPhone algún día"] },
+      { id:"p2", t:"¿Cómo prefieres instalarla y actualizarla?",
+        o:["Se abre desde una dirección web y se instala como app (PWA). Se actualiza sola.|Lo más simple. No necesita tienda ni firmar nada.",
+           "Un APK que instalo a mano cada vez que haya cambios|Más control, más fricción en cada actualización.",
+           "Publicarla en Play Store|Cuenta de desarrollador, revisiones, esperas.",
+           "Me da igual: elige tú lo más simple de mantener"] },
+      { id:"p3", t:"¿Tiene que funcionar sin internet?",
+        h:"Aquí se decide si el traductor puede ser bueno o tiene que ser offline.",
+        o:["Todo offline, sin excepción",
+           "Leer siempre offline; traducir puede pedir internet",
+           "Puede necesitar internet casi siempre, no me molesta"] }
+    ]
+  },
+  {
+    letter: "B", title: "Biblioteca", note: "Qué abre y dónde vive",
+    qs: [
+      { id:"p4", t:"¿Qué formatos tiene que abrir?", multi:true,
+        h:"Cada formato es un motor distinto. Marca solo los que vas a usar de verdad.",
+        o:["PDF","EPUB","CBZ / CBR (cómic comprimido)","MOBI / AZW3 (Kindle)","Carpetas de imágenes sueltas (JPG/PNG)","TXT / Markdown"] },
+      { id:"p5", t:"¿Dónde viven los archivos?",
+        h:"En Android hay que darle permiso a una carpeta concreta; no puede pasearse por todo el teléfono.",
+        o:["En una carpeta del teléfono que yo elija; la app solo la lee|Tú mandas sobre los archivos. La app se adapta a lo que metas ahí.",
+           "Los importo una vez y la app los guarda en su propio almacén|Más rápido y ordenado, pero los archivos quedan dentro de la app.",
+           "Las dos cosas: que yo elija por libro"] },
+      { id:"p6", t:"¿Cuántos libros y cómics vas a tener ahí?",
+        h:"Define si hace falta un índice serio, miniaturas en caché y búsqueda.",
+        o:["Menos de 50","Entre 50 y 300","Entre 300 y 2000","Miles"] },
+      { id:"p7", t:"¿Quieres que se sincronice entre celular y PC?",
+        h:"Sincronizar de verdad obliga a una nube o un servidor. Lo dijiste al revés, pero lo confirmo.",
+        o:["No. Cada aparato por su lado.",
+           "Solo el progreso de lectura y las notas; los archivos los copio yo|Se puede hacer con un archivo que exportas/importas, sin nube.",
+           "Sí, todo automático|Requiere nube o servidor propio. Rompe el 'nada de nubes'."] }
+    ]
+  },
+  {
+    letter: "C", title: "Traductor", note: "El corazón de la app",
+    qs: [
+      { id:"p8", t:"¿Cómo quieres traducir, en concreto?", multi:true,
+        h:"Marca todo lo que usarías. Lo que marques define el motor.",
+        o:["Toco una palabra y sale su significado ahí mismo",
+           "Selecciono un párrafo y me lo traduce en una burbuja",
+           "Traduce la página entera respetando el diseño",
+           "Traduce el texto dentro de las viñetas de un cómic|Esto es OCR sobre imagen: es lo más caro y lo más frágil de todo.",
+           "Yo escribo o pego el texto en una burbuja y me responde|Lo que mencionaste. Es lo más fácil de hacer excelente.",
+           "Puedo preguntar '¿qué significa esto aquí?' y me lo explica en contexto"] },
+      { id:"p9", t:"¿De qué idiomas a cuál?", free:true,
+        h:"Ej.: inglés → español casi siempre; japonés a veces. Sé específico, cambia qué motor conviene." },
+      { id:"p10", t:"Si tuvieras que elegir una sola cosa del traductor, ¿cuál?",
+        o:["Calidad máxima, aunque necesite internet y cueste algo",
+           "Bueno y gratis, aunque a veces falle o tenga límites",
+           "Que funcione sin internet, aunque traduzca peor|Los modelos offline en celular son notablemente peores.",
+           "Híbrido: rápido siempre + botón 'traducir bien' cuando haya internet"] },
+      { id:"p11", t:"¿Aceptas pagar por uso de una API de traducción o IA?",
+        h:"Sin esto, el techo de calidad baja bastante. Es una respuesta legítima igual.",
+        o:["Sí, unos pocos dólares al mes","Sí, lo que haga falta si de verdad es bueno","Solo si hay capa gratuita generosa y no me pasa la factura de sorpresa","No. Cero costo, sin excepción."] },
+      { id:"p12", t:"¿Qué pasa con lo que traduces?", multi:true,
+        o:["Guardar palabras en una lista de vocabulario","Que recuerde traducciones ya hechas y no las vuelva a pedir","Repaso tipo tarjetas para memorizar","Nada. Traduzco, entiendo y sigo leyendo."] }
+    ]
+  },
+  {
+    letter: "D", title: "Lectura", note: "Qué significa 'cómodo' para ti",
+    qs: [
+      { id:"p13", t:"¿Cómo lees?", multi:true,
+        o:["Página a página, como un libro","Scroll continuo hacia abajo","Cómic: doble página horizontal","Cómic: dirección derecha → izquierda (manga)","Zoom y arrastre libre en PDF"] },
+      { id:"p14", t:"¿Qué necesitas para estar cómodo?", multi:true,
+        h:"Marca lo que usarías. Lo que no marques, no lo construyo: menos ajustes, app más ligera.",
+        o:["Temas: oscuro, sepia, papel","Tamaño y tipo de letra ajustables","Márgenes e interlineado ajustables","Control de brillo y temperatura dentro de la app","Modo sin distracciones (nada en pantalla salvo el texto)","Pasar página con los botones de volumen","Bloquear la rotación"] },
+      { id:"p15", t:"¿Anotaciones?", multi:true,
+        o:["Subrayar","Escribir notas","Marcadores","Que recuerde dónde quedé, automático","Estadísticas de lectura","Ninguna, no anoto nunca"] },
+      { id:"p16", t:"¿Lectura en voz alta?",
+        o:["Sí, importante","Estaría bien, pero no es prioridad","No"] }
+    ]
+  },
+  {
+    letter: "E", title: "Identidad y alcance", note: "Para quién es y cómo se siente",
+    qs: [
+      { id:"p17", t:"¿Es solo para ti?",
+        h:"Compartirla obliga a cuentas, permisos y privacidad. Es la diferencia entre un fin de semana y un mes.",
+        o:["Solo yo, un aparato","Solo yo, varios aparatos","Yo y dos o tres personas más","Quiero poder publicarla algún día"] },
+      { id:"p18", t:"¿Cómo se tiene que sentir? Referencias, apps que te gusten, palabras.", free:true,
+        h:"Dijiste 'estética, ligera, orgánica'. Dame algo concreto: una app, una portada, un color, algo que odies." },
+      { id:"p19", t:"Si hay que sacrificar algo, ¿qué se queda de primero?",
+        h:"Una sola. Esta respuesta desempata todas las decisiones que vengan después.",
+        o:["Que se sienta instantánea y ligera","Que el traductor sea excelente","Que sea bellísima","Que organice bien una biblioteca grande"] },
+      { id:"p20", t:"¿Cómo se va a llamar?", free:true,
+        h:"Si no tienes nombre, escribe 'propón' y te doy opciones en la ronda 2." },
+      { id:"p21", t:"El repositorio tiene la app vieja \"La corte del Rey\". ¿Qué hago con ella?",
+        o:["Borrar todo y empezar limpio|Recomendado. El historial de git conserva lo viejo igual.",
+           "Borrar, pero dejar una etiqueta o rama con lo viejo por si acaso",
+           "Dejarla en una carpeta aparte y trabajar al lado"] }
+    ]
+  }
+];
+
+const KEY = "lector-q1-v1";
+let state = {};
+try { state = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch(e) { state = {}; }
+
+const form = document.getElementById("form");
+let totalQs = 0;
+
+BLOCKS.forEach(function(b){
+  const sec = document.createElement("section");
+  sec.className = "block";
+  const head = document.createElement("div");
+  head.className = "block-head";
+  head.innerHTML = '<span class="block-letter">'+b.letter+'</span>'
+    + '<h2 class="block-title"></h2>'
+    + '<span class="block-note"></span>';
+  head.querySelector(".block-title").textContent = b.title;
+  head.querySelector(".block-note").textContent = b.note;
+  sec.appendChild(head);
+
+  b.qs.forEach(function(q){
+    totalQs++;
+    const n = q.id.slice(1);
+    const card = document.createElement("article");
+    card.className = "q";
+    card.dataset.qid = q.id;
+
+    const qh = document.createElement("div");
+    qh.className = "q-head";
+    const num = document.createElement("span");
+    num.className = "q-num";
+    num.textContent = "P" + n;
+    const title = document.createElement("h3");
+    title.className = "q-title";
+    title.textContent = q.t;
+    if (q.multi){
+      const tag = document.createElement("span");
+      tag.className = "q-multi";
+      tag.textContent = "varias";
+      title.appendChild(tag);
+    }
+    qh.appendChild(num); qh.appendChild(title);
+    card.appendChild(qh);
+
+    if (q.h){
+      const hint = document.createElement("p");
+      hint.className = "q-hint";
+      hint.textContent = q.h;
+      card.appendChild(hint);
+    }
+
+    if (q.free){
+      const wrap = document.createElement("div");
+      wrap.className = "free";
+      const ta = document.createElement("textarea");
+      ta.placeholder = "Tu respuesta…";
+      ta.dataset.role = "ans";
+      ta.dataset.qid = q.id;
+      ta.value = (state[q.id] && state[q.id].free) || "";
+      wrap.appendChild(ta);
+      card.appendChild(wrap);
+    } else {
+      const opts = document.createElement("div");
+      opts.className = "opts";
+      q.o.forEach(function(raw, i){
+        const parts = raw.split("|");
+        const label = document.createElement("label");
+        label.className = "opt";
+        const inp = document.createElement("input");
+        inp.type = q.multi ? "checkbox" : "radio";
+        inp.name = q.id;
+        inp.value = parts[0];
+        inp.dataset.role = "opt";
+        inp.dataset.qid = q.id;
+        const saved = (state[q.id] && state[q.id].sel) || [];
+        if (saved.indexOf(parts[0]) !== -1) inp.checked = true;
+        const txt = document.createElement("span");
+        txt.className = "opt-txt";
+        txt.textContent = parts[0];
+        if (parts[1]){
+          const em = document.createElement("em");
+          em.textContent = parts[1];
+          txt.appendChild(em);
+        }
+        label.appendChild(inp); label.appendChild(txt);
+        opts.appendChild(label);
+      });
+      card.appendChild(opts);
+    }
+
+    const obs = document.createElement("div");
+    obs.className = "obs";
+    const lbl = document.createElement("label");
+    lbl.className = "obs-lbl";
+    lbl.textContent = "Observaciones";
+    const ota = document.createElement("textarea");
+    ota.placeholder = "Matices, excepciones, \"ninguna de las anteriores\"…";
+    ota.dataset.role = "obs";
+    ota.dataset.qid = q.id;
+    ota.value = (state[q.id] && state[q.id].obs) || "";
+    lbl.setAttribute("for", q.id + "-obs");
+    ota.id = q.id + "-obs";
+    obs.appendChild(lbl); obs.appendChild(ota);
+    card.appendChild(obs);
+
+    sec.appendChild(card);
+  });
+
+  form.appendChild(sec);
+});
+
+document.getElementById("total").textContent = totalQs;
+
+function collect(){
+  const out = {};
+  document.querySelectorAll('input[data-role="opt"]').forEach(function(i){
+    if (!out[i.dataset.qid]) out[i.dataset.qid] = {sel:[], obs:"", free:""};
+    if (i.checked) out[i.dataset.qid].sel.push(i.value);
+  });
+  document.querySelectorAll('textarea[data-role="ans"]').forEach(function(t){
+    if (!out[t.dataset.qid]) out[t.dataset.qid] = {sel:[], obs:"", free:""};
+    out[t.dataset.qid].free = t.value.trim();
+  });
+  document.querySelectorAll('textarea[data-role="obs"]').forEach(function(t){
+    if (!out[t.dataset.qid]) out[t.dataset.qid] = {sel:[], obs:"", free:""};
+    out[t.dataset.qid].obs = t.value.trim();
+  });
+  return out;
+}
+
+function refresh(){
+  state = collect();
+  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e){}
+  let done = 0;
+  document.querySelectorAll(".q").forEach(function(card){
+    const s = state[card.dataset.qid] || {sel:[],obs:"",free:""};
+    const has = s.sel.length > 0 || s.free.length > 0 || s.obs.length > 0;
+    card.classList.toggle("answered", has);
+    if (has) done++;
+  });
+  document.getElementById("done").textContent = done;
+  document.getElementById("fill").style.width = (done / totalQs * 100) + "%";
+}
+
+form.addEventListener("change", refresh);
+form.addEventListener("input", refresh);
+refresh();
+
+function buildText(){
+  const s = collect();
+  const lines = ["CUESTIONARIO 1 — DECISIONES GRANDES", ""];
+  BLOCKS.forEach(function(b){
+    lines.push("== " + b.letter + ". " + b.title.toUpperCase() + " ==");
+    b.qs.forEach(function(q){
+      const a = s[q.id] || {sel:[],obs:"",free:""};
+      lines.push("P" + q.id.slice(1) + ". " + q.t);
+      if (q.free){
+        lines.push("R: " + (a.free || "(sin responder)"));
+      } else {
+        lines.push("R: " + (a.sel.length ? a.sel.join(" + ") : "(sin responder)"));
+      }
+      if (a.obs) lines.push("Obs: " + a.obs);
+      lines.push("");
+    });
+  });
+  return lines.join("\n");
+}
+
+function flash(btn, label){
+  const old = btn.textContent;
+  btn.textContent = label;
+  btn.classList.add("done");
+  setTimeout(function(){ btn.textContent = old; btn.classList.remove("done"); }, 2200);
+}
+
+function doCopy(btn){
+  const txt = buildText();
+  const warn = document.getElementById("warn");
+  function fallback(){
+    const sink = document.getElementById("sink");
+    sink.value = txt;
+    sink.style.left = "0";
+    sink.select();
+    let ok = false;
+    try { ok = document.execCommand("copy"); } catch(e){ ok = false; }
+    sink.style.left = "-9999px";
+    if (ok){ flash(btn, "Copiado ✓"); warn.textContent = ""; }
+    else {
+      warn.textContent = "El navegador bloqueó el copiado. Selecciona el texto de abajo a mano.";
+      sink.style.left = "0";
+      sink.style.position = "static";
+      sink.style.opacity = "1";
+      sink.style.minHeight = "12rem";
+      sink.setAttribute("aria-hidden","false");
+      sink.removeAttribute("tabindex");
+    }
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(function(){
+      flash(btn, "Copiado ✓");
+      warn.textContent = "";
+    }).catch(fallback);
+  } else fallback();
+}
+
+document.getElementById("copy1").addEventListener("click", function(){ doCopy(this); });
+document.getElementById("copy2").addEventListener("click", function(){ doCopy(this); });
+</script>
