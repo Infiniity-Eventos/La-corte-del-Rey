@@ -1,0 +1,588 @@
+<title>Cuestionario 2 · Cómo Funciona</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Karla:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+
+<style>
+  :root{
+    --ground:#E7E9F0; --surface:#F8F9FC; --sunken:#DFE2EC;
+    --ink:#14161E; --ink-2:#474D5F; --ink-3:#767D91;
+    --line:#CFD4E1; --line-soft:#DFE3EC;
+    --brass:#8F6416; --brass-ink:#6E4C0E; --brass-wash:#F3E7CC;
+    --alert:#8C2F2F; --alert-wash:#F6E2E2;
+    --shadow:0 1px 2px rgba(20,22,30,.05); --r:7px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ground:#0F1118; --surface:#171A23; --sunken:#12141C;
+      --ink:#E9EBF2; --ink-2:#A9AFC1; --ink-3:#798094;
+      --line:#2A2F3C; --line-soft:#232833;
+      --brass:#D9A24E; --brass-ink:#E8BC76; --brass-wash:#2C2416;
+      --alert:#E58B8B; --alert-wash:#2E1B1B;
+      --shadow:0 1px 2px rgba(0,0,0,.3);
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#0F1118; --surface:#171A23; --sunken:#12141C;
+    --ink:#E9EBF2; --ink-2:#A9AFC1; --ink-3:#798094;
+    --line:#2A2F3C; --line-soft:#232833;
+    --brass:#D9A24E; --brass-ink:#E8BC76; --brass-wash:#2C2416;
+    --alert:#E58B8B; --alert-wash:#2E1B1B;
+    --shadow:0 1px 2px rgba(0,0,0,.3);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:var(--ground);color:var(--ink);
+    font-family:"Karla","Helvetica Neue",Arial,sans-serif;
+    font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:44rem;margin:0 auto;padding:0 1.25rem 8rem}
+
+  .bar{position:sticky;top:0;z-index:20;
+    background:color-mix(in srgb, var(--ground) 88%, transparent);
+    backdrop-filter:blur(10px);border-bottom:1px solid var(--line-soft);}
+  .bar-in{max-width:44rem;margin:0 auto;padding:.7rem 1.25rem;
+    display:flex;align-items:center;gap:1rem;justify-content:space-between;}
+  .bar-name{font-family:"JetBrains Mono",ui-monospace,monospace;
+    font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);}
+  .bar-count{font-family:"JetBrains Mono",ui-monospace,monospace;
+    font-size:.78rem;color:var(--ink-2);font-variant-numeric:tabular-nums;}
+  .bar-count b{color:var(--brass-ink);font-weight:500}
+  .track{height:2px;background:var(--line-soft)}
+  .fill{height:2px;width:0%;background:var(--brass);transition:width .35s ease}
+
+  header.hero{padding:3.5rem 0 2.5rem}
+  .eyebrow{font-family:"JetBrains Mono",ui-monospace,monospace;
+    font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--brass-ink);margin:0 0 1.1rem;}
+  h1{font-family:"Fraunces",Georgia,serif;
+    font-variation-settings:"SOFT" 30,"WONK" 1,"opsz" 100;font-weight:600;
+    font-size:clamp(2.1rem,7vw,3.1rem);line-height:1.05;letter-spacing:-.015em;
+    margin:0 0 1rem;text-wrap:balance;}
+  .lede{color:var(--ink-2);font-size:1.02rem;margin:0 0 1.6rem;max-width:34rem}
+  .howto{background:var(--surface);border:1px solid var(--line-soft);
+    border-radius:var(--r);padding:1rem 1.1rem;font-size:.9rem;color:var(--ink-2);}
+  .howto ul{margin:.4rem 0 0;padding-left:1.1rem}
+  .howto li{margin:.28rem 0}
+  .howto strong{color:var(--ink)}
+
+  section.block{margin-top:3rem}
+  .block-head{display:flex;align-items:baseline;gap:.85rem;
+    padding-bottom:.7rem;border-bottom:1px solid var(--line);margin-bottom:1.6rem;}
+  .block-letter{font-family:"JetBrains Mono",ui-monospace,monospace;
+    font-size:.72rem;letter-spacing:.12em;color:var(--brass-ink);}
+  .block-title{font-family:"Fraunces",Georgia,serif;
+    font-variation-settings:"SOFT" 20,"opsz" 40;font-weight:600;
+    font-size:1.22rem;margin:0;letter-spacing:-.01em;}
+  .block-note{font-size:.86rem;color:var(--ink-3);margin-left:auto;text-align:right}
+
+  .intro{background:var(--surface);border:1px solid var(--line-soft);
+    border-radius:var(--r);padding:1.05rem 1.1rem;margin-bottom:1.3rem;
+    font-size:.9rem;color:var(--ink-2);}
+  .intro p{margin:0 0 .7rem}
+  .intro p:last-child{margin-bottom:0}
+  .intro strong{color:var(--ink)}
+  .scroller{overflow-x:auto;-webkit-overflow-scrolling:touch;
+    margin:.9rem -.35rem;padding:0 .35rem}
+  table{border-collapse:collapse;font-size:.82rem;min-width:33rem;width:100%}
+  th,td{text-align:left;padding:.45rem .6rem;border-bottom:1px solid var(--line-soft);
+    vertical-align:top}
+  thead th{font-family:"JetBrains Mono",ui-monospace,monospace;
+    font-size:.63rem;letter-spacing:.09em;text-transform:uppercase;
+    color:var(--ink-3);border-bottom:1px solid var(--line);white-space:nowrap}
+  tbody th{font-weight:700;color:var(--ink);white-space:nowrap}
+  td.no{color:var(--alert)}
+  td.si{color:var(--brass-ink)}
+  .fuente{font-size:.76rem;color:var(--ink-3);margin:.5rem 0 0}
+
+  .q{background:var(--surface);border:1px solid var(--line-soft);
+    border-radius:var(--r);padding:1.15rem 1.15rem 1rem;margin-bottom:1rem;
+    box-shadow:var(--shadow);}
+  .q.answered{border-color:color-mix(in srgb, var(--brass) 40%, var(--line-soft))}
+  .q.key{border-left:none}
+  .q-head{display:flex;gap:.7rem;align-items:baseline;margin-bottom:.15rem}
+  .q-num{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.78rem;
+    color:var(--ink-3);flex:none;padding-top:.1rem;font-variant-numeric:tabular-nums;}
+  .q.answered .q-num{color:var(--brass-ink)}
+  .q-title{font-size:1.02rem;font-weight:700;margin:0;line-height:1.35;text-wrap:balance}
+  .q-hint{margin:.3rem 0 .9rem 1.48rem;font-size:.86rem;color:var(--ink-3)}
+  .q-hint.warn{color:var(--alert);background:var(--alert-wash);
+    padding:.5rem .65rem;border-radius:5px}
+  .q-multi,.q-flag{display:inline-block;font-family:"JetBrains Mono",ui-monospace,monospace;
+    font-size:.63rem;letter-spacing:.1em;text-transform:uppercase;
+    padding:.14rem .42rem;border-radius:3px;margin-left:.5rem;vertical-align:.12em;}
+  .q-multi{color:var(--brass-ink);background:var(--brass-wash)}
+  .q-flag{color:var(--alert);background:var(--alert-wash)}
+
+  .opts{display:flex;flex-direction:column;gap:.4rem;margin-left:1.48rem}
+  .opt{display:flex;gap:.65rem;align-items:flex-start;
+    border:1px solid var(--line-soft);border-radius:5px;padding:.6rem .7rem;
+    cursor:pointer;background:var(--ground);
+    transition:border-color .15s ease, background .15s ease;}
+  .opt:hover{border-color:var(--line)}
+  .opt input{appearance:none;-webkit-appearance:none;width:1.05rem;height:1.05rem;
+    flex:none;margin:.16rem 0 0;border:1.5px solid var(--ink-3);background:transparent;
+    display:grid;place-content:center;cursor:pointer;}
+  .opt input[type=radio]{border-radius:50%}
+  .opt input[type=checkbox]{border-radius:3px}
+  .opt input::after{content:"";width:.5rem;height:.5rem;transform:scale(0);
+    transition:transform .12s ease;background:var(--brass);}
+  .opt input[type=radio]::after{border-radius:50%}
+  .opt input:checked{border-color:var(--brass)}
+  .opt input:checked::after{transform:scale(1)}
+  .opt input:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+  .opt:has(input:checked){border-color:var(--brass);background:var(--brass-wash)}
+  .opt-txt{font-size:.94rem;line-height:1.4}
+  .opt-txt em{display:block;font-style:normal;color:var(--ink-3);
+    font-size:.83rem;margin-top:.12rem}
+
+  textarea{width:100%;font-family:"Karla",Arial,sans-serif;font-size:.92rem;
+    line-height:1.5;color:var(--ink);background:var(--sunken);
+    border:1px solid var(--line-soft);border-radius:5px;padding:.6rem .7rem;resize:vertical;}
+  textarea:focus{outline:2px solid var(--brass);outline-offset:1px;border-color:transparent}
+  textarea::placeholder{color:var(--ink-3)}
+  .free{margin-left:1.48rem}
+  .obs{margin:.75rem 0 0 1.48rem}
+  .obs-lbl{display:block;font-family:"JetBrains Mono",ui-monospace,monospace;
+    font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--ink-3);margin-bottom:.35rem;}
+  .obs textarea{min-height:2.6rem}
+  .free textarea{min-height:4.5rem}
+
+  .end{margin-top:3rem;background:var(--surface);border:1px solid var(--line);
+    border-radius:var(--r);padding:1.6rem 1.3rem;text-align:center;}
+  .end h2{font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:1.3rem;margin:0 0 .4rem}
+  .end p{color:var(--ink-2);font-size:.92rem;margin:0 auto 1.2rem;max-width:26rem}
+  button.copy{font-family:"Karla",Arial,sans-serif;font-size:.98rem;font-weight:700;
+    color:var(--ground);background:var(--ink);border:none;border-radius:6px;
+    padding:.8rem 1.6rem;cursor:pointer;transition:transform .12s ease, opacity .15s ease;}
+  button.copy:hover{opacity:.88}
+  button.copy:active{transform:translateY(1px)}
+  button.copy:focus-visible{outline:2px solid var(--brass);outline-offset:3px}
+  button.copy.done{background:var(--brass);color:#14161E}
+  .end small{display:block;margin-top:.9rem;color:var(--ink-3);font-size:.8rem}
+
+  .float{position:fixed;right:1rem;bottom:1rem;z-index:30;
+    font-family:"Karla",Arial,sans-serif;font-size:.88rem;font-weight:700;
+    color:var(--ground);background:var(--ink);border:none;border-radius:999px;
+    padding:.72rem 1.15rem;cursor:pointer;box-shadow:0 4px 16px rgba(20,22,30,.22);}
+  .float.done{background:var(--brass);color:#14161E}
+  .float:focus-visible{outline:2px solid var(--brass);outline-offset:3px}
+
+  #sink{position:fixed;left:-9999px;top:0;opacity:0}
+
+  @media (prefers-reduced-motion: reduce){ *{transition:none !important} }
+  @media (max-width:520px){
+    .opts,.obs,.free,.q-hint{margin-left:0}
+    .block-note{display:none}
+  }
+</style>
+
+<div class="bar">
+  <div class="bar-in">
+    <span class="bar-name">Cuestionario 02 · cómo funciona</span>
+    <span class="bar-count"><b id="done">0</b>/<span id="total">0</span></span>
+  </div>
+  <div class="track"><div class="fill" id="fill"></div></div>
+</div>
+
+<div class="wrap">
+  <header class="hero">
+    <p class="eyebrow">Ronda 2 · el traductor, los archivos y el orden</p>
+    <h1>Ahora lo que de verdad cuesta</h1>
+    <p class="lede">Con tus respuestas ya está fijada la plataforma: una app web instalable, solo PDF, sin servidor y sin costo. Lo que queda son tres nudos: cómo traducir gratis de verdad, cómo no perder tu biblioteca, y qué significa "organizar bien". Antes de cada bloque te dejo los datos que verifiqué, para que decidas con números y no con intuiciones.</p>
+    <div class="howto">
+      <strong>Dos avisos antes de empezar</strong>
+      <ul>
+        <li>Hay preguntas marcadas <strong>clave</strong>: si esas quedan en blanco, no puedo avanzar sin adivinar.</li>
+        <li>Encontré una <strong>contradicción</strong> entre dos respuestas tuyas de la ronda 1 (P23). No es un reproche: la pregunta estaba mal calibrada de mi parte.</li>
+        <li>Lo demás igual que antes: en blanco significa "decide tú", y <strong>Observaciones</strong> manda sobre la opción marcada.</li>
+      </ul>
+    </div>
+  </header>
+
+  <main id="form"></main>
+
+  <div class="end">
+    <h2>Listo</h2>
+    <p>Copia y pega el resultado en el chat. Con esto cierro la arquitectura y el cuestionario 3 ya es solo estética: animación de página, gestos, temas y tipografía.</p>
+    <button class="copy" id="copy1">Copiar respuestas</button>
+    <small id="warn"></small>
+  </div>
+</div>
+
+<button class="float" id="copy2">Copiar</button>
+<textarea id="sink" aria-hidden="true" tabindex="-1"></textarea>
+
+<script>
+const BLOCKS = [
+  {
+    letter:"F", title:"Confirmaciones y un desempate", note:"Lo que ya di por decidido",
+    intro:'<p>Con las respuestas de la ronda 1 di por cerradas cinco cosas. Te las enseño para que las vetes ahora, que sale gratis, y no dentro de dos semanas.</p>'
+      +'<p><strong>App web instalable</strong> (se abre en Chrome de Android y de Fedora, se instala con su icono, se actualiza sola, sin tienda y sin APK). <strong>Solo PDF.</strong> <strong>Los archivos se copian al almacén de la app</strong> al importarlos. <strong>Sin servidor, sin nube y sin cuentas.</strong> <strong>Se borra la app vieja</strong> (ya está hecho; el historial de git la conserva).</p>',
+    qs:[
+      { id:"p22", t:"¿Vas con ese plan técnico?", key:true,
+        o:["Sí, adelante|Es lo único que cumple a la vez: Android + PC, cero costo y cero mantenimiento.",
+           "Sí, pero explícame primero qué pierdo respecto a una app normal",
+           "No: prefiero un APK que instalo a mano",
+           "No: prefiero programa de escritorio para Fedora y otra cosa para el celular"] },
+      { id:"p23", t:"Desempate: dos respuestas tuyas se contradicen.", key:true, flag:"contradicción",
+        h:"En P19 dijiste que si hay que sacrificar algo, lo primero que se salva es «que organice bien una biblioteca grande». Pero en P6 dijiste que vas a tener menos de 50 libros. Con 50 libros, organizar es trivial: cualquier lista ordenada sirve. La pregunta estaba mal planteada de mi parte. Elige de nuevo, sabiendo eso.",
+        o:["Me refería a que el orden se sienta impecable, aunque sean pocos libros|Vale como respuesta. Significa: cuidar el detalle, no construir un gestor pesado.",
+           "En realidad voy a tener bastantes más de 50|Cambia el diseño de la biblioteca: hace falta índice, búsqueda y miniaturas en caché.",
+           "Me equivoqué: lo primero que se salva es que se sienta ligera e instantánea",
+           "Me equivoqué: lo primero que se salva es el traductor",
+           "Me equivoqué: lo primero que se salva es que sea bellísima"] },
+      { id:"p24", t:"Solo PDF en la primera versión. ¿Se sostiene?",
+        h:"No es cerrar la puerta: la arquitectura deja EPUB y cómics para después. Es saber si los necesitas en los próximos meses o no.",
+        o:["Sí, solo PDF y ya veremos",
+           "Solo PDF ahora, pero sé que voy a querer EPUB pronto",
+           "Solo PDF ahora, pero sé que voy a querer cómics (CBZ) pronto",
+           "Necesito más de un formato desde el principio"] }
+    ]
+  },
+  {
+    letter:"G", title:"El traductor", note:"El nudo del proyecto",
+    intro:'<p>Dijiste <strong>traductor bueno</strong> y <strong>cero costo, sin excepción</strong>. Eso deja pocas salidas, y una que parecía perfecta se cayó al verificarla: el traductor que Chrome trae dentro es gratis, ilimitado y funciona sin internet… <strong>pero no existe en Chrome de Android</strong>, que es tu aparato principal. Solo funciona en PC, y encima pide 22 GB libres y 16 GB de RAM.</p>'
+      +'<p>Esto es lo que hay de verdad, verificado este mes:</p>'
+      +'<div class="scroller"><table>'
+      +'<thead><tr><th>Motor</th><th>Gratis</th><th>Clave</th><th>Tarjeta</th><th>Calidad</th><th>El pero</th></tr></thead>'
+      +'<tbody>'
+      +'<tr><th>Gemini</th><td>1.000 peticiones al día <em>por persona</em></td><td>sí, gratuita</td><td class="si">no</td><td>muy alta, y explica en contexto</td><td>Google recortó cuotas sin avisar en diciembre de 2025</td></tr>'
+      +'<tr><th>MyMemory</th><td>5.000 caracteres/día sin registro; 50.000 con email</td><td class="si">no</td><td class="si">no</td><td>media e irregular</td><td>tope de 500 bytes por petición: hay que trocear</td></tr>'
+      +'<tr><th>Chrome interno</th><td>ilimitado, sin internet</td><td class="si">no</td><td class="si">no</td><td>alta</td><td class="no">no existe en Android</td></tr>'
+      +'<tr><th>Google Cloud</th><td>500.000 caract./mes</td><td>sí</td><td class="no">sí</td><td>alta</td><td class="no">exige tarjeta</td></tr>'
+      +'<tr><th>DeepL</th><td>1.000.000 caract. <em>una sola vez</em></td><td>sí</td><td>depende</td><td>muy alta</td><td class="no">se agota y no se renueva</td></tr>'
+      +'<tr><th>LibreTranslate</th><td>gratis si lo alojas tú</td><td class="si">no</td><td class="si">no</td><td>media</td><td class="no">exige un servidor que mantener</td></tr>'
+      +'</tbody></table></div>'
+      +'<p class="fuente">Fuentes: documentación de Chrome for Developers, límites de uso de MyMemory, comparativa de APIs gratuitas 2026 y límites del nivel gratuito de Gemini.</p>',
+    qs:[
+      { id:"p25", t:"Sabiendo eso, ¿qué motor usamos?", key:true,
+        h:"«Clave gratuita» significa: entras a una página de Google, pulsas un botón, copias un código largo y lo pegas una vez en los ajustes de la app. Cinco minutos, sin tarjeta, sin suscripción. Cada persona usa la suya, así que nadie se come la cuota de nadie.",
+        o:["Gemini con clave propia|Lo mejor con diferencia: traduce bien, entiende el contexto y son 1.000 consultas diarias por persona. El precio es pegar la clave una vez.",
+           "MyMemory, sin registro de nada|Funciona nada más abrir la app, sin configurar. A cambio: traduce peor y son 5.000 caracteres al día, unas 8 páginas de texto.",
+           "Los dos: MyMemory por defecto, y si pego una clave sube a Gemini automáticamente|Más trabajo de mi parte, pero nunca te quedas sin traductor.",
+           "El de Chrome en el PC y MyMemory en el celular|Aprovecha lo gratis-ilimitado en PC, pero son dos comportamientos distintos según el aparato.",
+           "Decide tú por mí"] },
+      { id:"p26", t:"¿Te molesta pegar una clave gratuita una sola vez?",
+        h:"Es la diferencia entre un traductor bueno y uno regular. Si dices que sí, te dejo la instrucción paso a paso dentro de la app.",
+        o:["No me molesta, lo hago sin problema",
+           "Lo hago si me guías con instrucciones dentro de la app",
+           "Preferiría que no, pero lo aguanto si es la única forma de que traduzca bien",
+           "No. La app tiene que funcionar sin configurar nada."] },
+      { id:"p27", t:"¿Y las otras 2 o 3 personas?",
+        h:"Si el motor lleva clave, cada quien necesita la suya, o compartes la tuya y comparten la cuota.",
+        o:["Cada quien pone la suya; yo les explico",
+           "Que usen la versión sin clave y yo uso la buena",
+           "Comparto mi clave con ellos|Compartir la cuota de 1.000 al día entre 4 personas. Suele alcanzar, pero se puede agotar.",
+           "En realidad ellos casi no van a traducir"] },
+      { id:"p28", t:"¿Qué quieres que te devuelva la burbuja?", multi:true,
+        h:"Marca todo lo que te sirva. Con Gemini todo esto es posible; con MyMemory solo lo primero.",
+        o:["La traducción literal, sin adornos",
+           "Una traducción natural, como lo diría un hispanohablante",
+           "Una explicación de qué significa en ese contexto",
+           "Si es una sola palabra: su significado, cómo se pronuncia y un ejemplo",
+           "Un aviso cuando sea un modismo o un juego de palabras que no traduce directo",
+           "Las dos versiones a la vez: literal y natural"] },
+      { id:"p29", t:"¿Cómo llega el texto a la burbuja?", multi:true, key:true,
+        h:"Dijiste «yo escribo o pego». Si el PDF tiene texto seleccionable, seleccionar con el dedo es mucho más cómodo que copiar a mano, y cuesta lo mismo programarlo.",
+        o:["Selecciono con el dedo o el mouse sobre la página y aparece un botón de traducir",
+           "Copio y pego a mano en la burbuja|Lo que pediste. Siempre funciona, incluso con escaneos.",
+           "Escribo a mano la palabra o frase que no entiendo",
+           "Un botón flotante que abre la burbuja en cualquier momento",
+           "Que la burbuja recuerde lo último que traduje al volver a abrirla"] },
+      { id:"p30", t:"Tus PDF: ¿son texto de verdad o escaneos?", key:true, flag:"crítica",
+        h:"Un PDF hecho desde un archivo digital tiene texto seleccionable. Un libro escaneado o fotografiado es solo imágenes: no se puede seleccionar ni copiar nada, y traducirlo exigiría OCR, que descartamos. Si no estás seguro: abre uno e intenta seleccionar una palabra con el dedo.",
+        o:["Casi todos tienen texto seleccionable",
+           "Casi todos son escaneos o imágenes",
+           "Mezcla de los dos",
+           "No estoy seguro|Dímelo en observaciones y lo comprobamos juntos antes de construir nada."] },
+      { id:"p31", t:"Si se acaba la cuota del día, ¿qué debe hacer la app?",
+        o:["Avisarme claramente y decirme cuándo se renueva",
+           "Cambiar sola al motor de repuesto, aunque traduzca peor",
+           "Dejarme pegar otra clave en ese momento",
+           "Guardar lo que quería traducir y reintentarlo cuando vuelva la cuota"] },
+      { id:"p32", t:"La lista de vocabulario: ¿qué guarda cada entrada?", multi:true,
+        o:["La palabra o frase y su traducción",
+           "La frase completa donde apareció",
+           "De qué libro y qué página salió",
+           "Una nota mía",
+           "La fecha",
+           "Poder exportarla a un archivo para estudiarla en otro lado"] }
+    ]
+  },
+  {
+    letter:"H", title:"Archivos, respaldo y las otras personas",
+    note:"Dónde vive todo y qué pasa si se rompe",
+    intro:'<p>Elegiste que la app guarde los archivos en su propio almacén. Es lo correcto para que funcione igual en Android y en PC, pero tiene un filo: <strong>ese almacén es del navegador</strong>. Si borras los datos de navegación, desinstalas la app o cambias de teléfono, <strong>la biblioteca se va con ellos</strong>. Se puede pedir al sistema que la proteja del borrado automático, y lo haré, pero eso no te protege de un borrado manual.</p>',
+    qs:[
+      { id:"p33", t:"¿Cómo nos protegemos de perder la biblioteca?", key:true,
+        o:["Un botón de respaldo que genera un archivo con todo, y yo lo guardo donde quiera|Cero servidores, control total. Tú decides cuándo.",
+           "Igual, pero que la app me lo recuerde cada cierto tiempo",
+           "Que solo respalde el progreso y el vocabulario; los PDF los tengo yo aparte de todas formas",
+           "Asumo el riesgo, no quiero complicaciones"] },
+      { id:"p34", t:"«Yo y dos o tres personas más»: ¿qué significa exactamente?", key:true,
+        h:"Esta respuesta decide si la app necesita servidor y cuentas, o ninguna de las dos cosas.",
+        o:["Cada quien instala la app y mete sus propios libros; no compartimos nada|Sin servidor, sin cuentas, sin costo. Lo más simple con diferencia.",
+           "Compartimos los mismos libros: yo les paso los archivos y ellos los importan|También sin servidor. Compartes por WhatsApp o USB, como cualquier archivo.",
+           "Queremos una biblioteca común de verdad, que se actualice sola|Esto sí exige servidor y cuentas. Rompe el «sin nubes» y multiplica el trabajo.",
+           "Usamos el mismo aparato y queremos progresos separados"] },
+      { id:"p35", t:"El progreso de lectura entre celular y PC: ¿cómo lo pasamos?",
+        h:"Pediste sincronizar progreso y notas. Sin servidor, la forma honesta es un archivo que exportas de un lado e importas del otro.",
+        o:["Con el mismo archivo de respaldo: lo exporto y lo importo",
+           "Con un código QR que muestro en un aparato y escaneo en el otro|Bonito y sin servidor, pero solo sirve para datos pequeños.",
+           "Pensándolo bien, no lo necesito: leo en el celular y ya",
+           "Quiero que se sincronice solo, aunque haya que usar un servicio gratuito de terceros"] },
+      { id:"p36", t:"¿Cuánto pesan tus PDF normalmente?",
+        h:"Define cuánto espacio hay que reservar y si hace falta comprimir o trocear al importar.",
+        o:["Menos de 10 MB casi siempre","Entre 10 y 50 MB","Más de 50 MB con frecuencia","Ni idea"] },
+      { id:"p37", t:"¿Qué pasa cuando importas un PDF que ya está en la biblioteca?",
+        o:["Que me avise y no lo duplique",
+           "Que lo reemplace y conserve mi progreso",
+           "Que lo meta igual, ya lo borro yo si sobra"] }
+    ]
+  },
+  {
+    letter:"I", title:"La biblioteca", note:"Qué ves al abrir la app",
+    intro:'<p>Aquí se decide la primera pantalla, que es la que más vas a ver. Dijiste que el orden importa, así que voy al detalle.</p>',
+    qs:[
+      { id:"p38", t:"¿Cómo quieres agrupar los libros?", multi:true,
+        h:"Marca solo lo que usarías de verdad. Cada forma de agrupar es un mueble más en la pantalla.",
+        o:["Colecciones que yo creo y nombro","Etiquetas que puedo poner y quitar","Por autor","Por estado: sin empezar, leyendo, terminado","Por lo último que abrí","Nada: una sola lista bien ordenada"] },
+      { id:"p39", t:"¿Qué ves nada más abrir la app?", key:true,
+        o:["Lo que estoy leyendo ahora, grande y arriba; el resto de la biblioteca debajo|Va directo a lo que haces el 90% de las veces: seguir leyendo.",
+           "Una rejilla de portadas, como una estantería",
+           "Una lista compacta con título, autor y progreso",
+           "Que abra directamente el libro que estaba leyendo|Lo más rápido posible, pero pierdes de vista la biblioteca.",
+           "Decide tú"] },
+      { id:"p40", t:"Las portadas",
+        o:["Que use la primera página del PDF automáticamente",
+           "Que use la primera página, pero yo pueda cambiarla por una imagen mía",
+           "Que yo elija siempre la imagen",
+           "Sin portadas: prefiero solo texto|Más ligero y más sobrio, pero una estantería sin portadas cuesta más de reconocer."] },
+      { id:"p41", t:"¿Buscador?", multi:true,
+        o:["Buscar por título y autor","Buscar dentro del texto del libro abierto","Buscar en todos los libros a la vez","Buscar en mi lista de vocabulario","No hace falta buscador"] },
+      { id:"p42", t:"El título y el autor de cada libro: ¿quién los pone?",
+        h:"Muchos PDF traen esos datos mal o vacíos, y el nombre del archivo suele ser un desastre.",
+        o:["La app los saca del PDF y yo corrijo lo que esté mal",
+           "Los escribo yo siempre, quiero control total",
+           "La app los adivina del nombre del archivo y yo corrijo",
+           "Me da igual, con el nombre del archivo me basta"] }
+    ]
+  },
+  {
+    letter:"J", title:"El nombre", note:"Con Infiniity, como pediste",
+    intro:'<p>Cinco propuestas. Todas parten de que la app es un sitio donde el libro se apoya y se lee, no un almacén.</p>'
+      +'<p><strong>Atril</strong> es el mueble inclinado donde se apoya un libro abierto para leerlo de pie: es castellano, es concreto y casi nadie lo usa como nombre de producto. <strong>Folio</strong> es la hoja de un libro, y es la palabra que usan las imprentas: suena profesional en cualquier idioma. <strong>Códex</strong> es el primer formato de libro con páginas cosidas, el que sustituyó al rollo: tiene peso y suena técnico. <strong>Margen</strong> es el espacio en blanco donde se anota y se traduce, que es justo lo que hace tu app. <strong>Vellum</strong> es la vitela, la piel fina donde se escribían los manuscritos: es el más elegante y el menos castellano.</p>',
+    qs:[
+      { id:"p43", t:"¿Cuál?",
+        o:["Infiniity Atril","Infiniity Folio","Infiniity Códex","Infiniity Margen","Infiniity Vellum","Ninguno: propón otra tanda","Tengo uno propio (lo escribo en observaciones)"] }
+    ]
+  }
+];
+
+const KEY = "lector-q2-v1";
+let state = {};
+try { state = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch(e) { state = {}; }
+
+const form = document.getElementById("form");
+let totalQs = 0;
+
+BLOCKS.forEach(function(b){
+  const sec = document.createElement("section");
+  sec.className = "block";
+  const head = document.createElement("div");
+  head.className = "block-head";
+  head.innerHTML = '<span class="block-letter">'+b.letter+'</span>'
+    + '<h2 class="block-title"></h2><span class="block-note"></span>';
+  head.querySelector(".block-title").textContent = b.title;
+  head.querySelector(".block-note").textContent = b.note || "";
+  sec.appendChild(head);
+
+  if (b.intro){
+    const box = document.createElement("div");
+    box.className = "intro";
+    box.innerHTML = b.intro;
+    sec.appendChild(box);
+  }
+
+  b.qs.forEach(function(q){
+    totalQs++;
+    const card = document.createElement("article");
+    card.className = "q" + (q.key ? " key" : "");
+    card.dataset.qid = q.id;
+
+    const qh = document.createElement("div");
+    qh.className = "q-head";
+    const num = document.createElement("span");
+    num.className = "q-num";
+    num.textContent = "P" + q.id.slice(1);
+    const title = document.createElement("h3");
+    title.className = "q-title";
+    title.textContent = q.t;
+    if (q.multi){
+      const tag = document.createElement("span");
+      tag.className = "q-multi"; tag.textContent = "varias";
+      title.appendChild(tag);
+    }
+    if (q.key && !q.flag){
+      const tag = document.createElement("span");
+      tag.className = "q-flag"; tag.textContent = "clave";
+      title.appendChild(tag);
+    }
+    if (q.flag){
+      const tag = document.createElement("span");
+      tag.className = "q-flag"; tag.textContent = q.flag;
+      title.appendChild(tag);
+    }
+    qh.appendChild(num); qh.appendChild(title);
+    card.appendChild(qh);
+
+    if (q.h){
+      const hint = document.createElement("p");
+      hint.className = "q-hint" + (q.flag ? " warn" : "");
+      hint.textContent = q.h;
+      card.appendChild(hint);
+    }
+
+    if (q.free){
+      const wrap = document.createElement("div");
+      wrap.className = "free";
+      const ta = document.createElement("textarea");
+      ta.placeholder = "Tu respuesta…";
+      ta.dataset.role = "ans"; ta.dataset.qid = q.id;
+      ta.value = (state[q.id] && state[q.id].free) || "";
+      wrap.appendChild(ta); card.appendChild(wrap);
+    } else {
+      const opts = document.createElement("div");
+      opts.className = "opts";
+      q.o.forEach(function(raw){
+        const parts = raw.split("|");
+        const label = document.createElement("label");
+        label.className = "opt";
+        const inp = document.createElement("input");
+        inp.type = q.multi ? "checkbox" : "radio";
+        inp.name = q.id; inp.value = parts[0];
+        inp.dataset.role = "opt"; inp.dataset.qid = q.id;
+        const saved = (state[q.id] && state[q.id].sel) || [];
+        if (saved.indexOf(parts[0]) !== -1) inp.checked = true;
+        const txt = document.createElement("span");
+        txt.className = "opt-txt";
+        txt.textContent = parts[0];
+        if (parts[1]){
+          const em = document.createElement("em");
+          em.textContent = parts[1];
+          txt.appendChild(em);
+        }
+        label.appendChild(inp); label.appendChild(txt);
+        opts.appendChild(label);
+      });
+      card.appendChild(opts);
+    }
+
+    const obs = document.createElement("div");
+    obs.className = "obs";
+    const lbl = document.createElement("label");
+    lbl.className = "obs-lbl"; lbl.textContent = "Observaciones";
+    const ota = document.createElement("textarea");
+    ota.placeholder = "Matices, excepciones, \"ninguna de las anteriores\"…";
+    ota.dataset.role = "obs"; ota.dataset.qid = q.id;
+    ota.value = (state[q.id] && state[q.id].obs) || "";
+    ota.id = q.id + "-obs";
+    lbl.setAttribute("for", q.id + "-obs");
+    obs.appendChild(lbl); obs.appendChild(ota);
+    card.appendChild(obs);
+
+    sec.appendChild(card);
+  });
+
+  form.appendChild(sec);
+});
+
+document.getElementById("total").textContent = totalQs;
+
+function collect(){
+  const out = {};
+  function slot(id){ if(!out[id]) out[id] = {sel:[], obs:"", free:""}; return out[id]; }
+  document.querySelectorAll('input[data-role="opt"]').forEach(function(i){
+    const s = slot(i.dataset.qid);
+    if (i.checked) s.sel.push(i.value);
+  });
+  document.querySelectorAll('textarea[data-role="ans"]').forEach(function(t){
+    slot(t.dataset.qid).free = t.value.trim();
+  });
+  document.querySelectorAll('textarea[data-role="obs"]').forEach(function(t){
+    slot(t.dataset.qid).obs = t.value.trim();
+  });
+  return out;
+}
+
+function refresh(){
+  state = collect();
+  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e){}
+  let done = 0;
+  document.querySelectorAll(".q").forEach(function(card){
+    const s = state[card.dataset.qid] || {sel:[],obs:"",free:""};
+    const has = s.sel.length > 0 || s.free.length > 0 || s.obs.length > 0;
+    card.classList.toggle("answered", has);
+    if (has) done++;
+  });
+  document.getElementById("done").textContent = done;
+  document.getElementById("fill").style.width = (done / totalQs * 100) + "%";
+}
+
+form.addEventListener("change", refresh);
+form.addEventListener("input", refresh);
+refresh();
+
+function buildText(){
+  const s = collect();
+  const lines = ["CUESTIONARIO 2 — CÓMO FUNCIONA", ""];
+  BLOCKS.forEach(function(b){
+    lines.push("== " + b.letter + ". " + b.title.toUpperCase() + " ==");
+    b.qs.forEach(function(q){
+      const a = s[q.id] || {sel:[],obs:"",free:""};
+      lines.push("P" + q.id.slice(1) + ". " + q.t);
+      if (q.free) lines.push("R: " + (a.free || "(sin responder)"));
+      else lines.push("R: " + (a.sel.length ? a.sel.join(" + ") : "(sin responder)"));
+      if (a.obs) lines.push("Obs: " + a.obs);
+      lines.push("");
+    });
+  });
+  return lines.join("\n");
+}
+
+function flash(btn, label){
+  const old = btn.textContent;
+  btn.textContent = label; btn.classList.add("done");
+  setTimeout(function(){ btn.textContent = old; btn.classList.remove("done"); }, 2200);
+}
+
+function doCopy(btn){
+  const txt = buildText();
+  const warn = document.getElementById("warn");
+  function fallback(){
+    const sink = document.getElementById("sink");
+    sink.value = txt; sink.style.left = "0"; sink.select();
+    let ok = false;
+    try { ok = document.execCommand("copy"); } catch(e){ ok = false; }
+    sink.style.left = "-9999px";
+    if (ok){ flash(btn, "Copiado ✓"); warn.textContent = ""; }
+    else {
+      warn.textContent = "El navegador bloqueó el copiado. Selecciona a mano el texto de abajo.";
+      sink.style.position = "static"; sink.style.left = "0"; sink.style.opacity = "1";
+      sink.style.minHeight = "12rem";
+      sink.setAttribute("aria-hidden","false"); sink.removeAttribute("tabindex");
+    }
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(function(){
+      flash(btn, "Copiado ✓"); warn.textContent = "";
+    }).catch(fallback);
+  } else fallback();
+}
+
+document.getElementById("copy1").addEventListener("click", function(){ doCopy(this); });
+document.getElementById("copy2").addEventListener("click", function(){ doCopy(this); });
+</script>
