@@ -397,6 +397,13 @@ El orden lo fijó P80: **leer antes que nada**.
 Las respuestas están en `guia/respuestas/`. Los prompts para generar el icono y
 las portadas, en `guia/prompts/`.
 
+### Páginas de trabajo
+
+| Página | Para qué | Archivo |
+|---|---|---|
+| Prompts | El icono y las portadas, listos para copiar | `guia/paginas/prompts.html` |
+| Instalación | Paso a paso de los dos proyectos de Google, con casillas | `guia/paginas/instalacion.html` |
+
 ## 9. Hallazgos al construir
 
 Cosas que solo aparecen escribiendo el código, y que cambian cómo hay que
@@ -492,3 +499,8 @@ construir lo que viene:
   para portadas que ya traen el título). Llega el icono definitivo: se le quita
   la marca del generador, se recorta y se reduce de 422 kB a 84 sin que se note.
   27 comprobaciones más, con la API de Gemini simulada para no gastar cuota.
+- **2026-08-26** — Se escribe la guía de instalación (`guia/paginas/instalacion.html`):
+  los dos proyectos de Google separados, Blaze, la alerta de presupuesto y qué
+  se manda por el chat y qué no. Queda por escrito una cosa que conviene no
+  olvidar: **un presupuesto de Google avisa pero no corta**. El corte de verdad
+  es un proceso aparte que se monta en el hito 4.
