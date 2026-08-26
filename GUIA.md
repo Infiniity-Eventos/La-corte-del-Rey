@@ -4,7 +4,7 @@ Documento vivo del proyecto. Todo lo que se decide queda aquí, y de aquí salen
 los parámetros para construir la app. Si algo no está en esta Guía, no está
 decidido.
 
-- **Estado:** Guía cerrada. En construcción — hito 1: leer.
+- **Estado:** Guía cerrada. **Hito 1 (leer) terminado y verificado.**
 - **Última actualización:** 2026-08-26
 - **Nombre:** **Infiniity Vellum** (P43)
 
@@ -364,7 +364,7 @@ El orden lo fijó P80: **leer antes que nada**.
 
 | Hito | Qué incluye | Estado |
 |---|---|---|
-| **1 · Leer** | Importar un PDF, guardarlo en el aparato, pasar páginas con el volteo de libro, sonido y vibración, número de página y progreso, saltar a una página, los tres temas, modo sin distracciones | **en curso** |
+| **1 · Leer** | Importar un PDF, guardarlo en el aparato, pasar páginas con el volteo de libro, sonido y vibración, número de página y progreso, saltar a una página, los tres temas, modo sin distracciones | **hecho** · 20 comprobaciones en `pruebas/` |
 | 2 · Biblioteca | Títulos, etiquetas, portadas tipográficas, buscador, "seguir leyendo", detección de repetidos | pendiente |
 | 3 · Traductor | La barra de abajo, Gemini con clave propia, pestañas, vocabulario, selección de texto donde el PDF lo permita | pendiente |
 | 4 · Nube | Sesión con Google, Firestore, subida de PDF con la regla de wifi, tope de facturación | pendiente |
@@ -373,7 +373,31 @@ El orden lo fijó P80: **leer antes que nada**.
 Las respuestas están en `guia/respuestas/`. Los prompts para generar el icono y
 las portadas, en `guia/prompts/`.
 
-## 9. Bitácora
+## 9. Hallazgos al construir
+
+Cosas que solo aparecen escribiendo el código, y que cambian cómo hay que
+construir lo que viene:
+
+- **pdf.js pesa medio megabyte y no puede ir en el paquete principal.** Con él
+  dentro, la biblioteca tardaba en pintarse aunque no fueras a abrir ningún
+  libro, que es justo lo que prohíbe R4. Va aparte y se descarga en cuanto la
+  biblioteca está en pantalla, así que al tocar un libro ya está. El paquete
+  inicial queda en 153 kB. **La misma regla vale para Firebase y para el
+  traductor:** ninguno de los dos puede entrar en el arranque.
+- **Las fuentes hay que servirlas desde la propia app.** Cargarlas de Google
+  dejaba a Vellum sin tipografía en cuanto no había red — y con la tipografía
+  se va media identidad. Están en `public/fuentes`, solo el subconjunto latino,
+  92 kB entre las dos.
+- **La hoja que gira tiene que desvanecerse cerca de los 90°.** De canto no se
+  ve en el mundo real, y es justo el ángulo donde la perspectiva la deforma y la
+  saca del marco. Desvanecerla resuelve las dos cosas a la vez.
+- **El worker de pdf.js es un `.mjs` de 1,4 MB.** Sin incluir esa extensión en el
+  service worker se quedaba fuera de la caché *en silencio*, y la app habría
+  dejado de abrir libros justo cuando no hubiera red.
+- **Las páginas vecinas se dibujan por adelantado.** Es lo que hace que el volteo
+  no tenga espera. Sin eso, R4 no se cumple por mucho que la animación sea bonita.
+
+## 10. Bitácora
 
 - **2026-08-26** — Se reutiliza el repositorio de "La corte del Rey". Se crea la
   Guía y se envía el cuestionario 1.
@@ -400,3 +424,8 @@ las portadas, en `guia/prompts/`.
   Vellum y no la IA (D-15), y el prompt recoge el estilo propio de cada obra
   (D-16). Sonido de clic seco con vibración. Se documenta que el modo silencio
   del teléfono no es detectable desde una app web (T17). Empieza el hito 1.
+- **2026-08-26** — **Hito 1 terminado.** Se puede importar un PDF, leerlo
+  volteando páginas con el dedo, con sonido, vibración, los tres temas, salto
+  por número y el progreso guardándose solo. Verificado con 20 comprobaciones
+  en Chromium sobre la versión compilada. Cinco hallazgos técnicos quedan
+  anotados arriba; dos de ellos condicionan los hitos 3 y 4.
