@@ -4,7 +4,7 @@ Documento vivo del proyecto. Todo lo que se decide queda aquí, y de aquí salen
 los parámetros para construir la app. Si algo no está en esta Guía, no está
 decidido.
 
-- **Estado:** ronda 4 de cuestionarios (la última; luego se construye)
+- **Estado:** Guía cerrada. En construcción — hito 1: leer.
 - **Última actualización:** 2026-08-26
 - **Nombre:** **Infiniity Vellum** (P43)
 
@@ -61,7 +61,17 @@ descartan.
 | R36 | Todas las portadas comparten estilo, para que la biblioteca parezca una colección | P61 obs |
 | R37 | Al leer: todo oculto por defecto; la interfaz aparece al tocar el centro | P62 |
 | R38 | La orientación se puede bloquear desde la app | P64 |
-| R39 | Botón de respaldo de toda la biblioteca a un archivo | P44 |
+| R39 | ~~Botón de respaldo a un archivo~~ | P44, **revocado en P70**: la nube basta |
+| R40 | Los PDF y las portadas suben a la nube automáticamente al importarlos | P67 |
+| R41 | Descargar un libro de la nube: automático con wifi, con permiso si son datos | P68 |
+| R42 | Corte automático de facturación en 1 dólar | P69 |
+| R43 | El botón Crear portada abre Gemini y, al volver, ofrece poner la imagen | P72 |
+| R44 | Todas las portadas llevan el título escrito | P73 |
+| R45 | El prompt invita a Gemini a recoger el estilo propio de la obra y traducirlo al formato de Vellum | P73 obs |
+| R46 | Sin portada generada, la portada es **tipográfica**. Nunca la primera página del PDF | P74 |
+| R47 | Sonido de **clic seco** al pasar página, con interruptor rápido | P75 · P76 |
+| R48 | Vibración corta al completarse la página | P77 |
+| R49 | Orden de construcción: **leer primero** | P80 |
 
 **No entra:** lectura en voz alta (P16), OCR de cómics (P8), traducción de
 página completa (P8), subrayados ni notas manuales (P15), EPUB / CBZ / MOBI en
@@ -214,7 +224,27 @@ técnicas que descartan opciones desde el primer día. Implican, como mínimo:
   PDF; si esa no sirve, una portada tipográfica con el título.
 - **Origen:** P61 obs.
 
-### D-14 · Modelo de datos de un libro
+### D-15 · El título lo escribe Vellum sobre la portada, no la IA
+- **Decisión:** el generador crea **solo la ilustración**, dejando una banda
+  limpia; **Vellum compone el título encima** con la tipografía de la casa.
+- **Por qué:** en P73 pediste que el título aparezca escrito en la portada, y
+  así aparece. Pero pedírselo al generador tiene dos problemas conocidos:
+  escribe mal con frecuencia, y cada portada saldría con una tipografía distinta,
+  que es justo lo contrario de que la biblioteca parezca una colección. Al
+  componerlo la app, el título siempre está bien escrito, siempre en el mismo
+  sitio y siempre con la misma letra.
+- **Origen:** P73, resuelto de forma que cumple lo pedido sin heredar el defecto.
+
+### D-16 · El prompt recoge el estilo propio de cada obra
+- **Decisión:** la plantilla invita a Gemini a reconocer la obra, si la conoce, y
+  a traducir sus motivos e iconografía **al formato de dos tintas sobre
+  pergamino** de Vellum. El formato manda siempre; el estilo original entra solo
+  como referencia de contenido.
+- **Por qué:** es lo que pediste en la observación de P73, y es el equilibrio
+  exacto entre "que se vean iguales" y "que se vean únicos".
+- **Origen:** P73 obs.
+
+### D-17 · Modelo de datos de un libro
 - **Decisión:** un libro es un **título** escrito a mano, un conjunto de
   **etiquetas**, un **tipo** (libro o cómic, que necesita el prompt de portada),
   una **portada** (generada, primera página del PDF, o tipográfica) y un
@@ -245,7 +275,9 @@ técnicas que descartan opciones desde el primer día. Implican, como mínimo:
 | T13 | Blaze no tiene tope de gasto. Un error puede generar cargos reales aunque el uso normal sea gratis. | **preguntada** en P69: corte automático de facturación. |
 | T14 | P46 pide sesión obligatoria la primera vez, pero R19 y D-08 exigen que nada haga esperar. | **resuelta**: la sesión se pide una sola vez y queda guardada; los arranques siguientes no tocan la red. Se confirma en P79. |
 | T15 | P47 no marcó las portadas entre lo que debe sincronizarse, pero P61 pide un sistema de portadas generadas que sería una lástima perder al cambiar de aparato. | **preguntada** en P67. |
-| T16 | Si los PDF viven en la nube, abrir un libro que no está en este aparato exige descargarlo, y eso puede ser 80 MB por datos móviles. Choca de frente con R19. | **preguntada** en P68. |
+| T16 | Si los PDF viven en la nube, abrir un libro que no está en este aparato exige descargarlo. | **resuelta** en P68: automático con wifi, con permiso si son datos móviles. La misma regla se aplica a las subidas. |
+| T17 | P76 pide que el sonido respete el modo silencio del teléfono, pero **una app web no puede leer el interruptor de silencio**. No existe forma de detectarlo. | **resuelta por diseño**: el sonido sale por el volumen multimedia (el mismo de la música, no el del timbre), arranca a volumen bajo y hay un interruptor rápido en la propia pantalla de lectura. Es lo más cerca que se puede llegar; se documenta en vez de prometer lo que no se puede cumplir. |
+| T18 | P73 pide que el título vaya escrito en la portada, pero los generadores escriben mal y cada uno usaría una letra distinta. | **resuelta** en D-15: la IA hace la ilustración, Vellum compone el título. |
 
 ## 5. Investigación: motores de traducción sin costo
 
@@ -320,12 +352,28 @@ Fuentes: [precios de Firebase](https://firebase.google.com/pricing),
 | 01 | Decisiones grandes: plataforma, biblioteca, traductor, lectura, alcance | `guia/cuestionarios/01-decisiones-grandes.html` | respondido |
 | 02 | Cómo funciona: traductor, archivos, respaldo, organización, nombre | `guia/cuestionarios/02-como-funciona.html` | respondido |
 | 03 | Cómo se ve y se siente: sesión, animación de página, burbuja, identidad | `guia/cuestionarios/03-como-se-siente.html` | respondido |
-| 04 | Blaze, portadas generadas, sonido y cierre | `guia/cuestionarios/04-cierre.html` | enviado |
+| 04 | Blaze, portadas generadas, sonido y cierre | `guia/cuestionarios/04-cierre.html` | respondido |
+
+**Las cuatro rondas están cerradas. 81 preguntas.** A partir de aquí, esta Guía
+deja de ser un cuestionario y pasa a ser la especificación contra la que se
+construye.
+
+## 8. Plan de construcción
+
+El orden lo fijó P80: **leer antes que nada**.
+
+| Hito | Qué incluye | Estado |
+|---|---|---|
+| **1 · Leer** | Importar un PDF, guardarlo en el aparato, pasar páginas con el volteo de libro, sonido y vibración, número de página y progreso, saltar a una página, los tres temas, modo sin distracciones | **en curso** |
+| 2 · Biblioteca | Títulos, etiquetas, portadas tipográficas, buscador, "seguir leyendo", detección de repetidos | pendiente |
+| 3 · Traductor | La barra de abajo, Gemini con clave propia, pestañas, vocabulario, selección de texto donde el PDF lo permita | pendiente |
+| 4 · Nube | Sesión con Google, Firestore, subida de PDF con la regla de wifi, tope de facturación | pendiente |
+| 5 · Portadas | Botón Crear portada, plantilla de prompt, composición del título | pendiente |
 
 Las respuestas están en `guia/respuestas/`. Los prompts para generar el icono y
 las portadas, en `guia/prompts/`.
 
-## 8. Bitácora
+## 9. Bitácora
 
 - **2026-08-26** — Se reutiliza el repositorio de "La corte del Rey". Se crea la
   Guía y se envía el cuestionario 1.
@@ -345,3 +393,10 @@ las portadas, en `guia/prompts/`.
   Google tiene facturación activada, lo que obliga a separar el proyecto de
   Firebase del proyecto de la clave (aviso crítico en D-09). Se escriben los
   prompts del icono y de las portadas. Se envía el cuestionario 4, el último.
+- **2026-08-26** — Respondido el cuestionario 4. **La Guía queda cerrada.** Se
+  confirma Blaze con corte de facturación en 1 dólar, los PDF suben solos, y la
+  descarga respeta el wifi. Se revoca el botón de respaldo (P70). Las portadas
+  son siempre tipográficas cuando no hay generada (P74), el título lo compone
+  Vellum y no la IA (D-15), y el prompt recoge el estilo propio de cada obra
+  (D-16). Sonido de clic seco con vibración. Se documenta que el modo silencio
+  del teléfono no es detectable desde una app web (T17). Empieza el hito 1.

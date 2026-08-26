@@ -1,0 +1,266 @@
+/* ============================================================
+   Infiniity Vellum — identidad Vitela (D-33 / P58)
+   Pergamino, tinta parda, un único acento de ocre.
+   ============================================================ */
+
+:root {
+  /* Vitela: la piel de la app. No cambia con el tema de lectura. */
+  --pergamino:   #EDE6D6;
+  --vitela:      #F6F1E5;
+  --vitela-alta: #FCF9F1;
+  --tinta:       #2E2822;
+  --tinta-2:     #6B5F4E;
+  --tinta-3:     #9A8E79;
+  --ocre:        #8A5A2B;
+  --ocre-suave:  #E3D3B4;
+  --linea:       #DDD2BC;
+  --linea-tenue: #E7DEC9;
+
+  --sombra: 0 1px 2px rgba(46, 40, 34, .07);
+  --r: 8px;
+
+  /* Ritmo. Una sola escala, para que nada quede a ojo. */
+  --e1: .35rem; --e2: .6rem; --e3: 1rem; --e4: 1.6rem; --e5: 2.6rem;
+
+  /* R34: transiciones suaves pero muy cortas en toda la app */
+  --paso: 140ms;
+  --curva: cubic-bezier(.32, .72, .35, 1);
+
+  /* R28: el volteo tiene peso (450 ms) */
+  --volteo: 450ms;
+
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--pergamino);
+  color: var(--tinta);
+  font-family: 'Karla', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+h1, h2, h3, .display {
+  font-family: 'Fraunces', ui-serif, Georgia, serif;
+  font-variation-settings: 'SOFT' 24, 'WONK' 1, 'opsz' 72;
+  font-weight: 600;
+  letter-spacing: -.012em;
+  text-wrap: balance;
+  margin: 0;
+}
+
+.mono {
+  font-family: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--ocre); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --paso: 0ms; --volteo: 0ms; }
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
+/* ------------------------------------------------------------------ */
+/* Biblioteca                                                          */
+/* ------------------------------------------------------------------ */
+
+.biblio { min-height: 100%; padding: calc(var(--safe-t) + var(--e4)) var(--e3) calc(var(--safe-b) + var(--e5)); max-width: 60rem; margin: 0 auto; }
+
+.biblio-top { display: flex; align-items: baseline; justify-content: space-between; gap: var(--e3); margin-bottom: var(--e4); }
+.marca { font-size: 1.5rem; }
+.marca em { font-style: normal; color: var(--ocre); }
+.cuenta { font-size: .78rem; letter-spacing: .1em; text-transform: uppercase; color: var(--tinta-3); }
+
+.vacio { text-align: center; padding: var(--e5) var(--e3); border: 1px dashed var(--linea); border-radius: var(--r); background: var(--vitela); }
+.vacio h2 { font-size: 1.25rem; margin-bottom: var(--e2); }
+.vacio p { color: var(--tinta-2); font-size: .94rem; margin: 0 auto var(--e4); max-width: 26rem; }
+
+.btn {
+  border: 1px solid var(--tinta); background: var(--tinta); color: var(--pergamino);
+  border-radius: 6px; padding: .68rem 1.3rem; font-weight: 700; font-size: .95rem;
+  transition: opacity var(--paso) var(--curva), transform var(--paso) var(--curva);
+}
+.btn:hover { opacity: .88; }
+.btn:active { transform: translateY(1px); }
+.btn.fantasma { background: transparent; color: var(--tinta); border-color: var(--linea); font-weight: 500; }
+.btn.fantasma:hover { border-color: var(--ocre); color: var(--ocre); opacity: 1; }
+.btn[disabled] { opacity: .45; cursor: default; transform: none; }
+
+/* Seguir leyendo (R25 / P39) */
+.seguir {
+  display: flex; gap: var(--e3); align-items: stretch; text-align: left; width: 100%;
+  background: var(--vitela); border: 1px solid var(--linea); border-radius: var(--r);
+  padding: var(--e3); margin-bottom: var(--e4); box-shadow: var(--sombra);
+  transition: border-color var(--paso) var(--curva);
+}
+.seguir:hover { border-color: var(--ocre); }
+.seguir-cuerpo { display: flex; flex-direction: column; justify-content: center; gap: .3rem; min-width: 0; flex: 1; }
+.seguir-eti { font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--ocre); }
+.seguir-tit { font-size: 1.15rem; }
+.seguir-sub { font-size: .82rem; color: var(--tinta-2); }
+.barra { height: 3px; background: var(--ocre-suave); border-radius: 2px; overflow: hidden; margin-top: var(--e1); }
+.barra i { display: block; height: 100%; background: var(--ocre); border-radius: 2px; }
+
+.rejilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr)); gap: var(--e3); }
+.libro { background: none; border: none; padding: 0; text-align: left; display: flex; flex-direction: column; gap: var(--e1); }
+.libro-sub { font-size: .72rem; color: var(--tinta-3); padding-left: .1rem; }
+
+/* Portada tipográfica (R46 / P74): siempre, nunca la primera página del PDF */
+.portada {
+  aspect-ratio: 2 / 3; border-radius: 4px; background: var(--vitela);
+  border: 1px solid var(--linea); position: relative; overflow: hidden;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  padding: .6rem .55rem; transition: transform var(--paso) var(--curva), border-color var(--paso) var(--curva);
+}
+.libro:hover .portada, .seguir:hover .portada { border-color: var(--ocre); }
+.libro:active .portada { transform: scale(.98); }
+.portada::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(120% 80% at 50% 12%, var(--marca-color, #CBBB9B) 0%, transparent 62%);
+  opacity: .5;
+}
+.portada-glifo {
+  position: absolute; top: 12%; left: 0; right: 0; text-align: center;
+  font-family: 'Fraunces', Georgia, serif; font-weight: 700;
+  font-size: 2.4rem; color: var(--marca-color, #CBBB9B); opacity: .85; line-height: 1;
+}
+.portada-tit {
+  position: relative; font-family: 'Fraunces', Georgia, serif; font-weight: 600;
+  font-size: .78rem; line-height: 1.22; color: var(--tinta);
+  display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
+}
+.portada-regla { position: relative; width: 1.4rem; height: 1px; background: var(--ocre); margin-bottom: .4rem; }
+.portada.grande { width: 5.2rem; flex: none; }
+
+/* El hueco para traer un PDF. Sin el degradado de las portadas: es un sitio
+   donde poner algo, no un libro. */
+.portada.hueca { border-style: dashed; display: grid; place-items: center; }
+.portada.hueca::before { content: none; }
+.portada.hueca span { font-family: 'Fraunces', Georgia, serif; font-size: 1.5rem; color: var(--tinta-3); line-height: 1; }
+.libro:hover .portada.hueca { border-color: var(--ocre); }
+.libro:hover .portada.hueca span { color: var(--ocre); }
+
+/* ------------------------------------------------------------------ */
+/* Lector                                                              */
+/* ------------------------------------------------------------------ */
+
+.lector { position: fixed; inset: 0; display: flex; flex-direction: column; background: var(--fondo-lectura); }
+
+/* Los tres temas de lectura (R14). Por defecto, papel (P59). */
+.lector[data-tema='papel'] { --fondo-lectura: #E6E2D8; --filtro: none; --tinta-lectura: #2E2822; --chrome: rgba(246, 241, 229, .94); }
+.lector[data-tema='sepia'] { --fondo-lectura: #DCCBA8; --filtro: sepia(.32) contrast(.94) brightness(.99); --tinta-lectura: #4A3F2E; --chrome: rgba(239, 227, 204, .94); }
+.lector[data-tema='oscuro'] { --canto-hoja: rgba(201, 203, 209, .12); --fondo-lectura: #0E0F12; --filtro: invert(1) hue-rotate(180deg) contrast(.86) brightness(.92); --tinta-lectura: #C9CBD1; --chrome: rgba(22, 24, 28, .94); }
+
+.escena {
+  flex: 1; position: relative; overflow: hidden;
+  /* Perspectiva floja a propósito: con una fuerte, al acercarse a los 90° la
+     hoja se magnifica y se sale del marco. Correcto en geometría, roto a la
+     vista. */
+  perspective: 2600px; touch-action: none; user-select: none; -webkit-user-select: none;
+  display: grid; place-items: center;
+}
+
+.hoja {
+  /* El anillo define el borde de la hoja en tema oscuro, donde la página
+     invertida y el fondo casi se tocan. */
+  position: absolute; background: #fff;
+  box-shadow: 0 2px 14px rgba(0, 0, 0, .18), 0 0 0 1px var(--canto-hoja, transparent);
+  transform-origin: left center; backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  will-change: transform;
+}
+.hoja canvas { display: block; width: 100%; height: 100%; filter: var(--filtro); }
+.hoja.movil { opacity: var(--visible, 1); }
+.hoja.debajo { z-index: 1; }
+.hoja.movil  { z-index: 2; }
+/* La sombra del pliegue: lo que hace que el giro parezca papel y no una diapositiva */
+.hoja.movil::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(to right, rgba(0,0,0,.20), rgba(0,0,0,0) 22%);
+  opacity: var(--pliegue, 0);
+}
+
+.cargando { color: var(--tinta-lectura); font-size: .84rem; letter-spacing: .1em; text-transform: uppercase; opacity: .5; }
+
+/* Todo oculto por defecto; aparece al tocar el centro (R37 / P62) */
+.chrome {
+  position: absolute; left: 0; right: 0; background: var(--chrome); backdrop-filter: blur(12px);
+  color: var(--tinta-lectura); z-index: 5;
+  transition: transform var(--paso) var(--curva), opacity var(--paso) var(--curva);
+}
+.chrome.arriba { top: 0; padding: calc(var(--safe-t) + .55rem) var(--e3) .55rem; border-bottom: 1px solid rgba(138, 90, 43, .16); }
+.chrome.abajo  { bottom: 0; padding: .55rem var(--e3) calc(var(--safe-b) + .55rem); border-top: 1px solid rgba(138, 90, 43, .16); }
+.chrome[data-visible='false'] { opacity: 0; pointer-events: none; }
+.chrome[data-visible='false'].arriba { transform: translateY(-100%); }
+.chrome[data-visible='false'].abajo  { transform: translateY(100%); }
+
+.fila { display: flex; align-items: center; gap: var(--e2); }
+.fila.entre { justify-content: space-between; }
+.titulo-lector { font-size: .9rem; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.icono {
+  background: transparent; border: 1px solid transparent; border-radius: 5px;
+  padding: .3rem .5rem; font-size: .78rem; color: inherit; opacity: .75; white-space: nowrap;
+  transition: opacity var(--paso) var(--curva), border-color var(--paso) var(--curva);
+}
+.icono:hover { opacity: 1; border-color: rgba(138, 90, 43, .3); }
+.icono[aria-pressed='true'] { opacity: 1; border-color: currentColor; }
+
+.salto { display: flex; align-items: center; gap: .4rem; }
+.salto input {
+  width: 3.6rem; font: inherit; font-size: .82rem; text-align: center;
+  background: transparent; color: inherit; border: 1px solid rgba(138, 90, 43, .35);
+  border-radius: 5px; padding: .28rem .3rem;
+  font-family: ui-monospace, Menlo, monospace; font-variant-numeric: tabular-nums;
+}
+.salto input::-webkit-outer-spin-button, .salto input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.salto input[type=number] { -moz-appearance: textfield; }
+
+/* La línea finísima de progreso (R53 / P53) */
+.progreso { position: absolute; left: 0; right: 0; bottom: 0; height: 1.5px; background: rgba(138, 90, 43, .16); z-index: 4; }
+.progreso i { display: block; height: 100%; background: var(--tinta-lectura); opacity: .45; transition: width var(--paso) linear; }
+
+/* El número de página, discreto (R53 / P53) */
+.folio {
+  position: absolute; left: 0; right: 0; bottom: calc(var(--safe-b) + .5rem);
+  text-align: center; font-size: .7rem; color: var(--tinta-lectura); opacity: .38;
+  z-index: 6; pointer-events: none; font-variant-numeric: tabular-nums;
+  transition: transform var(--paso) var(--curva);
+}
+.lector[data-chrome='true'] .folio { transform: translateY(-3.1rem); }
+
+.aviso {
+  position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(var(--safe-b) + 2.4rem);
+  background: var(--tinta); color: var(--pergamino); border-radius: 999px;
+  padding: .45rem .5rem .45rem .95rem; font-size: .8rem; z-index: 6;
+  display: flex; align-items: center; gap: .75rem; white-space: nowrap; max-width: calc(100vw - 2rem);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, .25); animation: sube var(--paso) var(--curva);
+}
+.aviso button {
+  background: none; border: 1px solid rgba(227, 211, 180, .35); border-radius: 999px;
+  color: var(--ocre-suave); font-weight: 700; padding: .2rem .7rem; white-space: nowrap;
+  transition: background var(--paso) var(--curva);
+}
+.aviso button:hover { background: rgba(227, 211, 180, .14); }
+.aviso span { overflow: hidden; text-overflow: ellipsis; }
+@keyframes sube { from { opacity: 0; transform: translate(-50%, 8px); } }
+
+.importando {
+  position: fixed; inset: 0; display: grid; place-items: center; background: rgba(237, 230, 214, .92);
+  z-index: 40; text-align: center; padding: var(--e3);
+}
+.importando p { color: var(--tinta-2); font-size: .9rem; margin-top: var(--e2); }
+
+/* El marco centrado que sostiene las dos hojas. Sin él, el giro en 3D
+   no tiene un plano común y las páginas se desalinean. */
+.marco { position: absolute; transform-style: preserve-3d; }

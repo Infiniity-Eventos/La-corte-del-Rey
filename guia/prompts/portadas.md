@@ -13,11 +13,15 @@ cincuenta momentos distintos parezcan una colección y no un cajón desordenado.
 ## Plantilla
 
 ```
-Portada para {libro | cómic} de una biblioteca personal.
+Ilustración de portada para {libro | cómic} de una biblioteca personal.
 
-Título: «{título}»
+Obra: «{título}»
 Temas: {etiquetas}
 Nombre del archivo original: {nombre-del-archivo}
+
+Si conoces esta obra, recoge sus motivos propios —su iconografía, sus
+símbolos, los objetos que la identifican— y tradúcelos a nuestro formato.
+El formato manda siempre; de la obra tomas el contenido, nunca el estilo.
 
 Estilo obligatorio, idéntico para toda la colección:
 ilustración plana y editorial impresa a dos tintas sobre pergamino cálido.
@@ -32,6 +36,8 @@ Una sola imagen simbólica y sencilla que evoque los temas del libro.
 Nada de escenas recargadas. Nada de personajes con rostro.
 Si hay figura humana, que sea silueta o esté de espaldas.
 
+Deja el tercio inferior despejado y sin detalle: ahí va el título.
+
 No escribas ningún texto en la imagen. Ni el título, ni el autor, ni nada.
 ```
 
@@ -39,9 +45,16 @@ No escribas ningún texto en la imagen. Ni el título, ni el autor, ni nada.
 
 - **«Ningún otro color»** es la línea que hace el trabajo. Sin ella, cada
   portada se va por su lado y se pierde la sensación de colección.
-- **Sin texto en la imagen.** Los generadores escriben mal, y el título ya
-  aparece debajo de la portada dentro de la app. Poner texto solo añade una
-  forma de que salga feo.
+- **El título va escrito en la portada, pero no lo escribe la IA.** En P73
+  pediste que apareciera, y aparece: el generador deja el tercio inferior
+  despejado y **Vellum compone el título encima**, con la tipografía de la casa.
+  Pedírselo al generador tiene dos defectos conocidos: escribe mal a menudo, y
+  cada portada saldría con una letra distinta, que es justo lo contrario de que
+  la biblioteca parezca una colección. Así el título está siempre bien escrito,
+  siempre en el mismo sitio y siempre con la misma letra.
+- **Recoge el estilo de la obra, no su estética.** Si Gemini conoce el cómic,
+  usa sus símbolos; pero los dibuja con nuestras dos tintas. Eso es lo que hace
+  que se vean «iguales y únicos a la vez».
 - **Sin rostros.** Las caras generadas son lo primero que delata que una imagen
   es artificial, y se ven mal a tamaño de miniatura.
 - **2:3 vertical** es la proporción de una portada de libro; encaja en la

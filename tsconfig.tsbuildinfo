@@ -1,0 +1,1 @@
+{"root":["./src/App.tsx","./src/main.tsx","./src/components/Biblioteca.tsx","./src/components/Lector.tsx","./src/components/Portada.tsx","./src/lib/almacen.ts","./src/lib/importar.ts","./src/lib/pdf.ts","./src/lib/sonido.ts","./src/lib/tipos.ts"],"version":"5.9.3"}
