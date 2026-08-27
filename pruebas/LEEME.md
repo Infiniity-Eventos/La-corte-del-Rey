@@ -255,6 +255,12 @@ pantalla.
 Lo que **no** cubre: que dos cuentas de verdad se vean entre ellas. Eso necesita
 dos cuentas de Google y una ventana que no se puede automatizar.
 
+Las **pestañas y la estrella** tampoco: solo aparecen con sesión. Lo que sí se
+comprueba, en `biblioteca.mjs` y sin cuenta, es la regla que hay debajo —**tu
+estantería son los marcados**— tocando la marca directamente en la base de
+datos: quitarla saca el libro de la vista sin borrarlo de ningún sitio, y
+devolverla lo trae de vuelta. La parte visual se revisó a mano, con capturas.
+
 ## Qué comprueba `en-vivo.mjs`
 
 Es la única que puede fallar por motivos que no están en el código: una ruta

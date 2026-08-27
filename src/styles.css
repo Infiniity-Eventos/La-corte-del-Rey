@@ -136,19 +136,23 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 /* La estrella: lo que decide qué está en TU estantería. Abajo a la izquierda,
    lejos de los tres puntos, porque marcar y editar no se parecen en nada. */
+/* Debajo de la portada, en la misma línea que las páginas. Encima de la tapa
+   se comía el título, que es justo lo que hay que leer para decidir marcarla. */
+.libro-pie { display: flex; align-items: center; gap: .3rem; min-width: 0; }
 .estrella {
-  position: absolute; bottom: 1.35rem; left: .3rem; z-index: 2;
-  width: 1.7rem; height: 1.7rem; border-radius: 50%; line-height: 1; padding: 0;
-  display: grid; place-items: center; font-size: .95rem;
-  background: var(--vitela-alta); border: 1px solid var(--linea); color: var(--tinta-3);
-  transition: color var(--paso) var(--curva), border-color var(--paso) var(--curva);
+  flex: none; width: 1.5rem; height: 1.5rem; border-radius: 50%;
+  line-height: 1; padding: 0; display: grid; place-items: center; font-size: .88rem;
+  background: transparent; border: none; color: var(--tinta-3);
+  transition: color var(--paso) var(--curva), transform var(--paso) var(--curva);
 }
-.estrella[aria-pressed='true'] { color: var(--ocre); border-color: var(--ocre-suave); }
-.estrella:hover { border-color: var(--ocre); }
+.estrella[aria-pressed='true'] { color: var(--ocre); }
+.estrella:hover { color: var(--ocre); transform: scale(1.12); }
+.libro-pie .libro-sub { padding-left: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* Las dos vistas del mismo sitio. */
 .segmento.vistas { margin-bottom: var(--e3); }
 .segmento.vistas .mono { opacity: .55; margin-left: .3rem; font-size: .8em; }
+.pista-vista { margin: 0 0 var(--e2); font-size: .82rem; color: var(--tinta-3); }
 
 /* En la ficha: lo que comparte otra persona se lee, no se edita. */
 .prestado {

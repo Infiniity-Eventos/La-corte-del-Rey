@@ -148,11 +148,60 @@ await page.reload({ waitUntil: 'networkidle' })
 await page.waitForSelector(LIBROS)
 paso('la portada sobrevive a recargar', (await page.locator('.rejilla .portada-img').count()) === 1)
 
-/* --- El catálogo: sin otra persona no hay dos vistas --- */
-paso('sin catálogo ajeno no hay pestañas', (await page.locator('.segmento.vistas').count()) === 0,
-  'con una sola persona, elegir entre dos vistas iguales sería ruido')
+/* --- El catálogo: sin sesión no hay casa que enseñar --- */
+paso('sin sesión no hay pestañas', (await page.locator('.segmento.vistas').count()) === 0,
+  'sin cuenta no hay catálogo común, y dos vistas iguales serían ruido')
 paso('ni estrellas que marcar', (await page.locator('.estrella').count()) === 0)
 paso('ni sellos de quién lo subió', (await page.locator('.sello-prestado').count()) === 0)
+
+/* --- Pero la regla de la estrella se cumple igual --- */
+// Se marca por debajo, en la base de datos, porque el botón solo aparece con
+// sesión. Lo que se comprueba aquí es la regla, no el botón: **tu estantería
+// son los marcados**, y quitarle la estrella a uno lo saca de la vista sin
+// borrarlo de ningún sitio.
+const antesDeEstrella = await page.locator(LIBROS).count()
+const cual = await page.evaluate(() => new Promise(res => {
+  const q = indexedDB.open('vellum')
+  q.onsuccess = () => {
+    const bd = q.result
+    const st = bd.transaction('libros', 'readwrite').objectStore('libros')
+    const todo = st.getAll()
+    todo.onsuccess = () => {
+      const l = todo.result.find(x => !x.borrado)
+      st.put({ ...l, estrella: false })
+      res(l.titulo)
+    }
+  }
+}))
+await page.reload({ waitUntil: 'networkidle' })
+await page.waitForTimeout(1200)
+paso('sin estrella, el libro sale de tu estantería',
+  (await page.locator(LIBROS).count()) === antesDeEstrella - 1, `«${cual}»`)
+paso('pero no se ha borrado: sigue en la base',
+  (await page.evaluate(() => new Promise(res => {
+    const q = indexedDB.open('vellum')
+    q.onsuccess = () => {
+      const t = q.result.transaction('libros', 'readonly').objectStore('libros').getAll()
+      t.onsuccess = () => res(t.result.filter(x => !x.borrado).length)
+    }
+  }))) === antesDeEstrella)
+
+// Se le devuelve la estrella para no descuadrar lo que viene después.
+await page.evaluate(() => new Promise(res => {
+  const q = indexedDB.open('vellum')
+  q.onsuccess = () => {
+    const st = q.result.transaction('libros', 'readwrite').objectStore('libros')
+    const todo = st.getAll()
+    todo.onsuccess = () => {
+      for (const l of todo.result) if (l.estrella === false) st.put({ ...l, estrella: true })
+      res()
+    }
+  }
+}))
+await page.reload({ waitUntil: 'networkidle' })
+await page.waitForSelector(LIBROS)
+await page.waitForTimeout(600)
+paso('y al devolvérsela, vuelve', (await page.locator(LIBROS).count()) === antesDeEstrella)
 
 /* --- Crear portada: el encargo (D-13 / hito 5) --- */
 await page.click('.rejilla .libro:has(.portada-tit:text-is("Notas sueltas")) .mas')

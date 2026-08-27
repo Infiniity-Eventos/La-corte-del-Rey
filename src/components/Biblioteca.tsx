@@ -61,7 +61,10 @@ export function Biblioteca({
    * siempre lleva al mismo sitio es ruido.
    */
   const [vista, setVista] = useState<'mia' | 'casa'>('mia')
-  const hayCasa = catalogo.length > libros.length
+  // Con la sesión abierta hay catálogo, aunque todavía sea solo lo tuyo. Antes
+  // esto esperaba a que la otra persona hubiera subido algo, y el resultado era
+  // que no se veía por ningún lado la mitad de la app.
+  const hayCasa = !!quien
   const fuente = vista === 'casa' && hayCasa ? catalogo : libros
 
   const etiquetas = useMemo(() => {
@@ -149,13 +152,18 @@ export function Biblioteca({
         </div>
       ) : (
         <>
-          {libros.length > 3 && (
+          {/* El buscador aparece en cuanto hay algo que buscar. Esperar a tener
+              cuatro libros lo escondía justo cuando más falta hace explicar
+              dónde vive. */}
+          {fuente.length > 1 && (
             <div className="buscador">
               <input
                 type="search"
                 value={busqueda}
                 onChange={e => setBusqueda(e.target.value)}
-                placeholder="Buscar por título o etiqueta"
+                placeholder={vista === 'casa'
+                  ? 'Buscar en toda la casa'
+                  : 'Buscar por título o etiqueta'}
                 aria-label="Buscar"
               />
             </div>
@@ -195,8 +203,20 @@ export function Biblioteca({
             </div>
           )}
 
+          {vista === 'casa' && !filtrando && (
+            <p className="pista-vista">
+              Todo lo que subís los dos. Toca la estrella para tenerlo en tu estantería.
+            </p>
+          )}
+
           {visibles.length === 0 ? (
-            <p className="sin-nada">Nada con eso. Prueba con menos letras.</p>
+            <p className="sin-nada">
+              {vista === 'casa'
+                ? 'Nada con eso en toda la casa.'
+                : filtrando
+                  ? 'Nada con eso. Está en «Toda la casa»?'
+                  : 'Nada con eso. Prueba con menos letras.'}
+            </p>
           ) : (
             <div className="rejilla">
               {resto.map(l => (
@@ -208,23 +228,27 @@ export function Biblioteca({
                   {/* De quién es, cuando no es tuyo. Sin esto, un catálogo
                       común se vuelve un cajón de cosas sin dueño. */}
                   {l.de && <span className="sello-prestado" title={`Lo subió ${l.deNombre}`}>{(l.deNombre || '?')[0]}</span>}
-                  {/* La estrella solo hace falta cuando hay catálogo: sin otra
+                  {/* La estrella va debajo de la portada, no encima: sobre la
+                      tapa se comía el título, que es lo que hay que leer para
+                      decidir si la marcas. Y solo cuando hay catálogo: sin otra
                       persona, todo lo tuyo está en tu estantería y ya está. */}
-                  {hayCasa && (
-                    <button
-                      className="estrella"
-                      aria-pressed={l.estrella !== false}
-                      onClick={() => onEstrella(l, l.estrella === false)}
-                      aria-label={l.estrella !== false
-                        ? `Quitar ${l.titulo} de mi estantería`
-                        : `Poner ${l.titulo} en mi estantería`}
-                      title={l.estrella !== false ? 'En tu estantería' : 'Ponerlo en tu estantería'}
-                    >
-                      {l.estrella !== false ? '★' : '☆'}
-                    </button>
-                  )}
-                  <span className="libro-sub mono">
-                    {l.paginas} pág.{l.pagina > 1 ? ` · ${porcentaje(l)} %` : ''}
+                  <span className="libro-pie">
+                    {hayCasa && (
+                      <button
+                        className="estrella"
+                        aria-pressed={l.estrella !== false}
+                        onClick={() => onEstrella(l, l.estrella === false)}
+                        aria-label={l.estrella !== false
+                          ? `Quitar ${l.titulo} de mi estantería`
+                          : `Poner ${l.titulo} en mi estantería`}
+                        title={l.estrella !== false ? 'En tu estantería' : 'Ponerlo en tu estantería'}
+                      >
+                        {l.estrella !== false ? '★' : '☆'}
+                      </button>
+                    )}
+                    <span className="libro-sub mono">
+                      {l.paginas} pág.{l.pagina > 1 ? ` · ${porcentaje(l)} %` : ''}
+                    </span>
                   </span>
                 </div>
               ))}

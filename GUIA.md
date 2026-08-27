@@ -333,8 +333,13 @@ técnicas que descartan opciones desde el primer día. Implican, como mínimo:
   Firebase; las reglas lo dejan leer y no escribir. Si la app pudiera añadir
   miembros, cualquiera con una cuenta de Google se metería solo.
 - **Sin casa montada no pasa nada.** `sincronizarEstante` no hace nada y los
-  libros propios se sincronizan igual. Y sin otra persona, la app no enseña ni
-  pestañas ni estrellas: elegir entre dos vistas idénticas sería ruido.
+  libros propios se sincronizan igual.
+- **Dónde vive cada cosa:** dos pestañas arriba de la estantería —**Mi
+  estantería** y **Toda la casa**—, el buscador debajo, y la estrella en el pie
+  de cada libro, junto al número de páginas. Las pestañas aparecen **en cuanto
+  hay sesión**, aunque el catálogo sea todavía solo lo tuyo: esperar a que la
+  otra persona subiera algo escondía media app justo cuando había que
+  entenderla. Sin sesión no salen, porque entonces no hay catálogo que enseñar.
 - **Origen:** pedido en el uso, 2026-08-27.
 
 ### D-30 · La clave de Gemini es una por perfil
@@ -795,6 +800,14 @@ construir lo que viene:
   los llevaba. Cuando pasó a componer también el encargo, marcar «Cómic» y
   añadir etiquetas antes de guardar no llegaba al prompt. Una estructura que
   sirve para dos cosas tiene que estar completa para las dos.
+- **Una función escondida hasta que «hace falta» es una función que no existe.**
+  Las pestañas del catálogo y el buscador estaban condicionados —uno a que
+  hubiera libros de otra persona, el otro a tener más de tres— y el resultado
+  fue el previsible: se pidió la función, se construyó, y no se veía por ningún
+  lado. La regla que salvaba pantalla escondía la explicación.
+- **La estrella no cabe encima de la portada.** Puesta sobre la tapa se comía el
+  título — que es justo lo que hay que leer para decidir si la marcas. Va debajo,
+  en la misma línea que las páginas.
 - **Compartir y «tener a mano» no son lo mismo, y mezclarlos se nota.** La
   primera versión del estante hacía de compartir un acto: marcabas un libro y la
   otra persona lo veía. Al usarlo aparece el modelo de verdad: **el catálogo es
@@ -1004,3 +1017,9 @@ construir lo que viene:
   entero para sacarla, con enlaces, para pasárselo a quien vaya a usar Vellum.
   19 comprobaciones nuevas del catálogo, sin red y sin cuenta. 275
   comprobaciones.
+- **2026-08-27** — Se arregla que el catálogo no se viera: las pestañas
+  esperaban a que la otra persona hubiera subido algo y el buscador a tener más
+  de tres libros, así que la función pedida quedaba invisible. Ahora las
+  pestañas salen con la sesión abierta y el buscador en cuanto hay algo que
+  buscar. La estrella baja de la portada al pie, porque encima tapaba el título.
+  277 comprobaciones.
