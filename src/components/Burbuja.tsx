@@ -3,6 +3,7 @@ import type { Libro, Palabra } from '../lib/tipos'
 import { ErrorTraductor, explicar, traducir } from '../lib/traductor'
 import type { Traduccion } from '../lib/traductor'
 import { borrarPalabra, guardarTraduccion } from '../lib/almacen'
+import { useAtras } from '../lib/atras'
 
 /**
  * La burbuja del traductor: una barra fija abajo, siempre lista (P55).
@@ -147,6 +148,16 @@ export function Burbuja({ clave, libro, pagina, seleccion, onUsarSeleccion, onIr
     setPidiendo(false)
     setConsultado('')
   }
+
+  /**
+   * Atrás cierra la traducción, exactamente igual que la ×.
+   *
+   * La capa es el panel, no el campo: con el teclado abierto, atrás lo cierra
+   * el propio sistema y a la app no le llega nada. Así el primer atrás baja el
+   * teclado, el segundo cierra la traducción y el tercero sale del libro, que
+   * es el orden en el que las cosas están puestas encima.
+   */
+  useAtras(hayPanelAbierto, limpiar)
 
   const solapas: { id: Solapa; nombre: string }[] = [
     ...(resultado?.palabra ? [{ id: 'palabra' as const, nombre: 'La palabra' }] : []),

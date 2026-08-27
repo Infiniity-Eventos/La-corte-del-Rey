@@ -313,6 +313,26 @@ técnicas que descartan opciones desde el primer día. Implican, como mínimo:
   Google: `apagon/LEEME.md` y `guia/paginas/apagon.html`.
 - **Origen:** P69, y T13.
 
+### D-27 · Atrás cierra capas, no la app
+- **Decisión:** el botón de atrás del teléfono deshace lo que tengas encima, de
+  dentro hacia fuera: el traductor, las notas de la página, el modo selección,
+  el acercamiento, la ficha, el libro, las pantallas de ajustes y vocabulario. Y
+  solo cuando no queda nada abierto, sale.
+- **Por qué:** instalada como app, atrás es el gesto más usado del teléfono y
+  por defecto hacía lo peor posible — te echaba fuera a mitad de lectura.
+- **Cómo:** cada cosa que se abre apila una entrada de historial
+  (`src/lib/atras.ts`); atrás las va sacando. Sin cambiar de dirección: la
+  entrada solo existe para tener a dónde volver.
+- **El detalle que lo hace funcionar es el otro camino.** Cerrar algo con su
+  propio botón **también tiene que quitar su entrada**. Si no, atrás se queda
+  deshaciendo cosas que ya no están y hay que pulsarlo tres veces para que pase
+  algo. No rompe nada visible, y por eso hay una comprobación dedicada.
+- **El teclado no es una capa.** Con el teclado abierto, atrás lo cierra el
+  propio sistema y a la app no le llega nada. Así el primero baja el teclado, el
+  segundo cierra la traducción y el tercero sale del libro, en el orden en que
+  las cosas están puestas encima.
+- **Origen:** pedido en el uso, 2026-08-27.
+
 ### D-26 · En la PC las flechas voltean; en el teléfono se pellizca
 - **Decisión:** las flechas ←/→ (y AvPág/RePág y la barra espaciadora) pasan
   página **con el mismo volteo** que el dedo, no saltando. Y en pantalla táctil,
@@ -727,6 +747,12 @@ construir lo que viene:
   los llevaba. Cuando pasó a componer también el encargo, marcar «Cómic» y
   añadir etiquetas antes de guardar no llegaba al prompt. Una estructura que
   sirve para dos cosas tiene que estar completa para las dos.
+- **Abrir algo y cerrarlo son dos caminos, y el segundo se olvida.** La pila de
+  atrás funcionaba a la primera abriendo capas; lo que no funcionaba era cerrar
+  una con su propio botón, que dejaba su entrada de historial huérfana. El
+  síntoma no se ve —nada se rompe— hasta que un día atrás no hace nada y hay que
+  pulsarlo tres veces. **Cuando algo apila estado, la comprobación que importa
+  no es la del camino de ida.**
 - **Una compilación que falla no borra la anterior.** El servidor sigue
   sirviendo el paquete de antes y las pruebas pasan **contra él**: verde sin
   haber probado nada. Pasó dos veces en la misma tarde, y las dos justo mientras
@@ -906,3 +932,9 @@ construir lo que viene:
   ahora **se niegan a correr contra un paquete viejo**, después de descubrir que
   dos comprobaciones «rotas a propósito» habían pasado por eso. 242
   comprobaciones.
+- **2026-08-27** — **Atrás deja de sacarte de la app** (D-27). Cierra capas de
+  dentro hacia fuera: traductor, notas, selección, acercamiento, ficha, libro,
+  pantallas. Una prueba nueva con 18 comprobaciones, y la que más costó no es
+  ninguna de las visibles: que cerrar algo a mano no deje su entrada de
+  historial colgando. Se comprobó quitando la limpieza a propósito, y falla como
+  debe. 260 comprobaciones.

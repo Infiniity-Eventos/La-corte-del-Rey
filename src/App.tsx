@@ -1,4 +1,5 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useAtras } from './lib/atras'
 import type { Ajustes, Libro, Palabra } from './lib/tipos'
 import { AJUSTES_POR_DEFECTO } from './lib/tipos'
 import {
@@ -288,6 +289,12 @@ export default function App() {
     setLibros(ls)
     setVocabulario(voc)
   }, [guardarAhora])
+
+  // El botón de atrás del teléfono, capa por capa: primero lo que tengas
+  // encima, y solo al final salir de la app.
+  useAtras(!!enFicha, () => setEnFicha(null))
+  useAtras(!!abierto, () => { void cerrar() })
+  useAtras(pantalla !== 'biblioteca', () => setPantalla('biblioteca'))
 
   const guardarFicha = useCallback(async (libro: Libro) => {
     await actualizarLibro(libro)

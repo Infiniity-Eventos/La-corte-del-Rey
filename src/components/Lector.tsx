@@ -3,6 +3,7 @@ import type { Ajustes, Libro, Palabra, Tema } from '../lib/tipos'
 import { borrarPalabra, leerArchivo, listarVocabulario } from '../lib/almacen'
 import { Cuaderno } from '../lib/pdf'
 import { clicDePagina, despertarSonido, toqueCorto } from '../lib/sonido'
+import { useAtras } from '../lib/atras'
 import { Burbuja } from './Burbuja'
 
 const TEMAS: Tema[] = ['papel', 'sepia', 'oscuro']
@@ -674,6 +675,12 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
     x: Math.round((caja.w - anchoArea) / 2),
     y: Math.round((caja.h - altoArea) / 2),
   }
+
+  // El botón de atrás, dentro del lector. El orden lo pone la pila: se cierra
+  // lo último que abriste, que es lo que tienes delante.
+  useAtras(notasAbiertas, () => setNotasAbiertas(false))
+  useAtras(!!lupa, () => { setAcercando(true); setLupa(null) })
+  useAtras(seleccionando, () => setSeleccionando(false))
 
   const notasAqui = notas.filter(n => n.pagina === pagina)
 

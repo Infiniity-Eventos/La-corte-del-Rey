@@ -13,6 +13,7 @@ node pruebas/biblioteca.mjs   # 47 comprobaciones · la estantería y crear port
 node pruebas/traductor.mjs    # 60 comprobaciones · el traductor y las notas de página
 node pruebas/comic.mjs        # 29 comprobaciones · tamaños mezclados, zoom, pellizco y teclado
 node pruebas/nube.mjs         # 14 comprobaciones · hito 4, la nube sin cuenta
+node pruebas/atras.mjs        # 18 comprobaciones · el botón de atrás del teléfono
 node pruebas/capturas.mjs     # capturas de cada estado
 
 # Sin navegador: se ejecutan solas
@@ -212,6 +213,25 @@ ningún error — simplemente, a los seis meses la biblioteca deja de verse ente
 
 Las comprobaciones del botón en sí —que copia de verdad, que abre el generador,
 que se lleva lo que estás editando sin haber guardado— están en `biblioteca.mjs`.
+
+## Qué comprueba `atras.mjs`
+
+El botón de atrás del teléfono. Lo que se vigila no es que cierre algo: es que
+cierre **una cosa cada vez, de dentro hacia fuera, sin saltarse ninguna**.
+
+Y una que no se ve: **cerrar algo con su propio botón no deja una entrada de
+historial huérfana**. Eso no rompe nada visible — hasta que un día atrás no hace
+nada y hay que pulsarlo tres veces sin saber por qué.
+
+| Comprueba | Requisito |
+|---|---|
+| Atrás cierra la ficha, y no saca de la app | D-27 |
+| Vuelve de ajustes y vocabulario a la biblioteca | D-27 |
+| Cierra el libro y vuelve a la estantería | D-27 |
+| **Con traductor + notas + acercamiento encima, los cierra uno a uno** | D-27 |
+| Y sin saltarse ninguno por el camino | D-27 |
+| Sale del modo selección sin salir del libro | D-27 |
+| **Cerrar a mano no deja entradas de más en el historial** | D-27 |
 
 ## Qué comprueba `en-vivo.mjs`
 
