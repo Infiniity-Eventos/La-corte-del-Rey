@@ -146,6 +146,60 @@ paso('arrastrar acercado mueve la vista', (await marco()).transform !== antesDeP
 paso('y no pasa de página', (await page.textContent('.folio')).trim() === '2 / 6',
   (await page.textContent('.folio')).trim())
 
+/* --- Con el teclado abierto, la página no se mueve --- */
+// No se puede abrir un teclado de verdad, pero lo que hace es esto: encoger la
+// ventana. Con el campo del traductor en uso, encogerla no debe mover nada.
+const hoja = () => page.evaluate(() => {
+  const r = document.querySelector('.hoja.debajo').getBoundingClientRect()
+  return { x: Math.round(r.x), y: Math.round(r.y), w: Math.round(r.width), h: Math.round(r.height) }
+})
+const lienzoDe = () => page.evaluate(() => {
+  const c = document.querySelector('.hoja.debajo canvas')
+  return c ? `${c.width}x${c.height}` : 'sin lienzo'
+})
+
+const medidaOriginal = page.viewportSize()
+const antesTransform = (await marco()).transform
+const antesHoja = await hoja()
+const antesLienzo = await lienzoDe()
+
+await page.focus('.barra-burbuja textarea')
+await page.waitForTimeout(250)
+await page.setViewportSize({ width: medidaOriginal.width, height: medidaOriginal.height - 380 })
+await page.waitForTimeout(700)
+
+paso('con el teclado abierto el zoom no se mueve', (await marco()).transform === antesTransform,
+  (await marco()).transform === antesTransform ? 'igual' : `${antesTransform} → ${(await marco()).transform}`)
+const ahoraHoja = await hoja()
+paso('ni la página cambia de sitio ni de tamaño',
+  JSON.stringify(ahoraHoja) === JSON.stringify(antesHoja),
+  `${JSON.stringify(antesHoja)} → ${JSON.stringify(ahoraHoja)}`)
+paso('y no se vuelve a dibujar', (await lienzoDe()) === antesLienzo,
+  `${antesLienzo} → ${await lienzoDe()}`)
+
+// Al cerrarse el teclado vuelve a medir, por si algo cambió de verdad.
+await page.evaluate(() => document.querySelector('.barra-burbuja textarea').blur())
+await page.setViewportSize(medidaOriginal)
+await page.waitForTimeout(900)
+paso('al cerrarse, la página vuelve a ocupar lo suyo',
+  JSON.stringify(await hoja()) === JSON.stringify(antesHoja),
+  JSON.stringify(await hoja()))
+
+// Y si el tamaño cambia de verdad mientras estaba congelada, se entera al soltar.
+await page.focus('.barra-burbuja textarea')
+await page.waitForTimeout(250)
+await page.setViewportSize({ width: medidaOriginal.width - 120, height: medidaOriginal.height })
+await page.waitForTimeout(700)
+paso('un cambio de verdad tampoco mueve nada mientras escribes',
+  JSON.stringify(await hoja()) === JSON.stringify(antesHoja))
+await page.evaluate(() => document.querySelector('.barra-burbuja textarea').blur())
+await page.waitForTimeout(900)
+paso('pero al soltar el campo sí se entera',
+  JSON.stringify(await hoja()) !== JSON.stringify(antesHoja),
+  JSON.stringify(await hoja()))
+await page.setViewportSize(medidaOriginal)
+await page.waitForTimeout(800)
+
 await page.mouse.click(punto.x, punto.y)
 await page.mouse.click(punto.x, punto.y, { delay: 30 })
 await page.waitForTimeout(500)

@@ -313,6 +313,24 @@ técnicas que descartan opciones desde el primer día. Implican, como mínimo:
   Google: `apagon/LEEME.md` y `guia/paginas/apagon.html`.
 - **Origen:** P69, y T13.
 
+### D-25 · El teclado no cambia el tamaño de la página
+- **Decisión:** mientras la burbuja del traductor está en uso, la medida del
+  área de lectura **se congela**. La página no se mueve ni se redibuja, y el
+  teclado tapa lo que tenga que tapar.
+- **Por qué:** al abrir el teclado la ventana se encoge, y el lector le hacía
+  caso: volvía a repartir la página y a dibujarla. Con el zoom puesto eso movía
+  de sitio justo lo que estabas mirando, que es lo peor que puede pasar en el
+  momento en que vas a copiar una frase. **Un teclado no es un cambio de tamaño:
+  es algo que se pone delante.**
+- **Se prefirió tapar antes que mover.** Fue lo pedido literalmente, y es lo
+  correcto: nada de lo que la app puede hacer con menos alto compensa perder el
+  sitio donde estabas.
+- **Al soltar el campo se vuelve a mirar una vez**, con espera, por si el tamaño
+  cambió de verdad mientras tanto —girar el aparato con el teclado abierto—.
+  Medir en el momento pillaría la pantalla aún encogida, que es el salto que
+  esto evita.
+- **Origen:** pedido en el uso, 2026-08-27.
+
 ### D-24 · La traducción se guarda sola
 - **Decisión:** ya no hay botón de guardar. En cuanto la traducción está
   entera, se guarda y la página queda marcada. La burbuja lo dice —«Guardada en
@@ -686,6 +704,11 @@ construir lo que viene:
   los llevaba. Cuando pasó a componer también el encargo, marcar «Cómic» y
   añadir etiquetas antes de guardar no llegaba al prompt. Una estructura que
   sirve para dos cosas tiene que estar completa para las dos.
+- **Un teclado no es un cambio de tamaño.** El navegador lo cuenta como si la
+  ventana se hubiera encogido, y todo lo que reacciona al tamaño reacciona: se
+  reparte la página otra vez, se redibuja, se recorta el zoom. Pero lo que ha
+  pasado no es que haya menos sitio, es que hay algo delante. Se congela la
+  medida mientras dura y se acabó el problema.
 - **Automatizar algo convierte sus fallos raros en fallos de todos los días.**
   Quitar una palabra borraba sin dejar lápida, y la sincronización nunca
   aplicaba lo quitado en el otro aparato. Con un botón de guardar, quitar era
@@ -837,3 +860,9 @@ construir lo que viene:
   el botón tapaba: quitar una palabra borraba sin dejar lápida —la nube la
   devolvía— y lo quitado en el otro aparato no se aplicaba aquí nunca. 215
   comprobaciones.
+- **2026-08-27** — **El teclado deja de mover la página** (D-25). Con el zoom
+  puesto, abrir el teclado corría de sitio justo lo que estabas mirando: la
+  ventana se encoge y el lector le hacía caso. Ahora la medida se congela
+  mientras la burbuja está en uso; se prefiere tapar antes que mover. Seis
+  comprobaciones nuevas, y se quitó el arreglo a propósito para ver cuáles se
+  ponían rojas de verdad: las dos que importan. 221 comprobaciones.

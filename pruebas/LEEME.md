@@ -11,7 +11,7 @@ npx vite preview --port 4173 --host 127.0.0.1 &
 node pruebas/lectura.mjs      # 30 comprobaciones · hito 1, leer
 node pruebas/biblioteca.mjs   # 47 comprobaciones · la estantería y crear portada
 node pruebas/traductor.mjs    # 60 comprobaciones · el traductor y las notas de página
-node pruebas/comic.mjs        # 16 comprobaciones · tamaños mezclados y zoom
+node pruebas/comic.mjs        # 22 comprobaciones · tamaños mezclados, zoom y teclado
 node pruebas/nube.mjs         # 14 comprobaciones · hito 4, la nube sin cuenta
 node pruebas/capturas.mjs     # capturas de cada estado
 
@@ -146,6 +146,9 @@ app en el uso real y que ningún PDF de prueba uniforme habría destapado.
 | El papel sobrante toma el color del fondo, opaco |
 | El doble toque acerca la página y centra lo que tocaste |
 | Acercado, arrastrar mueve la vista y no pasa de página |
+| **Con el teclado abierto, la página no se mueve ni se redibuja** |
+| Al cerrarse, vuelve a ocupar lo suyo |
+| Y si el tamaño cambió de verdad, se entera al soltar el campo |
 | Otro doble toque la devuelve a su sitio |
 
 El PDF de prueba se genera con `gen_mixto.py`: páginas impares verticales,

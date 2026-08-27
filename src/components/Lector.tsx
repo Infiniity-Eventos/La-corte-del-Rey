@@ -128,6 +128,23 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
 
   /* ------------------------------ medir ------------------------------ */
 
+  /**
+   * El teclado no es un cambio de tamaño: es algo que se pone delante.
+   *
+   * La ventana se encoge al abrirlo, y si el lector le hace caso vuelve a
+   * repartir la página y a redibujarla — con el zoom puesto, eso mueve de sitio
+   * justo lo que estabas mirando. Mientras la burbuja está en uso, la medida se
+   * queda congelada: la página no se mueve un pixel y el teclado tapa lo que
+   * tenga que tapar, que es lo que se pidió.
+   *
+   * Y si tocas la página mientras escribes —para acercar, por ejemplo—, el
+   * campo pierde el foco y el teclado se cierra, así que la medida congelada es
+   * justo la que va a valer un instante después. Por eso el doble toque acierta
+   * el centro aunque se dé con el teclado todavía delante.
+   */
+  const congelada = useRef(false)
+  useEffect(() => { congelada.current = traduciendo }, [traduciendo])
+
   useEffect(() => {
     const el = escenaRef.current
     if (!el) return
@@ -139,12 +156,32 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
       window.clearTimeout(espera)
       const { width, height } = e.contentRect
       espera = window.setTimeout(() => {
+        if (congelada.current) return
         setCaja({ w: Math.floor(width), h: Math.floor(height) })
       }, 180)
     })
     ro.observe(el)
     return () => { window.clearTimeout(espera); ro.disconnect() }
   }, [])
+
+  /**
+   * Al soltar la burbuja se vuelve a mirar una vez, por si el tamaño cambió de
+   * verdad mientras estaba congelada —girar el aparato con el teclado abierto—.
+   * Se espera a que la ventana se asiente; medir en el momento pillaría la
+   * pantalla aún encogida, que es exactamente el salto que esto evita. Si nada
+   * cambió, `setCaja` devuelve el mismo objeto y no hay renderizado.
+   */
+  useEffect(() => {
+    if (traduciendo) return
+    const t = window.setTimeout(() => {
+      const el = escenaRef.current
+      if (!el) return
+      const w = el.clientWidth
+      const h = el.clientHeight
+      setCaja(c => (c.w === w && c.h === h ? c : { w, h }))
+    }, 320)
+    return () => window.clearTimeout(t)
+  }, [traduciendo])
 
   /* ------------------------------ abrir ------------------------------ */
 
