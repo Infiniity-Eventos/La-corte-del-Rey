@@ -42,12 +42,11 @@ jobs:
           # repositorio, no en la raíz del dominio.
           VITE_BASE: /La-corte-del-Rey/
 
-      # Enciende GitHub Pages por su cuenta la primera vez. Sin esto, la
-      # primera publicación falla pidiendo que se active a mano en los ajustes
-      # del repositorio.
+      # Pages tiene que estar activado a mano una vez, en
+      # Ajustes → Pages → Origen: GitHub Actions.
+      # El flujo no puede activarlo solo: el token no tiene permiso para crear
+      # el sitio, y responde «Resource not accessible by integration».
       - uses: actions/configure-pages@v5
-        with:
-          enablement: true
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
