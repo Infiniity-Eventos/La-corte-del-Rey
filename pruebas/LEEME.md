@@ -10,7 +10,7 @@ npm run build
 npx vite preview --port 4173 --host 127.0.0.1 &
 node pruebas/lectura.mjs      # 30 comprobaciones · hito 1, leer
 node pruebas/biblioteca.mjs   # 35 comprobaciones · hito 2, la estantería
-node pruebas/traductor.mjs    # 40 comprobaciones · hito 3, el traductor
+node pruebas/traductor.mjs    # 53 comprobaciones · el traductor y las notas de página
 node pruebas/comic.mjs        # 16 comprobaciones · tamaños mezclados y zoom
 node pruebas/nube.mjs         # 14 comprobaciones · hito 4, la nube sin cuenta
 node pruebas/capturas.mjs     # capturas de cada estado
@@ -114,6 +114,13 @@ resto.
 | Clave inválida, servidor saturado y sin red, cada uno con su mensaje | R8 |
 | El modo selección avisa de cómo funciona | D-18 · P56 |
 | Seleccionar sobre la página rellena la burbuja | R31 · P56 |
+| Al guardar, la página se marca en el momento | D-23 |
+| La marca dice cuántas hay, y abre la frase y su traducción | D-23 |
+| **Al volver a esa página, la marca sigue ahí** | D-23 |
+| Y sobrevive a cerrar el libro y volver a abrirlo | D-23 |
+| En una página sin nada traducido no hay marca | D-23 |
+| La marca y el panel no se pisan con la burbuja | D-23 |
+| Tocar fuera cierra el panel | D-23 |
 
 ## Qué comprueba `comic.mjs`
 
