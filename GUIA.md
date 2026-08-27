@@ -314,6 +314,30 @@ técnicas que descartan opciones desde el primer día. Implican, como mínimo:
   Google: `apagon/LEEME.md` y `guia/paginas/apagon.html`.
 - **Origen:** P69, y T13.
 
+### D-33 · El idioma se elige, y en japonés hay teclado de kana
+- **Decisión:** en Ajustes se elige **de qué idioma traduce** la burbuja —siempre
+  al español—, y al poner japonés aparece en la burbuja un botón **あ** que abre
+  un teclado de kana.
+- **El teclado es el 五十音 entero:** las diez filas en hiragana y en katakana,
+  dakuten, handakuten, las formas pequeñas, ー, 〜 y los signos japoneses. Con eso
+  se escribe cualquier kana.
+- **Kanji no escribe, y no es un descuido.** Escribir kanji necesita un IME: un
+  diccionario que convierta かたな en 刀 ofreciendo candidatos. Eso es otro
+  programa, y el del propio teléfono lo hace mucho mejor que nada que quepa aquí.
+  **La app lo dice y enseña dónde activarlo, en vez de fingir que lo tiene.** Con
+  los kana se pregunta igual: Gemini entiende かたな lo mismo que 刀.
+- **Las transformaciones van sobre la última letra**, no en teclas propias: con
+  teclas para が ざ だ ば ぱ y las pequeñas harían falta sesenta más y no cabría.
+- **La lógica vive en `src/lib/kana.ts`, no en el componente.** Es lo único que
+  puede equivocarse en silencio —comerse una letra al pasar a katakana, aplicar
+  el dakuten a lo que no toca— y así se prueba sin navegador, como la fusión.
+- **Ocupa la mitad de la pantalla**, como el teclado del teléfono. Tapa la
+  página, que ya no se mueve por el teclado desde D-25.
+- **El japonés lleva una línea propia en el encargo a Gemini:** sin ella, la
+  «pronunciación» de una palabra salía en kana, que es justo lo que no sabe leer
+  quien pregunta.
+- **Origen:** pedido en el uso, 2026-08-27.
+
 ### D-32 · Pasar página: deslizar o tocar, a elección
 - **Decisión:** en Ajustes se elige entre **Deslizar** (lo de siempre) y
   **Tocar**: un toque en el borde derecho avanza, en el izquierdo vuelve, y el
@@ -837,6 +861,13 @@ construir lo que viene:
   los llevaba. Cuando pasó a componer también el encargo, marcar «Cómic» y
   añadir etiquetas antes de guardar no llegaba al prompt. Una estructura que
   sirve para dos cosas tiene que estar completa para las dos.
+- **Hay peticiones que no se pueden cumplir enteras, y decirlo es parte del
+  trabajo.** «Un teclado japonés muy completo» tiene dos mitades: los kana, que
+  caben en un componente, y los kanji, que necesitan un diccionario de conversión
+  — otro programa, y uno que el teléfono ya trae mucho mejor hecho. Se construyó
+  la mitad que se puede y **la app dice en voz alta cuál es la otra y dónde
+  está**, en vez de dejar que se descubra a base de buscar una tecla que no
+  existe.
 - **Una prueba que mueve el mundo rompe a las de al lado.** El bloque nuevo de
   «tocar para pasar página» dejaba el libro una página más adelante, y dos
   comprobaciones de más abajo —que daban por hecho la página 2— se pusieron
@@ -1084,3 +1115,10 @@ construir lo que viene:
   pulgar en cada página. En los bordes no hay doble toque a propósito —pasar
   página no puede esperar a ver si viene un segundo dedo— y para acercar quedan
   el centro y el pellizco. 271 comprobaciones.
+- **2026-08-27** — **Idioma del traductor y teclado de kana** (D-33). En Ajustes
+  se elige de qué idioma traduce; con japonés aparece un teclado con el 五十音
+  entero en hiragana y katakana, dakuten, handakuten, pequeñas y signos. Kanji no
+  escribe —eso necesita un IME con diccionario, que el teléfono ya trae— y la app
+  lo dice y enseña dónde activarlo. 19 comprobaciones de las tablas y las
+  transformaciones, sin navegador, y 9 del teclado en pantalla. 299
+  comprobaciones.

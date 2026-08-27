@@ -10,7 +10,7 @@ npm run build
 npx vite preview --port 4173 --host 127.0.0.1 &
 node pruebas/lectura.mjs      # 43 comprobaciones · leer, las flechas y los dos modos de pasar página
 node pruebas/biblioteca.mjs   # 47 comprobaciones · la estantería y crear portada
-node pruebas/traductor.mjs    # 63 comprobaciones · el traductor y las notas de página
+node pruebas/traductor.mjs    # 72 comprobaciones · el traductor, las notas y el japonés
 node pruebas/comic.mjs        # 29 comprobaciones · tamaños mezclados, zoom, pellizco y teclado
 node pruebas/nube.mjs         # 14 comprobaciones · hito 4, la nube sin cuenta
 node pruebas/atras.mjs        # 18 comprobaciones · el botón de atrás del teléfono
@@ -21,6 +21,7 @@ node pruebas/fusion.mjs       # 14 comprobaciones · la fusión entre aparatos
 node pruebas/apagon.mjs       # 14 comprobaciones · el corte de facturación
 node pruebas/portadas.mjs     #  9 comprobaciones · la búsqueda de portada
 node pruebas/estante.mjs      # 19 comprobaciones · el catálogo de la casa
+node pruebas/kana.mjs         # 19 comprobaciones · el teclado japonés
 
 # Contra la app publicada
 node pruebas/en-vivo.mjs      # 15 comprobaciones sobre la app en su dirección real
@@ -219,6 +220,22 @@ portada. Un título con acentos, con ñ, con espacios o con un signo raro es lo
 normal en una biblioteca en español.
 
 Que los dos botones son dos y hacen lo suyo se comprueba en `biblioteca.mjs`.
+
+## Qué comprueba `kana.mjs`
+
+Las tablas del teclado japonés y las transformaciones, sin navegador. Lo que
+puede salir mal aquí sin dar ningún error: que la conversión a katakana se coma
+una letra, que el dakuten se aplique a lo que no toca, o que algo funcione en
+hiragana y no en katakana.
+
+| Comprueba | Requisito |
+|---|---|
+| Están las diez filas del 五十音 y sus 48 kana, sin repetidos | D-33 |
+| Dakuten, handakuten y pequeñas, sobre la última letra | D-33 |
+| **Y funciona igual en katakana**, devolviendo el silabario en que estaba | D-33 |
+| Lo que no tiene transformación se queda como está | D-33 |
+
+Lo que **no** cubre: los kanji, porque el teclado no los escribe (D-33).
 
 ## Qué comprueba `estante.mjs`
 

@@ -4,6 +4,9 @@ import { ErrorTraductor, explicar, traducir } from '../lib/traductor'
 import type { Traduccion } from '../lib/traductor'
 import { borrarPalabra, guardarTraduccion } from '../lib/almacen'
 import { useAtras } from '../lib/atras'
+import { Kana } from './Kana'
+import { transformar } from '../lib/kana'
+import type { Ajustes } from '../lib/tipos'
 
 /**
  * La burbuja del traductor: una barra fija abajo, siempre lista (P55).
@@ -17,6 +20,7 @@ import { useAtras } from '../lib/atras'
 type Solapa = 'literal' | 'contexto' | 'palabra' | 'aviso'
 
 interface Props {
+  ajustes: Ajustes
   clave: string
   libro: Libro
   pagina: number
@@ -32,7 +36,7 @@ interface Props {
   onQuitada: (id: string) => void
 }
 
-export function Burbuja({ clave, libro, pagina, seleccion, onUsarSeleccion, onIrAAjustes, onEnUso, onGuardada, onQuitada }: Props) {
+export function Burbuja({ ajustes, clave, libro, pagina, seleccion, onUsarSeleccion, onIrAAjustes, onEnUso, onGuardada, onQuitada }: Props) {
   const [texto, setTexto] = useState('')
   const [abierta, setAbierta] = useState(false)
   const [pidiendo, setPidiendo] = useState(false)
@@ -48,6 +52,10 @@ export function Burbuja({ clave, libro, pagina, seleccion, onUsarSeleccion, onIr
    */
   const [guardada, setGuardada] = useState<Palabra | null>(null)
   const [consultado, setConsultado] = useState('')
+  // El teclado de kana. Solo existe leyendo en japonés, y se abre a mano: el
+  // del teléfono sigue siendo el bueno para todo lo demás.
+  const [kana, setKana] = useState(false)
+  const [katakana, setKatakana] = useState(false)
   const campo = useRef<HTMLTextAreaElement>(null)
   const corte = useRef<AbortController | null>(null)
 
@@ -105,6 +113,7 @@ export function Burbuja({ clave, libro, pagina, seleccion, onUsarSeleccion, onIr
       const r = await traducir({
         clave,
         texto: t,
+        idioma: ajustes.idioma,
         senal: control.signal,
         alAsomar: setNatural,
       })
@@ -147,6 +156,7 @@ export function Burbuja({ clave, libro, pagina, seleccion, onUsarSeleccion, onIr
 
   const limpiar = () => {
     corte.current?.abort()
+    setKana(false)
     setTexto('')
     setAbierta(false)
     setResultado(null)
@@ -246,7 +256,33 @@ export function Burbuja({ clave, libro, pagina, seleccion, onUsarSeleccion, onIr
         </div>
       )}
 
+      {kana && ajustes.idioma === 'japones' && (
+        <Kana
+          katakana={katakana}
+          onKatakana={setKatakana}
+          onEscribir={k => setTexto(t => t + k)}
+          onTransformar={tabla => setTexto(t => transformar(t, tabla))}
+          onBorrar={() => setTexto(t => t.slice(0, -1))}
+          onCerrar={() => setKana(false)}
+        />
+      )}
+
       <div className="barra-burbuja">
+        {ajustes.idioma === 'japones' && (
+          <button
+            className="icono kana-abrir"
+            aria-pressed={kana}
+            onClick={() => {
+              // Se le quita el foco al campo: si no, el teclado del teléfono se
+              // queda encima del de kana y no cabe ninguno de los dos.
+              if (!kana) campo.current?.blur()
+              setKana(v => !v)
+            }}
+            aria-label="Teclado japonés"
+          >
+            あ
+          </button>
+        )}
         <textarea
           ref={campo}
           value={texto}
@@ -264,7 +300,7 @@ export function Burbuja({ clave, libro, pagina, seleccion, onUsarSeleccion, onIr
               void pedir()
             }
           }}
-          aria-label="Texto en inglés para traducir"
+          aria-label="Texto para traducir"
         />
         <button
           className="btn peq"

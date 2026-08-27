@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { explicar, probarClave } from '../lib/traductor'
 import type { Quien } from '../lib/nube'
+import { IDIOMAS } from '../lib/tipos'
 import type { Ajustes as LosAjustes, Paso } from '../lib/tipos'
 
 /**
@@ -138,6 +139,40 @@ export function Ajustes({
           Vellum traduce con Gemini. La clave es gratuita, no pide tarjeta y da
           1.000 traducciones al día. Se pega una vez y se queda en este aparato.
         </p>
+
+        <label className="campo">
+          <span className="campo-eti">De qué idioma traduce</span>
+          <select
+            className="selector"
+            value={ajustes.idioma}
+            onChange={e => onCambiarAjustes({ ...ajustes, idioma: e.target.value as LosAjustes['idioma'] })}
+          >
+            {IDIOMAS.map(i => (
+              <option key={i.id} value={i.id}>{i.nombre}</option>
+            ))}
+          </select>
+        </label>
+        <p className="tarjeta-nota">
+          Siempre traduce al español; lo que eliges es el idioma de lo que estás
+          leyendo.
+        </p>
+        {ajustes.idioma === 'japones' && (
+          <div className="alerta suave">
+            <p className="alerta-tit">El teclado japonés</p>
+            <p>
+              En la burbuja aparece un botón <strong>あ</strong> que abre un teclado
+              de kana completo: los cincuenta sonidos en hiragana y katakana, con
+              dakuten, handakuten, las formas pequeñas y los signos japoneses.
+            </p>
+            <p>
+              <strong>Kanji no escribe</strong>, y no es un descuido: para eso hace
+              falta un diccionario que convierta かたな en 刀, que es otro programa.
+              El teclado japonés del teléfono lo hace mucho mejor — en Android se
+              añade en Ajustes → Idiomas → Teclado. Con los kana se pregunta
+              igual: Gemini entiende かたな lo mismo que 刀.
+            </p>
+          </div>
+        )}
 
         <label className="campo">
           <span className="campo-eti">Clave de Gemini</span>

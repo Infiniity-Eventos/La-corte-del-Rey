@@ -833,6 +833,7 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
           </div>
         )}
         <Burbuja
+          ajustes={ajustes}
           clave={clave}
           libro={libro}
           pagina={pagina}

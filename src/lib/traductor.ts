@@ -1,3 +1,5 @@
+import { IDIOMAS } from './tipos'
+import type { Idioma } from './tipos'
 /**
  * El traductor: Gemini con tu propia clave (D-09).
  *
@@ -112,7 +114,19 @@ const ESQUEMA = {
   required: ['natural', 'literal', 'contexto'],
 } as const
 
-const INSTRUCCION = `Eres el traductor de una app de lectura. Traduces del inglés al español.
+function instruccion(idioma: Idioma): string {
+  const nombre = IDIOMAS.find(i => i.id === idioma)?.nombre ?? 'Inglés'
+  // El japonés necesita una línea propia: sin ella, la «pronunciación» de una
+  // palabra sale en kana, que es justo lo que no sabe leer quien pregunta.
+  const extra = idioma === 'japones'
+    ? `\n\nEl original está en japonés. En «pronunciación», escribe la lectura en
+rōmaji tal como la diría un hispanohablante, y añade la lectura en kana entre
+paréntesis. Si lo que te mandan lleva kanji, di en «contexto» cómo se lee.`
+    : ''
+  return BASE.replace('{IDIOMA}', nombre.toLowerCase()) + extra
+}
+
+const BASE = `Eres el traductor de una app de lectura. Traduces del {IDIOMA} al español.
 
 Devuelves siempre:
 - natural: cómo lo diría un hispanohablante. Es lo más importante y lo que se lee primero. Sin rodeos, sin explicar, solo la frase.
@@ -121,7 +135,7 @@ Devuelves siempre:
 
 Además, solo cuando corresponda:
 - aviso: si es un modismo, un juego de palabras, una referencia cultural o algo que no traduce directo, dilo en una frase.
-- palabra: solo si lo que te mandan es UNA sola palabra. Incluye pronunciación aproximada escrita para un hispanohablante (no alfabeto fonético), el significado, una frase de ejemplo en inglés y su traducción.
+- palabra: solo si lo que te mandan es UNA sola palabra. Incluye pronunciación aproximada escrita para un hispanohablante (no alfabeto fonético), el significado, una frase de ejemplo en el idioma original y su traducción.
 
 Escribe en español de España neutro. Sé breve: esto se lee en un teléfono, en mitad de un libro.`
 
@@ -175,6 +189,8 @@ function naturalAMedias(texto: string): string | null {
 export interface Opciones {
   clave: string
   texto: string
+  /** De qué idioma se traduce. Siempre al español. */
+  idioma?: Idioma
   /** Se llama con la traducción natural en cuanto asoma, antes del resto. */
   alAsomar?: (natural: string) => void
   senal?: AbortSignal
@@ -221,7 +237,7 @@ export async function traducir(opciones: Opciones): Promise<Traduccion> {
   }
 }
 
-async function pedirTraduccion(MODELO: string, { clave, texto, alAsomar, senal }: Opciones): Promise<Traduccion> {
+async function pedirTraduccion(MODELO: string, { clave, texto, idioma = 'ingles', alAsomar, senal }: Opciones): Promise<Traduccion> {
 
   let respuesta: Response
   try {
@@ -230,7 +246,7 @@ async function pedirTraduccion(MODELO: string, { clave, texto, alAsomar, senal }
       headers: { 'Content-Type': 'application/json', 'x-goog-api-key': clave },
       signal: senal,
       body: JSON.stringify({
-        systemInstruction: { parts: [{ text: INSTRUCCION }] },
+        systemInstruction: { parts: [{ text: instruccion(idioma) }] },
         contents: [{ role: 'user', parts: [{ text: texto }] }],
         generationConfig: {
           responseMimeType: 'application/json',

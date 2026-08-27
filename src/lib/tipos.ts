@@ -88,11 +88,31 @@ export interface Palabra {
  */
 export type Paso = 'deslizar' | 'tocar'
 
+/**
+ * De qué idioma traduce la burbuja.
+ *
+ * Siempre al español: lo que se elige es el idioma de lo que estás leyendo.
+ * Añadir uno más es una línea aquí y otra en la lista de abajo.
+ */
+export type Idioma = 'ingles' | 'japones' | 'frances' | 'italiano' | 'portugues' | 'aleman' | 'coreano'
+
+/** El nombre para la pantalla y el que se le dice a Gemini. */
+export const IDIOMAS: { id: Idioma; nombre: string }[] = [
+  { id: 'ingles', nombre: 'Inglés' },
+  { id: 'japones', nombre: 'Japonés' },
+  { id: 'frances', nombre: 'Francés' },
+  { id: 'italiano', nombre: 'Italiano' },
+  { id: 'portugues', nombre: 'Portugués' },
+  { id: 'aleman', nombre: 'Alemán' },
+  { id: 'coreano', nombre: 'Coreano' },
+]
+
 export interface Ajustes {
   tema: Tema
   sonido: boolean
   vibracion: boolean
   paso: Paso
+  idioma: Idioma
 }
 
 /**
@@ -111,4 +131,5 @@ export const AJUSTES_POR_DEFECTO: Ajustes = {
   vibracion: true,
   // El de siempre. Quien prefiera tocar lo cambia una vez y no vuelve a pensarlo.
   paso: 'deslizar',
+  idioma: 'ingles',
 }

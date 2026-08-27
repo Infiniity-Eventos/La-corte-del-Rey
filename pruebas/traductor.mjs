@@ -199,6 +199,74 @@ paso('la pestaña literal funciona', (await page.textContent('.hoja-solapa .lite
 await page.click('.solapa:has-text("En contexto")')
 paso('la pestaña de contexto funciona', (await page.textContent('.hoja-solapa p')) === RESPUESTA.contexto)
 
+/* --- El idioma y el teclado japonés --- */
+// Se cierra el panel y se sale del libro para tocar los ajustes.
+await page.click('.panel-top .icono')
+await page.evaluate(() => document.querySelector('.barra-burbuja textarea').blur())
+await page.waitForTimeout(400)
+paso('en inglés no hay teclado japonés', (await page.locator('.kana-abrir').count()) === 0)
+await page.click('.escena', { position: { x: 200, y: 300 } })
+await page.waitForTimeout(250)
+await page.click('.chrome.arriba .icono:first-child')
+await page.waitForSelector('.rejilla .libro', { timeout: 10000 })
+await page.click('.biblio-top .icono:has-text("Ajustes")')
+await page.waitForSelector('.selector')
+await page.selectOption('.selector', 'japones')
+await page.waitForTimeout(300)
+paso('los ajustes dejan elegir el idioma',
+  (await page.inputValue('.selector')) === 'japones')
+paso('y avisan de que kanji no escribe',
+  /Kanji no escribe/.test(await page.textContent('.alerta.suave')))
+await page.click('.icono.volver')
+await page.waitForSelector('.rejilla .libro')
+await abrirLibro()
+
+paso('en japonés aparece el botón del teclado',
+  (await page.locator('.kana-abrir').count()) === 1)
+await page.click('.kana-abrir')
+await page.waitForSelector('.kana', { timeout: 5000 })
+paso('el teclado trae el silabario entero',
+  (await page.locator('.kana-rejilla .kana-tecla').count()) === 48,
+  `${await page.locator('.kana-rejilla .kana-tecla').count()} teclas`)
+
+await page.click('.kana-tecla:has-text("か")')
+await page.click('.kana-tecla:has-text("゛")')
+await page.click('.kana-tecla:has-text("た")')
+await page.click('.kana-tecla:has-text("な")')
+paso('se escribe kana, con dakuten y todo',
+  (await page.inputValue('.barra-burbuja textarea')) === 'がたな',
+  `«${await page.inputValue('.barra-burbuja textarea')}»`)
+
+await page.click('.segmento.peq .segmento-op:has-text("カタカナ")')
+await page.waitForTimeout(200)
+await page.click('.kana-tecla:has-text("ア")')
+paso('y se cambia a katakana', (await page.inputValue('.barra-burbuja textarea')) === 'がたなア',
+  `«${await page.inputValue('.barra-burbuja textarea')}»`)
+await page.click('.kana-fila .kana-tecla:has-text("⌫")')
+paso('el borrado quita una letra', (await page.inputValue('.barra-burbuja textarea')) === 'がたな')
+
+await page.click('.kana .icono')
+await page.waitForTimeout(250)
+paso('el teclado se cierra', (await page.locator('.kana').count()) === 0)
+
+// Se devuelve el idioma a inglés para lo que viene después.
+await page.fill('.barra-burbuja textarea', '')
+await page.evaluate(() => document.querySelector('.barra-burbuja textarea').blur())
+await page.waitForTimeout(300)
+await page.click('.escena', { position: { x: 200, y: 300 } })
+await page.waitForTimeout(250)
+await page.click('.chrome.arriba .icono:first-child')
+await page.waitForSelector('.rejilla .libro', { timeout: 10000 })
+await page.click('.biblio-top .icono:has-text("Ajustes")')
+await page.waitForSelector('.selector')
+await page.selectOption('.selector', 'ingles')
+await page.waitForTimeout(300)
+await page.click('.icono.volver')
+await page.waitForSelector('.rejilla .libro')
+await abrirLibro()
+await pedir('he was over the moon about it')
+await page.waitForSelector('.guardada .icono', { timeout: 15000 })
+
 /* --- El campo se vacía al mandar, para poder seguir --- */
 paso('al traducir, el campo queda vacío',
   (await page.inputValue('.barra-burbuja textarea')) === '',

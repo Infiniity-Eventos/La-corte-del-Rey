@@ -158,6 +158,48 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; justif
 .pista-vista { margin: 0 0 var(--e2); font-size: .82rem; color: var(--tinta-3); }
 .paso-como { margin-top: var(--e2); min-height: 2.6rem; }
 
+.selector {
+  width: 100%; font: inherit; font-size: .95rem; color: var(--tinta);
+  background: var(--vitela-alta); border: 1px solid var(--linea); border-radius: 6px;
+  padding: .55rem .7rem;
+}
+.selector:focus { outline: none; border-color: var(--ocre); }
+.alerta.suave { background: var(--vitela-alta); border-color: var(--linea); }
+.alerta.suave .alerta-tit { color: var(--ocre); }
+
+/* ---- El teclado de kana ----
+   Va dentro de la zona de la burbuja, encima de la barra, y ocupa lo que
+   ocuparía el teclado del teléfono: es su sustituto, no un añadido. */
+/* Ocupa lo que ocuparía el teclado del teléfono —poco más de un tercio— y ni
+   un pixel más: lo que se tapa es la página que estás leyendo. */
+.kana {
+  background: var(--chrome); backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(138, 90, 43, .16);
+  padding: .35rem .4rem .3rem;
+  display: flex; flex-direction: column; gap: .2rem;
+  color: var(--tinta-lectura);
+}
+.kana-top { display: flex; align-items: center; justify-content: space-between; gap: var(--e2); }
+.kana-rejilla { display: grid; grid-template-columns: repeat(5, 1fr); gap: .2rem; }
+.kana-fila { display: flex; gap: .2rem; }
+.kana-fila .kana-tecla { flex: 1; }
+.kana-tecla {
+  height: 2rem; border-radius: 5px; padding: 0;
+  background: var(--vitela-alta); border: 1px solid var(--linea); color: var(--tinta);
+  font-size: 1rem; line-height: 1;
+  transition: background var(--paso) var(--curva);
+}
+.kana-tecla:active { background: var(--ocre-suave); }
+/* Los signos de sonora y explosiva son diminutos por naturaleza: sin subirles
+   el tamaño no se distinguen el uno del otro en una tecla. */
+.kana-tecla.mod { color: var(--ocre); font-weight: 700; font-size: 1.3rem; }
+.kana-fila.finos .kana-tecla { height: 1.7rem; font-size: .88rem; }
+.kana-hueco { height: 2rem; }
+.kana-pie { margin: .1rem 0 0; font-size: .64rem; opacity: .5; text-align: center; }
+.kana-abrir { flex: none; font-size: 1.05rem; padding: .4rem .6rem; }
+.kana-abrir[aria-pressed='true'] { color: var(--ocre); border-color: var(--ocre); }
+.segmento.peq .segmento-op { font-size: .75rem; padding: .22rem .55rem; }
+
 /* En la ficha: lo que comparte otra persona se lee, no se edita. */
 .prestado {
   background: var(--vitela-alta); border: 1px solid var(--linea); border-radius: var(--r);
