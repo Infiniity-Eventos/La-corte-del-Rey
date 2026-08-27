@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Libro } from '../lib/tipos'
-import { GENERADOR, copiar, promptPortada } from '../lib/portadas'
+import { buscarPortada } from '../lib/portadas'
 import { Portada } from './Portada'
 
 /**
@@ -36,14 +36,8 @@ export function FichaLibro({ libro, etiquetasConocidas, miUid, onGuardar, onBorr
   const [tipo, setTipo] = useState(libro.tipo)
   const [etiquetas, setEtiquetas] = useState<string[]>(libro.etiquetas)
   const [portada, setPortada] = useState<Blob | undefined>(libro.portada)
-  const [tituloEnPortada, setTituloEnPortada] = useState(libro.tituloEnPortada ?? false)
   const [nueva, setNueva] = useState('')
   const [confirmando, setConfirmando] = useState(false)
-  // El encargo de la portada, cuando lo has pedido: qué se copió, si se copió y
-  // si el generador llegó a abrirse.
-  const [encargo, setEncargo] = useState<
-    { texto: string; copiado: boolean; abrio: boolean } | null
-  >(null)
   const imagen = useRef<HTMLInputElement>(null)
   const campoTitulo = useRef<HTMLInputElement>(null)
 
@@ -73,7 +67,6 @@ export function FichaLibro({ libro, etiquetasConocidas, miUid, onGuardar, onBorr
       tipo,
       etiquetas,
       portada,
-      tituloEnPortada: portada ? tituloEnPortada : false,
     })
   }
 
@@ -89,25 +82,6 @@ export function FichaLibro({ libro, etiquetasConocidas, miUid, onGuardar, onBorr
     tipo,
     etiquetas,
     portada,
-    tituloEnPortada: portada ? tituloEnPortada : false,
-  }
-
-  /**
-   * Copiar primero y abrir después, y en ese orden.
-   *
-   * El portapapeles exige que la página tenga el foco, y abrir el generador se
-   * lo quita. Al revés, el encargo se perdería justo cuando ya no estás mirando.
-   */
-  const crearPortada = async () => {
-    const texto = promptPortada(vistaPrevia)
-    const copiado = await copiar(texto)
-    // Con 'noopener' en las opciones, window.open **siempre devuelve null**, y
-    // entonces no hay forma de distinguir «se abrió» de «lo bloquearon». Se
-    // abre sin esa opción y se corta el enlace de vuelta a mano, que consigue
-    // lo mismo sin quedarse ciego.
-    const ventana = window.open(GENERADOR, '_blank')
-    if (ventana) ventana.opener = null
-    setEncargo({ texto, copiado, abrio: ventana !== null })
   }
 
 
@@ -120,67 +94,37 @@ export function FichaLibro({ libro, etiquetasConocidas, miUid, onGuardar, onBorr
           <Portada libro={vistaPrevia} grande />
           {ajeno ? null : (
           <div className="ficha-acciones">
+            {/* Dos botones y ya. Buscar abre Google Imágenes con «portada» y el
+                título; subir coge el archivo que hayas guardado. */}
+            <a
+              className="btn fantasma peq"
+              href={buscarPortada(vistaPrevia)}
+              target="_blank"
+              rel="noopener"
+            >
+              Buscar portada
+            </a>
             <button className="btn fantasma peq" onClick={() => imagen.current?.click()}>
-              {portada ? 'Cambiar portada' : 'Poner portada'}
+              Subir imagen
             </button>
-            {portada && (
-              <button className="btn fantasma peq" onClick={() => setPortada(undefined)}>
-                Quitar portada
-              </button>
-            )}
-            <button className="btn fantasma peq" onClick={() => void crearPortada()}>
-              Crear portada
-            </button>
-            {portada ? (
-              <label className="casilla">
-                <input
-                  type="checkbox"
-                  checked={tituloEnPortada}
-                  onChange={e => setTituloEnPortada(e.target.checked)}
-                />
-                <span>
-                  El título ya está en la imagen
-                  <em>
-                    Normalmente lo compone Vellum encima, para que todas las portadas
-                    lleven la misma letra. Marca esto si esta lo trae ya escrito.
-                  </em>
-                </span>
-              </label>
-            ) : (
-              <p className="ficha-pista">Sin imagen, la portada se compone con el título.</p>
-            )}
+            <p className="ficha-pista">
+              {portada
+                ? 'Subir otra la reemplaza.'
+                : 'Sin imagen, la portada se compone con el título.'}
+            </p>
           </div>
           )}
         </div>
 
-        {encargo && (
-          <div className="encargo">
-            <div className="encargo-top">
-              <span className="encargo-tit">
-                {encargo.copiado ? 'Encargo copiado' : 'Cópialo tú'}
-              </span>
-              <button
-                className="btn fantasma peq"
-                onClick={() => void copiar(encargo.texto).then(ok =>
-                  setEncargo(e => (e ? { ...e, copiado: ok } : e)))}
-              >
-                Copiar otra vez
-              </button>
-              <button className="icono" onClick={() => setEncargo(null)} aria-label="Cerrar el encargo">
-                ✕
-              </button>
-            </div>
-            <pre className="encargo-txt">{encargo.texto}</pre>
-            <p className="encargo-pista">
-              {encargo.abrio
-                ? 'Pégalo en Gemini, genera la portada y guárdala. Luego vuelve aquí y pulsa «Poner portada».'
-                : 'El navegador no dejó abrir Gemini. Ábrelo tú, pega el encargo y vuelve con la imagen.'}
+        {ajeno && (
+          <div className="prestado">
+            <p className="prestado-tit">Lo comparte {libro.deNombre || 'la otra persona'}</p>
+            <p className="prestado-txt">
+              Puedes leerlo y traducirlo, y <strong>por dónde vas es tuyo</strong>.
+              El título, las etiquetas y la portada son suyos y se actualizan
+              solos: por eso aquí no se editan. Si lo quita del catálogo,
+              desaparece también de aquí.
             </p>
-            {!encargo.abrio && (
-              <a className="btn peq" href={GENERADOR} target="_blank" rel="noopener">
-                Abrir Gemini
-              </a>
-            )}
           </div>
         )}
 
@@ -265,22 +209,12 @@ export function FichaLibro({ libro, etiquetasConocidas, miUid, onGuardar, onBorr
         </div>
         </>)}
 
-        {ajeno ? (
-          <div className="prestado">
-            <p className="prestado-tit">Lo comparte {libro.deNombre || 'la otra persona'}</p>
-            <p className="prestado-txt">
-              Puedes leerlo y traducirlo, y <strong>por dónde vas es tuyo</strong>.
-              El título, las etiquetas y la portada son suyos y se actualizan
-              solos: por eso aquí no se editan. Si lo quita del catálogo,
-              desaparece también de aquí.
-            </p>
-          </div>
-        ) : miUid ? (
+        {!ajeno && miUid && (
           <p className="ficha-pista compartir">
             Con la sesión abierta, lo que traes va al catálogo de la casa: la otra
             persona puede encontrarlo y leerlo.
           </p>
-        ) : null}
+        )}
 
         <div className="ficha-pie">
           {confirmando ? (

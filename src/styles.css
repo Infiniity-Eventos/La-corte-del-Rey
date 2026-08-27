@@ -91,6 +91,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
   border-radius: 6px; padding: .68rem 1.3rem; font-weight: 700; font-size: .95rem;
   transition: opacity var(--paso) var(--curva), transform var(--paso) var(--curva);
 }
+/* Un .btn puede ser un enlace —«Buscar portada» lo es— y entonces el navegador
+   le pone subrayado. Un botón subrayado no parece un botón. */
+a.btn { text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
 .btn:hover { opacity: .88; }
 .btn:active { transform: translateY(1px); }
 .btn.fantasma { background: transparent; color: var(--tinta); border-color: var(--linea); font-weight: 500; }

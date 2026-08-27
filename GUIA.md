@@ -211,7 +211,7 @@ técnicas que descartan opciones desde el primer día. Implican, como mínimo:
   separados, o Gemini deja de ser gratis.
 - **Origen:** P61 obs.
 
-### D-13 · Las portadas se generan fuera y se traen a mano
+### D-13 · Las portadas se generan fuera y se traen a mano — ~~REVOCADA~~
 - **Decisión:** un botón **Crear portada** compone un prompt con el título, las
   etiquetas, el tipo de obra y el nombre del archivo, lo copia al portapapeles y
   abre el generador de imágenes. Tú generas allí y vuelves con el archivo.
@@ -225,9 +225,10 @@ técnicas que descartan opciones desde el primer día. Implican, como mínimo:
   `guia/prompts/portadas.md`.
 - **Siempre hay portada:** si no generas ninguna, se usa la primera página del
   PDF; si esa no sirve, una portada tipográfica con el título.
+- **Revocada** por D-31: se buscan en Google Imágenes y se suben.
 - **Origen:** P61 obs.
 
-### D-15 · El título lo escribe Vellum sobre la portada, no la IA
+### D-15 · El título lo escribe Vellum sobre la portada, no la IA — ~~REVOCADA~~
 - **Decisión:** el generador crea **solo la ilustración**, dejando una banda
   limpia; **Vellum compone el título encima** con la tipografía de la casa.
 - **Por qué:** en P73 pediste que el título aparezca escrito en la portada, y
@@ -238,7 +239,7 @@ técnicas que descartan opciones desde el primer día. Implican, como mínimo:
   sitio y siempre con la misma letra.
 - **Origen:** P73, resuelto de forma que cumple lo pedido sin heredar el defecto.
 
-### D-16 · El prompt recoge el estilo propio de cada obra
+### D-16 · El prompt recoge el estilo propio de cada obra — ~~REVOCADA~~
 - **Decisión:** la plantilla invita a Gemini a reconocer la obra, si la conoce, y
   a traducir sus motivos e iconografía **al formato de dos tintas sobre
   pergamino** de Vellum. El formato manda siempre; el estilo original entra solo
@@ -259,7 +260,7 @@ técnicas que descartan opciones desde el primer día. Implican, como mínimo:
   con palabras en vez de dejarte intentándolo (R31 / P30).
 - **Origen:** P51, P56.
 
-### D-19 · El título en la portada, con una excepción
+### D-19 · El título en la portada, con una excepción — ~~REVOCADA~~
 - **Decisión:** se mantiene D-15 —la ilustración la hace la IA, el título lo
   compone Vellum— pero la ficha de cada libro tiene una casilla, **«el título ya
   está en la imagen»**, que desactiva la composición para ese libro.
@@ -312,6 +313,24 @@ técnicas que descartan opciones desde el primer día. Implican, como mínimo:
 - **Montarlo es cosa de una vez y hay que hacerlo a mano** en la consola de
   Google: `apagon/LEEME.md` y `guia/paginas/apagon.html`.
 - **Origen:** P69, y T13.
+
+### D-31 · Las portadas se buscan y se suben. Nada más
+- **Decisión:** en la ficha de cada libro hay **dos botones y ya**. *Buscar
+  portada* abre Google Imágenes buscando «portada» y el título; *Subir imagen*
+  coge el archivo que hayas guardado.
+- **Qué se va:** el encargo para Gemini, la plantilla de estilo, el panel del
+  prompt, la casilla del título y el título compuesto encima de la imagen.
+  Revoca D-13, D-15, D-16 y D-19 enteras.
+- **Por qué:** la idea era que cincuenta portadas parecieran una colección. En el
+  uso resultó otra cosa: **la portada de verdad de un libro sirve mejor que una
+  ilustración bonita que no es la suya**, y buscarla cuesta cinco segundos frente
+  a generar, elegir y volver.
+- **Con imagen no se escribe nada encima**, porque las portadas de verdad ya
+  traen su título. Sin imagen sigue la tipográfica de siempre.
+- **Se fue también «Quitar portada»**, que era un tercer botón. Subir otra la
+  reemplaza; dejar un libro sin imagen otra vez ya no se puede. Queda dicho por
+  si hace falta.
+- **Origen:** pedido en el uso, 2026-08-27.
 
 ### D-29 · Un catálogo para la casa, una estrella para cada quien
 - **Decisión:** todo PDF que sube cualquiera va a un **catálogo común**, que se
@@ -616,14 +635,13 @@ El orden lo fijó P80: **leer antes que nada**.
 | **4 · Nube** | Sesión con Google, Firestore, subida de PDF con la regla de datos móviles, corte de facturación | **hecho** · 28 comprobaciones en `pruebas/` |
 | **5 · Portadas** | Botón Crear portada, plantilla de prompt, composición del título | **hecho** · 32 comprobaciones en `pruebas/` |
 
-Las respuestas están en `guia/respuestas/`. Los prompts para generar el icono y
-las portadas, en `guia/prompts/`.
+Las respuestas están en `guia/respuestas/`. El prompt del icono, en `guia/prompts/`.
 
 ### Páginas de trabajo
 
 | Página | Para qué | Archivo |
 |---|---|---|
-| Prompts | El icono y las portadas, listos para copiar | `guia/paginas/prompts.html` |
+| Prompts | El icono. Las portadas ya no se generan | `guia/paginas/prompts.html` |
 | Instalación | Paso a paso de los dos proyectos de Google, con casillas | `guia/paginas/instalacion.html` |
 | La clave de Gemini | Tutorial para sacar la clave, con enlaces. El que se le pasa a quien va a usar la app | `guia/paginas/clave.html` |
 | Apagón | Paso a paso del corte de facturación en 1 dólar, con las órdenes listas para copiar | `guia/paginas/apagon.html` |
@@ -800,6 +818,13 @@ construir lo que viene:
   los llevaba. Cuando pasó a componer también el encargo, marcar «Cómic» y
   añadir etiquetas antes de guardar no llegaba al prompt. Una estructura que
   sirve para dos cosas tiene que estar completa para las dos.
+- **Lo bonito perdió contra lo correcto.** Todo el sistema de portadas
+  generadas —plantilla, estilo idéntico, título compuesto por la app— estaba
+  bien pensado y bien probado, y sobrevivió exactamente hasta que se usó: la
+  portada de verdad del libro gana. **Que una pieza esté bien hecha no es un
+  argumento para conservarla.**
+- **Un `.btn` que es un enlace sale subrayado**, y un botón subrayado no parece
+  un botón. Cuesta una línea y se ve a la primera mirada.
 - **Una función escondida hasta que «hace falta» es una función que no existe.**
   Las pestañas del catálogo y el buscador estaban condicionados —uno a que
   hubiera libros de otra persona, el otro a tener más de tres— y el resultado
@@ -1023,3 +1048,9 @@ construir lo que viene:
   pestañas salen con la sesión abierta y el buscador en cuanto hay algo que
   buscar. La estrella baja de la portada al pie, porque encima tapaba el título.
   277 comprobaciones.
+- **2026-08-27** — **Fuera el sistema de portadas generadas** (D-31). Dos botones
+  y ya: *Buscar portada*, que abre Google Imágenes con «portada» y el título, y
+  *Subir imagen*. Se van el encargo para Gemini, la plantilla de estilo, el panel
+  del prompt, la casilla del título y el título compuesto encima de la imagen —
+  las portadas de verdad ya traen el suyo. Estaba bien hecho y bien probado, y
+  duró exactamente hasta que se usó. 262 comprobaciones.

@@ -24,8 +24,6 @@ export interface Libro {
   abiertoEn: number
   /** Portada generada fuera y traída a mano (D-13). */
   portada?: Blob
-  /** Cuando la propia imagen ya trae el título escrito, Vellum no lo compone. */
-  tituloEnPortada?: boolean
 
   /**
    * Cuándo se tocó por última vez. Es lo que decide quién gana al sincronizar:

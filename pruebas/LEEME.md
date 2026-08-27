@@ -19,7 +19,7 @@ node pruebas/capturas.mjs     # capturas de cada estado
 # Sin navegador: se ejecutan solas
 node pruebas/fusion.mjs       # 14 comprobaciones · la fusión entre aparatos
 node pruebas/apagon.mjs       # 14 comprobaciones · el corte de facturación
-node pruebas/portadas.mjs     # 20 comprobaciones · el encargo de las portadas
+node pruebas/portadas.mjs     #  9 comprobaciones · la búsqueda de portada
 node pruebas/estante.mjs      # 19 comprobaciones · el catálogo de la casa
 
 # Contra la app publicada
@@ -89,7 +89,9 @@ vea de dónde sale y no parezca una prueba puesta por costumbre.
 | Buscar por etiqueta | P41 |
 | Decir con palabras que no hay resultados | R8 |
 | Poner una portada propia | R26 · P40 |
-| Componer el título encima de la imagen | D-15 · P73 |
+| Con imagen, el título NO se escribe encima | D-31 |
+| En la portada hay exactamente dos botones | D-31 |
+| Buscar lleva a Google Imágenes con «portada» y el título | D-31 |
 | Lo empezado sube arriba del todo | R25 · P39 |
 | Al buscar no se destaca nada | — |
 | Preguntar antes de borrar, y borrar de verdad | — |
@@ -207,34 +209,12 @@ no corta, un céntimo por encima sí. **No comprueba que Google acepte el corte*
 
 ## Qué comprueba `portadas.mjs`
 
-El encargo que el botón *Crear portada* deja en el portapapeles. Lo que se
-vigila no es que el texto salga: es que **salga idéntico entre dos obras
-distintas salvo el encabezado**. La promesa de D-13 es que cincuenta portadas
-hechas en cincuenta momentos parezcan una colección, y eso se rompe el día que
-alguien meta una variable dentro del bloque de estilo. Un cambio así no da
-ningún error — simplemente, a los seis meses la biblioteca deja de verse entera.
+La dirección de «Buscar portada». Solo hay una cosa que pueda salir mal sin dar
+ningún error: que se arme mal y te lleve a buscar cualquier cosa menos la
+portada. Un título con acentos, con ñ, con espacios o con un signo raro es lo
+normal en una biblioteca en español.
 
-Las comprobaciones del botón en sí —que copia de verdad, que abre el generador,
-que se lleva lo que estás editando sin haber guardado— están en `biblioteca.mjs`.
-
-## Qué comprueba `atras.mjs`
-
-El botón de atrás del teléfono. Lo que se vigila no es que cierre algo: es que
-cierre **una cosa cada vez, de dentro hacia fuera, sin saltarse ninguna**.
-
-Y una que no se ve: **cerrar algo con su propio botón no deja una entrada de
-historial huérfana**. Eso no rompe nada visible — hasta que un día atrás no hace
-nada y hay que pulsarlo tres veces sin saber por qué.
-
-| Comprueba | Requisito |
-|---|---|
-| Atrás cierra la ficha, y no saca de la app | D-27 |
-| Vuelve de ajustes y vocabulario a la biblioteca | D-27 |
-| Cierra el libro y vuelve a la estantería | D-27 |
-| **Con traductor + notas + acercamiento encima, los cierra uno a uno** | D-27 |
-| Y sin saltarse ninguno por el camino | D-27 |
-| Sale del modo selección sin salir del libro | D-27 |
-| **Cerrar a mano no deja entradas de más en el historial** | D-27 |
+Que los dos botones son dos y hacen lo suyo se comprueba en `biblioteca.mjs`.
 
 ## Qué comprueba `estante.mjs`
 
@@ -309,8 +289,6 @@ Se dice aquí para que nadie las lea como una garantía que no son:
   ventana que no se puede automatizar, así que lo que se prueba es que sin
   cuenta todo funciona y que Firebase no se descarga. Que dos aparatos acaben
   con lo mismo hay que verlo con dos aparatos.
-- **Si la portada generada queda bonita.** Se comprueba que el encargo sea el
-  correcto y siempre el mismo; lo que Gemini dibuje con él es cosa de mirarlo.
 - **Que el apagón corte de verdad.** Se prueba la decisión, no el corte. Google
   tendría que aceptar desenganchar la facturación el día que toque, y eso solo
   se comprueba cuando pasa.

@@ -156,49 +156,8 @@ Sin ningún texto. Sin marco. Sin borde.</pre>
     <li><b>PNG de 1024 × 1024 como mínimo.</b> De ahí saco todos los tamaños que necesita la app.</li>
   </ol>
 
-  <div class="cabeza"><h2>Las portadas</h2><span>plantilla</span></div>
-  <p class="nota">Esto es lo que el botón <strong>Crear portada</strong> pondrá en el portapapeles. Lo que está en ocre lo rellena la app con los datos de cada libro. Puedes copiarlo ya y probarlo a mano con cualquier libro tuyo.</p>
-  <p class="nota">Lo que hace el trabajo aquí no es el prompt: es que sea <strong>idéntico para todos los libros salvo el sujeto</strong>. Esa línea de «ningún otro color» es la que hace que cincuenta portadas creadas en cincuenta momentos distintos parezcan una colección y no un cajón.</p>
-
-  <div class="bloque">
-    <div class="bloque-top">
-      <span class="bloque-nom">Plantilla de portada<span class="bloque-sub">Con los huecos sin rellenar, para probarla a mano</span></span>
-      <button class="copiar" data-c="pc">Copiar</button>
-    </div>
-    <pre id="pc">Ilustración de portada para <b>{libro | cómic}</b> de una biblioteca personal.
-
-Obra: «<b>{título}</b>»
-Temas: <b>{etiquetas}</b>
-Nombre del archivo original: <b>{nombre-del-archivo}</b>
-
-Si conoces esta obra, recoge sus motivos propios —su iconografía, sus símbolos, los objetos que la identifican— y tradúcelos a nuestro formato. El formato manda siempre; de la obra tomas el contenido, nunca el estilo.
-
-Estilo obligatorio, idéntico para toda la colección:
-ilustración plana y editorial impresa a dos tintas sobre pergamino cálido.
-Paleta estricta: fondo #EDE6D6, pergamino #F6F1E5, tinta parda #6B4423, un único acento de ocre #8A5A2B. Ningún otro color.
-Textura de papel muy sutil, como un grabado antiguo.
-Sin degradados brillantes, sin efectos 3D, sin sombras dramáticas, sin marcos, sin bordes.
-
-Composición: vertical 2:3, centrada, con amplio margen alrededor.
-Una sola imagen simbólica y sencilla que evoque los temas del libro.
-Nada de escenas recargadas. Nada de personajes con rostro.
-Si hay figura humana, que sea silueta o esté de espaldas.
-
-Deja el tercio inferior despejado y sin detalle: ahí va el título.
-
-No escribas ningún texto en la imagen. Ni el título, ni el autor, ni nada.</pre>
-  </div>
-
-  <p class="nota">La última línea contradice lo que pediste en P73, así que te explico por qué está: <strong>el título sí va escrito en la portada, pero no lo escribe la IA.</strong> El generador deja el tercio inferior despejado y <strong>Vellum compone el título encima</strong> con la tipografía de la casa. Pedírselo al generador tiene dos defectos conocidos: escribe mal a menudo, y cada portada saldría con una letra distinta, que es justo lo contrario de que la biblioteca parezca una colección. Así el título está siempre bien escrito, siempre en el mismo sitio y siempre con la misma letra.</p>
-
-  <div class="aviso">
-    <h3>Lo que no se puede olvidar nunca</h3>
-    <p>Ahora que vas con Blaze: <strong>el proyecto de Firebase y el proyecto de la clave de Gemini tienen que ser dos proyectos de Google distintos.</strong></p>
-    <p>El nivel gratuito de Gemini solo existe mientras ese proyecto no tenga facturación activada, y Blaze <em>es</em> activarla. Si son el mismo proyecto, cada traducción pasa a facturarse y nada te avisa: solo llega el cobro.</p>
-  </div>
-
-  <footer>Sale de la Guía del proyecto · rondas 3 y 4 · decisiones D-09, D-13, D-15 y D-16.</footer>
-</div>
+  <div class="cabeza"><h2>Las portadas</h2><span>ya no van por aquí</span></div>
+  <p>Vellum ya no genera portadas. En la ficha de cada libro hay dos botones: <strong>Buscar portada</strong>, que abre Google Imágenes buscando «portada» y el título, y <strong>Subir imagen</strong>. La portada de verdad de un libro sirve mejor que una ilustración que no es la suya, y buscarla cuesta cinco segundos.</p>
 
 <script>
   document.querySelectorAll('.copiar').forEach(function (b) {

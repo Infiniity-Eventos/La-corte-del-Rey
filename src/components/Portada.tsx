@@ -9,9 +9,8 @@ import type { Libro } from '../lib/tipos'
  * título — así que un libro se ve igual siempre y dos libros casi nunca
  * coinciden. Es lo que permite reconocerlo de un vistazo.
  *
- * Con imagen, **Vellum compone el título encima** (D-15). En P73 pediste que el
- * título apareciera escrito en la portada, y aparece; lo que no hace es
- * escribirlo el generador, que lo haría mal y con una letra distinta cada vez.
+ * Con imagen, la imagen manda y el título no se compone encima: las portadas
+ * salen de Google Imágenes y ya traen el suyo. Escribirlo otra vez lo duplica.
  */
 
 const TINTES = [
@@ -63,8 +62,8 @@ export function Portada({ libro, grande = false }: { libro: Libro; grande?: bool
           <span className="portada-regla" aria-hidden="true" />
         </>
       )}
-      {/* Si la imagen ya trae el título escrito, componerlo encima lo duplica. */}
-      {!(url && libro.tituloEnPortada) && <span className="portada-tit">{libro.titulo}</span>}
+      {/* Con imagen no se escribe nada encima: la portada de verdad ya lo trae. */}
+      {!url && <span className="portada-tit">{libro.titulo}</span>}
     </div>
   )
 }

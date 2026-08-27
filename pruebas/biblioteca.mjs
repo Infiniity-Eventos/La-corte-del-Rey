@@ -139,8 +139,9 @@ await page.waitForSelector('.ficha')
 await page.setInputFiles('.ficha input[type=file]', `${SC}/portada.png`)
 await page.waitForTimeout(600)
 paso('acepta una portada propia', (await page.locator('.ficha .portada-img').count()) === 1)
-paso('el título se compone encima de la imagen (D-15)',
-  (await page.locator('.ficha .portada.conImagen .portada-tit').count()) === 1)
+paso('con imagen, el título no se escribe encima',
+  (await page.locator('.ficha .portada.conImagen .portada-tit').count()) === 0,
+  'las portadas de Google ya traen el suyo')
 await page.click('.ficha-pie .btn:last-child')
 await page.waitForTimeout(800)
 paso('la portada aparece en la estantería', (await page.locator('.rejilla .portada-img').count()) === 1)
@@ -203,47 +204,24 @@ await page.waitForSelector(LIBROS)
 await page.waitForTimeout(600)
 paso('y al devolvérsela, vuelve', (await page.locator(LIBROS).count()) === antesDeEstrella)
 
-/* --- Crear portada: el encargo (D-13 / hito 5) --- */
+/* --- La portada: dos botones y ya --- */
 await page.click('.rejilla .libro:has(.portada-tit:text-is("Notas sueltas")) .mas')
 await page.waitForSelector('.ficha')
-// Se cambia el tipo y se añade una etiqueta SIN guardar: el encargo tiene que
-// llevarse lo que estás editando ahora, no lo que hay guardado.
-await page.click('.ficha .segmento-op:has-text("Cómic")')
 await page.fill(T, 'Tinta y ceniza')
-await page.fill(E, 'grabado')
-await page.press(E, 'Enter')
+const botones = await page.locator('.ficha-acciones .btn').allTextContents()
+paso('en la portada hay exactamente dos botones', botones.length === 2, botones.join(' · '))
+paso('uno busca la portada', botones[0].trim() === 'Buscar portada')
+paso('y el otro sube la imagen', botones[1].trim() === 'Subir imagen')
 
-const emergente = ctx.waitForEvent('page', { timeout: 8000 }).catch(() => null)
-await page.click('.ficha-acciones .btn:has-text("Crear portada")')
-await page.waitForSelector('.encargo', { timeout: 8000 })
-const encargo = await page.textContent('.encargo-txt')
-
-paso('«Crear portada» enseña el encargo', encargo.length > 500)
-paso('dice que lo copió', (await page.textContent('.encargo-tit')) === 'Encargo copiado')
-paso('el encargo lleva el título que estás escribiendo',
-  encargo.includes('Obra: «Tinta y ceniza»'))
-paso('y el tipo que acabas de marcar, sin haber guardado',
-  encargo.includes('portada para cómic'))
-paso('y la etiqueta que acabas de poner', encargo.includes('grabado'))
-paso('lleva el nombre del archivo original',
-  /Nombre del archivo original: .+\.pdf/.test(encargo), (encargo.match(/Nombre.*/) || [''])[0])
-paso('impone la paleta de la casa', encargo.includes('Ningún otro color'))
-paso('y le prohíbe escribir el título (D-15)',
-  encargo.includes('No escribas ningún texto en la imagen'))
-
-const enPortapapeles = await page.evaluate(() => navigator.clipboard.readText())
-paso('lo que se ve es exactamente lo que se copió',
-  enPortapapeles.trim() === encargo.trim())
-
-const gemini = await emergente
-paso('abre el generador', gemini !== null && /gemini\.google\.com/.test(gemini.url()),
-  gemini ? gemini.url() : 'no se abrió ninguna ventana')
-if (gemini) await gemini.close()
-
-paso('dice qué hacer al volver',
-  /vuelve aquí y pulsa/.test(await page.textContent('.encargo-pista')))
-await page.click('.encargo .icono')
-paso('el encargo se puede cerrar', (await page.locator('.encargo').count()) === 0)
+const aDonde = await page.getAttribute('.ficha-acciones a', 'href')
+paso('buscar lleva a Google Imágenes', /google\.com\/search\?.*tbm=isch/.test(aDonde))
+paso('buscando «portada» y el título que estás escribiendo',
+  decodeURIComponent(new URL(aDonde).searchParams.get('q')) === 'portada Tinta y ceniza',
+  new URL(aDonde).searchParams.get('q'))
+paso('se abre fuera, sin sacarte de la app',
+  (await page.getAttribute('.ficha-acciones a', 'target')) === '_blank')
+paso('y no queda nada del encargo de antes',
+  (await page.locator('.encargo, .casilla').count()) === 0)
 await page.keyboard.press('Escape')
 await page.waitForTimeout(300)
 
