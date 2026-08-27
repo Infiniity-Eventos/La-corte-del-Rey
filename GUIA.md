@@ -625,6 +625,13 @@ construir lo que viene:
   clave del traductor dejó de guardarse. La prueba tenía razón en fallar, pero
   señalaba el sitio equivocado: **en una prueba, se apunta por lo que algo dice,
   no por dónde está.**
+- **Poner la fecha dentro del paquete rompió la forma de verificarlo.** Cada
+  compilación cambiaba el contenido del paquete principal —y su hash, y el de
+  todo lo que lo importa— aunque el código fuera idéntico, así que ya no se podía
+  comparar byte a byte lo publicado con lo compilado aquí. La fecha se puede
+  fijar desde fuera y `verificar.sh` lee la de lo publicado y recompila con ella:
+  22 de 22 archivos idénticos. **Una comprobación que se relaja para seguir
+  pasando deja de comprobar; la que se arregla, sigue sirviendo.**
 - **Una clase de CSS reutilizada mezcla dos significados.** El error de sesión
   se pintaba con la clase del resultado de «probar la clave» porque se parecían.
   Se ven igual y son cosas distintas, y en cuanto una prueba mira «el aviso rojo»

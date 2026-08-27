@@ -19,8 +19,16 @@ function version(): string {
   }
 }
 
+/**
+ * La fecha de compilación se puede fijar desde fuera.
+ *
+ * Sin eso, el paquete principal cambia de contenido —y de hash— en cada
+ * compilación aunque el código sea idéntico, y no hay forma de comparar byte a
+ * byte lo que sirve GitHub con lo que sale de aquí. `verificar.sh` lee la fecha
+ * de lo publicado y recompila con ella.
+ */
 function cuando(): string {
-  return new Date().toISOString()
+  return process.env.COMPILADO ?? new Date().toISOString()
 }
 
 // Vellum se publica en dos sitios: en GitHub Pages vive en una subcarpeta con
