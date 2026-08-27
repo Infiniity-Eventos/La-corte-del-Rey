@@ -67,9 +67,9 @@ descartan.
 | R41 | Descargar un libro de la nube: automático con wifi, con permiso si son datos | P68 |
 | R42 | Corte automático de facturación en 1 dólar | P69 |
 | R43 | El botón Crear portada abre Gemini y, al volver, ofrece poner la imagen | P72 |
-| R44 | Todas las portadas llevan el título escrito | P73 |
-| R45 | El prompt invita a Gemini a recoger el estilo propio de la obra y traducirlo al formato de Vellum | P73 obs |
-| R46 | Sin portada generada, la portada es **tipográfica**. Nunca la primera página del PDF | P74 |
+| ~~R44~~ | ~~Todas las portadas llevan el título escrito~~ — revocado por D-31: con imagen manda la imagen | P73 |
+| ~~R45~~ | ~~El prompt invita a Gemini a recoger el estilo de la obra~~ — revocado por D-31: ya no hay prompt | P73 obs |
+| R46 | Sin imagen, la portada es **tipográfica**. Nunca la primera página del PDF | P74 |
 | R47 | Sonido de **clic seco** al pasar página, con interruptor rápido | P75 · P76 |
 | R48 | Vibración corta al completarse la página | P77 |
 | R49 | Orden de construcción: **leer primero** | P80 |
@@ -633,7 +633,9 @@ El orden lo fijó P80: **leer antes que nada**.
 | **2 · Biblioteca** | Títulos, tipo, etiquetas con filtro, buscador, portada propia, "seguir leyendo", quitar libros | **hecho** · 33 comprobaciones en `pruebas/` |
 | **3 · Traductor** | La barra de abajo, Gemini con clave propia, pestañas, vocabulario, selección de texto donde el PDF lo permita | **hecho** · 27 comprobaciones en `pruebas/` |
 | **4 · Nube** | Sesión con Google, Firestore, subida de PDF con la regla de datos móviles, corte de facturación | **hecho** · 28 comprobaciones en `pruebas/` |
-| **5 · Portadas** | Botón Crear portada, plantilla de prompt, composición del título | **hecho** · 32 comprobaciones en `pruebas/` |
+| **5 · Portadas** | Buscar portada en Google Imágenes y subir la imagen (D-31; la versión generada se revocó) | **hecho** · 12 comprobaciones en `pruebas/` |
+| **6 · La casa** | Catálogo común, estrella por perfil, clave de Gemini por perfil | **hecho** · 22 comprobaciones · falta montar `casa/miembros` a mano |
+| 7 · El apagón | Corte de facturación en 1 dólar | **escrito y probado**, sin montar (D-22) |
 
 Las respuestas están en `guia/respuestas/`. El prompt del icono, en `guia/prompts/`.
 
