@@ -278,6 +278,41 @@ técnicas que descartan opciones desde el primer día. Implican, como mínimo:
   **progreso**. No hay campo de autor.
 - **Origen:** P38, P40, P42, P61.
 
+### D-21 · Entre aparatos gana el cambio más reciente
+- **Decisión:** cada libro, cada palabra del vocabulario y los ajustes llevan
+  una marca de cuándo se tocaron por última vez. Al sincronizar, gana la marca
+  más alta. Borrar no borra: deja una **lápida**, un registro marcado como
+  borrado que también viaja, para que quitar un libro en el celular lo quite
+  también en la PC en vez de que la PC lo resucite.
+- **Por qué así y no algo más listo:** son dos aparatos de la misma persona, que
+  casi nunca están usándose a la vez. Lo único que puede perderse es un cambio
+  hecho sin conexión que se pise con otro más nuevo, y eso es exactamente lo que
+  la persona esperaría. Cualquier cosa más elaborada añade fallos posibles sin
+  añadir nada que se note.
+- **Vive en `src/lib/fusion.ts`, sin Firebase dentro.** Es la pieza que puede
+  equivocarse en silencio y perder datos, así que está aparte y se prueba sin
+  navegador: 14 comprobaciones de las que ninguna necesita internet.
+- **Las lápidas se limpian solas** cuando ya han viajado a todas partes.
+
+### D-22 · El corte de facturación es código, no una alerta
+- **Decisión:** un vigía en Google Cloud desengancha la cuenta de facturación
+  del proyecto cuando el gasto del mes pasa de **1 dólar**. Vive en `apagon/`.
+- **Por qué hace falta:** el presupuesto que ofrece Google **avisa pero no
+  corta**. Manda un correo y la factura sigue subiendo. Esto es lo único que
+  detiene el gasto de verdad, y por eso D-12 no está cerrada sin ello.
+- **Qué se pierde cuando salta:** los PDF dejan de subir y bajar, porque Cloud
+  Storage necesita Blaze. Firestore sigue dentro del nivel gratuito, y Vellum
+  abre, lee y traduce igual, porque todo está también en el aparato. **Se pierde
+  el transporte, no los libros** — que es justo lo que compra D-08.
+- **Lo que no se puede prometer:** los datos de gasto de Google llegan con horas
+  de retraso, así que no es un interruptor instantáneo. El tope va en 1 dólar
+  para que el retraso quepa dentro del margen. Y que Google acepte el corte el
+  día que toque solo se sabe cuando pase: las 14 comprobaciones de
+  `pruebas/apagon.mjs` cubren **la decisión**, no el corte.
+- **Montarlo es cosa de una vez y hay que hacerlo a mano** en la consola de
+  Google: `apagon/LEEME.md` y `guia/paginas/apagon.html`.
+- **Origen:** P69, y T13.
+
 ### D-05 · El repositorio se limpia
 - **Decisión:** se borra la app vieja "La corte del Rey" y se empieza limpio.
   El historial de git y la rama `main` la conservan; no se pierde nada.
@@ -299,7 +334,7 @@ técnicas que descartan opciones desde el primer día. Implican, como mínimo:
 | T10 | P27 comparte una sola clave de Gemini entre cuatro personas: hay que decidir cómo se reparte sin exponerla, y las 1.000 consultas diarias pasan a ser comunes. | **preguntada** en P48. |
 | T11 | P28 pide una respuesta muy completa de la burbuja, pero R19 exige que nada se sienta lento. | **resuelta** en P54: traducción natural grande, el resto en pestañas. |
 | T12 | **El nivel gratuito de Gemini muere si el proyecto de Google tiene facturación activada, y Blaze la activa.** | **resuelta por diseño**: dos proyectos de Google separados. Ver el aviso de D-09. No se pregunta; no hay alternativa razonable. |
-| T13 | Blaze no tiene tope de gasto. Un error puede generar cargos reales aunque el uso normal sea gratis. | **preguntada** en P69: corte automático de facturación. |
+| T13 | Blaze no tiene tope de gasto. Un error puede generar cargos reales aunque el uso normal sea gratis. | **resuelta** en D-22: el corte está escrito en `apagon/`. Queda montarlo a mano una vez. |
 | T14 | P46 pide sesión obligatoria la primera vez, pero R19 y D-08 exigen que nada haga esperar. | **resuelta**: la sesión se pide una sola vez y queda guardada; los arranques siguientes no tocan la red. Se confirma en P79. |
 | T15 | P47 no marcó las portadas entre lo que debe sincronizarse, pero P61 pide un sistema de portadas generadas que sería una lástima perder al cambiar de aparato. | **preguntada** en P67. |
 | T16 | Si los PDF viven en la nube, abrir un libro que no está en este aparato exige descargarlo. | **resuelta** en P68: automático con wifi, con permiso si son datos móviles. La misma regla se aplica a las subidas. |
@@ -394,6 +429,20 @@ construye.
 | Se publica | sola, en cada cambio a `main`, con `.github/workflows/publicar.yml` |
 | Rama del proyecto | `main`. La app anterior queda en el historial de git. |
 | Preparado además | `firebase.json` y `.firebaserc`, para servirla desde el propio dominio con `npx firebase deploy` |
+| Los datos, con sesión | Firestore, bajo `gente/{uid}` — progreso, etiquetas, vocabulario, ajustes |
+| Los PDF, con sesión | Cloud Storage, bajo `gente/{uid}` — copia; el original sigue en el aparato |
+| La clave de Gemini | solo en este aparato. **No viaja nunca**, ni con la sesión abierta (D-09) |
+| El corte de facturación | `apagon/`, en Google Cloud. Montarlo es a mano, una vez (D-22) |
+
+**Falta hacer dos cosas a mano** para que entrar funcione, y las dos son de la
+cuenta, no del código:
+
+1. Autorizar `infiniity-eventos.github.io` en Firebase → **Authentication →
+   Settings → Dominios autorizados**. Sin eso, la ventana de Google se abre y se
+   cierra con un error de dominio.
+2. Publicar las reglas: `npx firebase deploy --only firestore:rules,storage`.
+   Sin eso, Firestore rechaza todo por defecto — que es lo correcto, pero
+   también impide sincronizar.
 
 **Por qué GitHub Pages y no Firebase Hosting, de momento.** Publicar en Firebase
 exige una credencial que solo puede crear el dueño de la cuenta. Pages funciona
@@ -409,7 +458,7 @@ El orden lo fijó P80: **leer antes que nada**.
 | **1 · Leer** | Importar un PDF, guardarlo en el aparato, pasar páginas con el volteo de libro, sonido y vibración, número de página y progreso, saltar a una página, los tres temas, modo sin distracciones | **hecho** · 21 comprobaciones en `pruebas/` |
 | **2 · Biblioteca** | Títulos, tipo, etiquetas con filtro, buscador, portada propia, "seguir leyendo", quitar libros | **hecho** · 33 comprobaciones en `pruebas/` |
 | **3 · Traductor** | La barra de abajo, Gemini con clave propia, pestañas, vocabulario, selección de texto donde el PDF lo permita | **hecho** · 27 comprobaciones en `pruebas/` |
-| 4 · Nube | Sesión con Google, Firestore, subida de PDF con la regla de wifi, tope de facturación | pendiente |
+| **4 · Nube** | Sesión con Google, Firestore, subida de PDF con la regla de datos móviles, corte de facturación | **hecho** · 28 comprobaciones en `pruebas/` |
 | 5 · Portadas | Botón Crear portada, plantilla de prompt, composición del título | pendiente |
 
 Las respuestas están en `guia/respuestas/`. Los prompts para generar el icono y
@@ -421,6 +470,7 @@ las portadas, en `guia/prompts/`.
 |---|---|---|
 | Prompts | El icono y las portadas, listos para copiar | `guia/paginas/prompts.html` |
 | Instalación | Paso a paso de los dos proyectos de Google, con casillas | `guia/paginas/instalacion.html` |
+| Apagón | Paso a paso del corte de facturación en 1 dólar, con las órdenes listas para copiar | `guia/paginas/apagon.html` |
 
 ## 10. Hallazgos al construir
 
@@ -548,6 +598,37 @@ construir lo que viene:
 - **Un error de cuota no es un número.** Cuando se agotan las 1.000 traducciones
   del día, la app dice a qué hora vuelven, calculado desde la medianoche del
   Pacífico que es cuando Google las repone (P31).
+- **«Se carga cuando hace falta» no se cumple solo: hay que vigilarlo.** D-08
+  promete que sin cuenta Firebase no se descarga. Para poder comprobarlo hubo
+  que **darle nombre a los trozos** —`firebase-sesion`, `-datos`, `-archivos`,
+  `-comun`—, porque el empaquetador los llamaba a todos `index.esm` y en el
+  navegador eran indistinguibles. Sin nombre, la comprobación no era difícil:
+  era imposible.
+- **Una prueba que no puede fallar no está probando nada.** La primera versión de
+  esa comprobación pasó a la primera, y pasó *en falso*: buscaba «firebase» en
+  los nombres de archivo y ningún archivo se llamaba así. Con los trozos ya
+  nombrados, falló — y tenía razón. **Antes de creerse un OK conviene romperlo a
+  propósito una vez** y ver que se pone rojo.
+- **Cargar «Firebase» de golpe no es cargarlo cuando hace falta.** El código
+  pedía las cuatro partes en la misma línea, así que entrar con Google se traía
+  también la base de datos y el almacén de archivos. Ahora cada parte se pide por
+  separado y la primera vez que se usa: entrar cuesta 50 kB en vez de 240.
+- **La ruta de un paquete puede contener su propio nombre dos veces.** El auth de
+  Firebase vive en `node_modules/firebase/node_modules/@firebase/auth`, y la
+  regla que decidía a qué trozo iba cada archivo se quedaba con la **primera**
+  coincidencia: metía 450 kB de sesión dentro del trozo común, que se descarga
+  siempre. Vale la última, no la primera. **Con las cuentas de un empaquetador no
+  basta con que sumen: hay que mirar qué hay dentro de cada trozo.**
+- **Apuntar a un botón por su posición se rompe al añadir otro botón.** Una
+  prueba pulsaba «el primer botón de la primera tarjeta» de los ajustes. Al
+  llegar la tarjeta de la cuenta, ese botón pasó a ser «Entrar con Google» y la
+  clave del traductor dejó de guardarse. La prueba tenía razón en fallar, pero
+  señalaba el sitio equivocado: **en una prueba, se apunta por lo que algo dice,
+  no por dónde está.**
+- **Una clase de CSS reutilizada mezcla dos significados.** El error de sesión
+  se pintaba con la clase del resultado de «probar la clave» porque se parecían.
+  Se ven igual y son cosas distintas, y en cuanto una prueba mira «el aviso rojo»
+  ya no se sabe cuál de los dos encontró. Cada uno con su nombre.
 
 ## 11. Bitácora
 
@@ -641,3 +722,21 @@ construir lo que viene:
   giro se perdía en cada repintado. Y entra el **zoom con doble toque**, que
   centra lo tocado y se deshace con otro doble toque; acercado, arrastrar pasea
   la vista en vez de pasar página. 121 comprobaciones.
+- **2026-08-27** — **Hito 4: la nube.** Entrar con Google hace que el progreso,
+  las etiquetas, el vocabulario y los PDF viajen entre el celular y la PC; sin
+  cuenta, Vellum sigue entera. La fusión entre aparatos (D-21) es gana-el-más-
+  reciente con lápidas, en un archivo aparte y sin Firebase dentro, para poder
+  probarla sin navegador. Los archivos suben de uno en uno y con freno de datos
+  móviles. La clave de Gemini se queda fuera de la sincronización a propósito.
+  Una prueba nueva vigila la promesa de D-08 —sin sesión no se descarga ni una
+  línea de Firebase— y para poder vigilarla hubo que dar nombre a los trozos del
+  paquete; al hacerlo destapó dos fallos míos: que las cuatro partes se cargaban
+  de golpe, y que la sesión entera estaba dentro del trozo común. Entrar cuesta
+  ahora 50 kB en vez de 240. 149 comprobaciones.
+- **2026-08-27** — **El apagón** (D-22): el corte de facturación deja de ser una
+  intención y pasa a ser código, en `apagon/`. Un presupuesto de Google avisa
+  pero no corta; esto desengancha la cuenta de facturación cuando el gasto pasa
+  de un dólar. Con 14 comprobaciones de la decisión —qué avisos cortan y cuáles
+  no— y una página con el paso a paso, `guia/paginas/apagon.html`. Lo que ninguna
+  prueba cubre queda escrito: que Google acepte el corte el día que toque solo se
+  sabe cuando pase, y por eso el tope está en un dólar. 163 comprobaciones.

@@ -1,0 +1,12 @@
+{
+  "name": "vellum-apagon",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Corta la facturación de Firebase cuando el gasto pasa del tope",
+  "main": "index.js",
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "@google-cloud/billing": "^6.0.0",
+    "@google-cloud/functions-framework": "^5.0.5"
+  }
+}

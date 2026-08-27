@@ -1,7 +1,9 @@
 # Pruebas
 
-No hay marco de pruebas ni configuración: son dos guiones que abren Chromium,
-usan la app como la usarías tú y dicen si algo se rompió.
+No hay marco de pruebas ni configuración: son guiones sueltos. Casi todos abren
+Chromium y usan la app como la usarías tú; dos —la fusión entre aparatos y el
+corte de facturación— corren solas en Node, porque lo que prueban es una
+decisión y no necesita navegador.
 
 ```bash
 npm run build
@@ -10,7 +12,12 @@ node pruebas/lectura.mjs      # 30 comprobaciones · hito 1, leer
 node pruebas/biblioteca.mjs   # 35 comprobaciones · hito 2, la estantería
 node pruebas/traductor.mjs    # 40 comprobaciones · hito 3, el traductor
 node pruebas/comic.mjs        # 16 comprobaciones · tamaños mezclados y zoom
+node pruebas/nube.mjs         # 14 comprobaciones · hito 4, la nube sin cuenta
 node pruebas/capturas.mjs     # capturas de cada estado
+
+# Sin navegador: se ejecutan solas
+node pruebas/fusion.mjs       # 14 comprobaciones · la fusión entre aparatos
+node pruebas/apagon.mjs       # 14 comprobaciones · el corte de facturación
 
 # Contra la app publicada
 node pruebas/en-vivo.mjs      # 15 comprobaciones sobre la app en su dirección real
@@ -128,6 +135,42 @@ app en el uso real y que ningún PDF de prueba uniforme habría destapado.
 El PDF de prueba se genera con `gen_mixto.py`: páginas impares verticales,
 pares horizontales.
 
+## Qué comprueba `nube.mjs`
+
+Iniciar sesión de verdad abre una ventana de Google que no se puede automatizar.
+Lo que sí se puede comprobar —y es lo que más importa— es la promesa de D-08:
+**sin cuenta, Vellum no descarga Firebase ni depende de él**. Esa es justo la
+que se rompería sin que nadie lo notara, porque la app seguiría funcionando
+igual, solo que arrancando más lenta.
+
+Para poder mirarlo, los trozos del paquete llevan nombre propio
+(`firebase-sesion`, `-datos`, `-archivos`, `-comun`). Sin eso el empaquetador
+los llama a todos `index.esm` y la comprobación no es difícil: es imposible.
+
+| Comprueba | Requisito |
+|---|---|
+| Sin sesión no se descarga ni una línea de Firebase | D-08 |
+| Se puede importar, leer y organizar sin cuenta | D-08 · R4 |
+| Usar la app tampoco la descarga | D-08 |
+| Abrir los ajustes tampoco | D-08 |
+| Sin sesión no hay indicador de nube | — |
+| Los ajustes explican para qué sirve entrar, y que sin cuenta funciona todo | R8 |
+| Dicen dónde vive todo, y que la clave de Gemini nunca viaja | D-09 |
+| **Al pulsar entrar llega solo la sesión, no los datos ni los archivos** | D-08 |
+
+## Qué comprueba `fusion.mjs`
+
+La fusión entre aparatos es la pieza que puede perder datos en silencio, así que
+vive aparte, sin Firebase dentro, y se prueba sin navegador. Gana el cambio más
+reciente; borrar deja una lápida que también viaja (D-21).
+
+## Qué comprueba `apagon.mjs`
+
+La decisión del corte de facturación: con qué avisos corta y con cuáles no. Un
+mensaje vacío no corta, un importe que no es número no corta, justo en el tope
+no corta, un céntimo por encima sí. **No comprueba que Google acepte el corte**
+— eso solo se sabe el día que pase, y por eso el tope está en un dólar.
+
 ## Qué comprueba `en-vivo.mjs`
 
 Es la única que puede fallar por motivos que no están en el código: una ruta
@@ -172,3 +215,10 @@ Se dice aquí para que nadie las lea como una garantía que no son:
   real y libros reales.
 - **Seleccionar con el dedo.** La selección se provoca por código. El gesto real
   sobre una capa de texto en un móvil hay que probarlo a mano.
+- **La sincronización con una cuenta de verdad.** Entrar con Google abre una
+  ventana que no se puede automatizar, así que lo que se prueba es que sin
+  cuenta todo funciona y que Firebase no se descarga. Que dos aparatos acaben
+  con lo mismo hay que verlo con dos aparatos.
+- **Que el apagón corte de verdad.** Se prueba la decisión, no el corte. Google
+  tendría que aceptar desenganchar la facturación el día que toque, y eso solo
+  se comprueba cuando pasa.

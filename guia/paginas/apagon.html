@@ -1,0 +1,360 @@
+<title>El Apagón</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Karla:wght@400;500;700&display=swap">
+
+<style>
+  :root{
+    --pergamino:#EDE6D6; --vitela:#F6F1E5; --vitela-alta:#FCF9F1;
+    --tinta:#2E2822; --tinta-2:#6B5F4E; --tinta-3:#9A8E79;
+    --ocre:#8A5A2B; --linea:#DDD2BC; --linea-tenue:#E7DEC9;
+    --rojo:#8C3F1D; --rojo-fondo:#F5E1D6; --rojo-linea:#DCB49A;
+    --verde:#4F6B3A; --verde-fondo:#E7EDDE;
+    --r:8px;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  body{margin:0;background:var(--pergamino);color:var(--tinta);
+    font-family:'Karla',ui-sans-serif,system-ui,sans-serif;font-size:16px;line-height:1.55;
+    -webkit-font-smoothing:antialiased}
+  .env{max-width:42rem;margin:0 auto;padding:0 1.15rem 5rem}
+
+  .barra{position:sticky;top:0;z-index:20;background:rgba(237,230,214,.93);
+    backdrop-filter:blur(10px);border-bottom:1px solid var(--linea-tenue)}
+  .barra-in{max-width:42rem;margin:0 auto;padding:.65rem 1.15rem;display:flex;
+    justify-content:space-between;align-items:center;gap:1rem}
+  .barra-nom{font-family:ui-monospace,Menlo,monospace;font-size:.68rem;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--tinta-3)}
+  .barra-n{font-family:ui-monospace,Menlo,monospace;font-size:.76rem;color:var(--ocre)}
+  .via{height:2px;background:var(--linea-tenue)}
+  .via i{display:block;height:2px;width:0;background:var(--ocre);transition:width .3s ease}
+
+  header{padding:3rem 0 1.6rem}
+  .ceja{font-family:ui-monospace,Menlo,monospace;font-size:.68rem;letter-spacing:.17em;
+    text-transform:uppercase;color:var(--ocre);margin:0 0 1rem}
+  h1{font-family:'Fraunces',Georgia,serif;font-variation-settings:'SOFT' 30,'WONK' 1,'opsz' 100;
+    font-weight:600;font-size:clamp(2rem,7.5vw,2.9rem);line-height:1.03;letter-spacing:-.015em;
+    margin:0 0 .9rem;text-wrap:balance}
+  .entrada{color:var(--tinta-2);font-size:1rem;margin:0 0 1.2rem;max-width:33rem}
+
+  h2{font-family:'Fraunces',Georgia,serif;font-variation-settings:'SOFT' 20,'opsz' 40;
+    font-weight:600;font-size:1.32rem;margin:0;letter-spacing:-.01em}
+  .cabeza{display:flex;align-items:baseline;gap:.8rem;border-bottom:1px solid var(--linea);
+    padding-bottom:.6rem;margin:2.6rem 0 1.1rem}
+  .cabeza .cual{font-family:ui-monospace,Menlo,monospace;font-size:.68rem;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--ocre)}
+  .cabeza .tiempo{margin-left:auto;font-size:.8rem;color:var(--tinta-3);white-space:nowrap}
+
+  p{margin:0 0 .9rem}
+  .nota{color:var(--tinta-2);font-size:.93rem}
+  strong{color:var(--tinta)}
+  code{font-family:ui-monospace,'JetBrains Mono',Menlo,monospace;font-size:.86em;
+    background:var(--vitela-alta);border:1px solid var(--linea-tenue);
+    border-radius:4px;padding:.08em .35em;word-break:break-word}
+
+  /* ---- el aviso que justifica toda la página ---- */
+  .clave{background:var(--rojo-fondo);border:1px solid var(--rojo-linea);border-radius:var(--r);
+    padding:1.1rem 1.15rem;margin:0 0 1.5rem}
+  .clave h3{font-family:'Fraunces',Georgia,serif;font-size:1.08rem;font-weight:600;
+    margin:0 0 .55rem;color:var(--rojo)}
+  .clave p{font-size:.94rem;color:var(--tinta-2);margin:0 0 .6rem}
+  .clave p:last-child{margin:0}
+
+  .dos{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin:1rem 0 0}
+  @media (max-width:30rem){.dos{grid-template-columns:1fr}}
+  .caja{background:var(--vitela-alta);border:1px solid var(--linea);border-radius:6px;padding:.75rem .8rem}
+  .caja b{display:block;font-size:.88rem;margin-bottom:.2rem}
+  .caja span{font-size:.82rem;color:var(--tinta-2);display:block}
+  .caja .si{color:var(--verde);font-weight:700}
+  .caja .no{color:var(--rojo);font-weight:700}
+
+  /* ---- pasos ---- */
+  ol.pasos{list-style:none;margin:0;padding:0;counter-reset:n}
+  ol.pasos>li{counter-increment:n;position:relative;padding-left:2.6rem;margin-bottom:1.4rem}
+  ol.pasos>li::before{content:counter(n);position:absolute;left:0;top:-.1rem;
+    width:1.8rem;height:1.8rem;border-radius:50%;display:grid;place-items:center;
+    font-family:ui-monospace,Menlo,monospace;font-size:.78rem;
+    background:var(--vitela);border:1px solid var(--linea);color:var(--ocre)}
+  ol.pasos>li.ok::before{background:var(--ocre);border-color:var(--ocre);color:var(--vitela-alta);content:'✓'}
+  .paso-t{font-weight:700;font-size:1rem;margin:0 0 .3rem;display:block}
+  .paso-d{color:var(--tinta-2);font-size:.93rem;margin:0 0 .5rem}
+  .marca{display:inline-flex;align-items:center;gap:.45rem;font-size:.84rem;color:var(--tinta-3);cursor:pointer;
+    border:1px solid var(--linea);border-radius:999px;padding:.28rem .75rem;background:var(--vitela);
+    transition:border-color .14s ease,color .14s ease}
+  .marca:hover{border-color:var(--ocre);color:var(--ocre)}
+  .marca input{appearance:none;-webkit-appearance:none;width:.85rem;height:.85rem;flex:none;
+    border:1.5px solid currentColor;border-radius:3px;display:grid;place-content:center;cursor:pointer}
+  .marca input::after{content:'';width:.42rem;height:.42rem;background:var(--ocre);transform:scale(0);transition:transform .12s ease}
+  .marca input:checked{border-color:var(--ocre)}
+  .marca input:checked::after{transform:scale(1)}
+  li.ok .marca{border-color:var(--ocre);color:var(--ocre)}
+
+  .enlace{display:inline-block;font-family:ui-monospace,Menlo,monospace;font-size:.82rem;
+    color:var(--ocre);border-bottom:1px solid var(--linea);text-decoration:none;margin-bottom:.5rem;
+    word-break:break-all}
+  .enlace:hover{border-color:var(--ocre)}
+
+  .ojo{background:var(--vitela-alta);border-left:2px solid var(--ocre);padding:.55rem .75rem;
+    font-size:.88rem;color:var(--tinta-2);margin:.5rem 0 0;border-radius:0 4px 4px 0}
+  .ojo b{color:var(--tinta)}
+  .ojo.rojo{border-left-color:var(--rojo);background:var(--rojo-fondo)}
+
+  .bloque{background:var(--vitela);border:1px solid var(--linea);border-radius:var(--r);
+    overflow:hidden;margin:.6rem 0}
+  .bloque-top{display:flex;align-items:center;gap:.7rem;padding:.55rem .8rem;
+    border-bottom:1px solid var(--linea-tenue);background:var(--vitela-alta)}
+  .bloque-nom{font-size:.82rem;font-weight:700;flex:1;min-width:0}
+  pre{margin:0;padding:.8rem;font-family:ui-monospace,'JetBrains Mono',Menlo,monospace;
+    font-size:.76rem;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+  .copiar{flex:none;font:inherit;font-size:.78rem;font-weight:700;background:var(--tinta);
+    color:var(--pergamino);border:none;border-radius:5px;padding:.35rem .8rem;cursor:pointer;
+    transition:opacity .14s ease,background .14s ease}
+  .copiar:hover{opacity:.87}
+  .copiar.ok{background:var(--ocre)}
+
+  table{border-collapse:collapse;width:100%;font-size:.84rem;margin:.6rem 0}
+  th,td{text-align:left;padding:.4rem .55rem;border-bottom:1px solid var(--linea-tenue);vertical-align:top}
+  thead th{font-family:ui-monospace,Menlo,monospace;font-size:.64rem;letter-spacing:.09em;
+    text-transform:uppercase;color:var(--tinta-3);border-bottom:1px solid var(--linea)}
+  tbody th{font-weight:700;white-space:nowrap}
+  .scroll{overflow-x:auto}
+
+  footer{margin-top:3rem;padding-top:1.2rem;border-top:1px solid var(--linea);
+    font-size:.85rem;color:var(--tinta-3)}
+  .reset{background:none;border:none;color:var(--tinta-3);font-size:.8rem;text-decoration:underline;
+    cursor:pointer;padding:0;margin-top:.5rem}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<style>
+  /* ---- el umbral: la única idea de esta página ---- */
+  .umbral{margin:1.4rem 0 0;border:1px solid var(--linea);border-radius:var(--r);overflow:hidden;
+    background:var(--vitela)}
+  .umbral-lado{display:grid;grid-template-columns:auto 1fr;gap:.9rem;padding:.95rem 1rem;align-items:start}
+  .umbral-lado .cuanto{font-family:ui-monospace,Menlo,monospace;font-size:.72rem;letter-spacing:.1em;
+    text-transform:uppercase;white-space:nowrap;padding-top:.15rem}
+  .umbral .abajo{background:var(--verde-fondo)}
+  .umbral .abajo .cuanto{color:var(--verde)}
+  .umbral .arriba{background:var(--rojo-fondo)}
+  .umbral .arriba .cuanto{color:var(--rojo)}
+  .umbral-raya{display:flex;align-items:center;gap:.75rem;padding:.5rem 1rem;
+    background:var(--tinta);color:var(--pergamino)}
+  .umbral-raya b{font-family:'Fraunces',Georgia,serif;font-size:1.05rem;font-weight:600}
+  .umbral-raya span{font-size:.82rem;color:var(--linea-tenue)}
+  .umbral p{margin:0;font-size:.92rem;color:var(--tinta-2)}
+  .umbral p b{color:var(--tinta)}
+
+  /* ---- qué sigue vivo y qué no, cuando salta ---- */
+  .balance{list-style:none;margin:.8rem 0 0;padding:0;display:grid;gap:.45rem}
+  .balance li{display:grid;grid-template-columns:1.1rem 1fr;gap:.6rem;align-items:start;
+    font-size:.93rem;color:var(--tinta-2)}
+  .balance .s{color:var(--verde);font-weight:700;line-height:1.5}
+  .balance .n{color:var(--rojo);font-weight:700;line-height:1.5}
+  .balance b{color:var(--tinta)}
+</style>
+
+<div class="barra">
+  <div class="barra-in">
+    <span class="barra-nom">El apagón</span>
+    <span class="barra-n"><b id="hechos">0</b>/<span id="total">0</span></span>
+  </div>
+  <div class="via"><i id="via"></i></div>
+</div>
+
+<div class="env">
+  <header>
+    <p class="ceja">Infiniity Vellum · 15 minutos, una sola vez</p>
+    <h1>El apagón</h1>
+    <p class="entrada">Blaze no tiene tope de gasto. El presupuesto que ofrece Google <strong>avisa pero no corta</strong>. Esto es lo que corta.</p>
+
+    <div class="clave">
+      <h3>Por qué hace falta esto y no basta con la alerta</h3>
+      <p>Cuando montaste Firebase pusiste un presupuesto de 1 dólar. Eso manda un correo. <strong>Nada más.</strong> Si algo se dispara un domingo por la noche, el correo llega y la factura sigue subiendo sola.</p>
+      <p>Lo que vas a montar aquí es un vigía: cuando el gasto pasa de un dólar, <strong>le quita al proyecto la cuenta de facturación</strong>. Sin cuenta de facturación, Google no tiene por dónde cobrar.</p>
+    </div>
+
+    <div class="umbral">
+      <div class="umbral-lado abajo">
+        <span class="cuanto">Hasta 1 $</span>
+        <p>Todo normal. La función se despierta, mira el número, apunta en el registro que no hay nada que hacer y se vuelve a dormir. Es lo que va a pasar siempre.</p>
+      </div>
+      <div class="umbral-raya"><b>1,00 USD</b><span>tope mensual · gasto real, no previsto</span></div>
+      <div class="umbral-lado arriba">
+        <span class="cuanto">Pasado 1 $</span>
+        <p>Salta. <b>El proyecto se queda sin facturación</b> y el gasto se detiene ahí. Volver a encenderlo es manual, en la consola de Google: si saltó, antes conviene saber por qué.</p>
+      </div>
+    </div>
+  </header>
+
+  <div class="cabeza"><span class="cual">Antes de empezar</span><h2>Qué pierdes si salta</h2></div>
+  <p class="nota">Conviene saberlo de antemano, para que el día que pase no parezca que la app se rompió.</p>
+  <ul class="balance">
+    <li><span class="n">✕</span><span><b>Los PDF dejan de subir y bajar</b> de la nube. Cloud Storage necesita Blaze, y sin facturación no hay Blaze.</span></li>
+    <li><span class="s">✓</span><span><b>El progreso, las etiquetas y el vocabulario siguen sincronizándose.</b> Eso vive en Firestore, que tiene nivel gratuito de sobra: son kilobytes.</span></li>
+    <li><span class="s">✓</span><span><b>Vellum abre, lee y traduce exactamente igual.</b> Todo está también en el aparato; por eso funciona sin internet. Pierdes el viaje de los archivos, no los libros.</span></li>
+  </ul>
+  <div class="ojo"><b>Los datos de gasto de Google llegan con horas de retraso.</b> Esto no es un interruptor instantáneo, es una red por debajo. El tope va en 1 dólar justamente para que el retraso quepa en el margen: cuando la señal llegue, lo acumulado seguirá siendo calderilla.</div>
+
+  <div class="cabeza"><span class="cual">Todo esto</span><h2>En el proyecto de la nube</h2><span class="tiempo">15 min</span></div>
+  <p class="nota">Es decir: en <code>infiniity-vellum</code>, el que tiene Blaze. <strong>No</strong> en el del traductor, que no debe tener facturación nunca.</p>
+
+  <ol class="pasos" data-parte="p">
+    <li>
+      <span class="paso-t">Abre la consola de Google Cloud</span>
+      <a class="enlace" href="https://console.cloud.google.com" target="_blank" rel="noopener">console.cloud.google.com</a>
+      <p class="paso-d">Arriba a la izquierda, comprueba que el proyecto seleccionado es <code>infiniity-vellum</code>. Luego pulsa el icono de terminal <code>&gt;_</code> arriba a la derecha: se abre <strong>Cloud Shell</strong>, una consola dentro del propio navegador. No hay que instalar nada.</p>
+      <div class="ojo">La primera vez tarda un minuto en arrancar y te pide autorizar. Es normal.</div>
+    </li>
+
+    <li>
+      <span class="paso-t">Enciende las piezas que hacen falta</span>
+      <p class="paso-d">Pega esto en Cloud Shell y dale a Enter. Tarda un par de minutos y no dice gran cosa: si acaba sin errores, listo.</p>
+      <div class="bloque">
+        <div class="bloque-top"><span class="bloque-nom">Activar servicios</span><button class="copiar" data-c="c1">Copiar</button></div>
+        <pre id="c1">gcloud services enable \
+  cloudfunctions.googleapis.com run.googleapis.com cloudbuild.googleapis.com \
+  eventarc.googleapis.com artifactregistry.googleapis.com \
+  pubsub.googleapis.com cloudbilling.googleapis.com billingbudgets.googleapis.com</pre>
+      </div>
+    </li>
+
+    <li>
+      <span class="paso-t">Crea el canal por donde llega el aviso</span>
+      <p class="paso-d">Un «tema» de Pub/Sub: el hilo por el que el presupuesto le grita a la función.</p>
+      <div class="bloque">
+        <div class="bloque-top"><span class="bloque-nom">Crear el tema</span><button class="copiar" data-c="c2">Copiar</button></div>
+        <pre id="c2">gcloud pubsub topics create presupuesto-vellum</pre>
+      </div>
+    </li>
+
+    <li>
+      <span class="paso-t">Sube los dos archivos del vigía</span>
+      <p class="paso-d">Están en el repositorio, en la carpeta <code>apagon/</code>: son <code>index.js</code> y <code>package.json</code>. En Cloud Shell, pulsa los tres puntos <code>⋮</code> arriba a la derecha → <strong>Subir</strong>, y súbelos.</p>
+      <p class="paso-d">Luego colócalos en una carpeta con ese mismo nombre:</p>
+      <div class="bloque">
+        <div class="bloque-top"><span class="bloque-nom">Ordenarlos</span><button class="copiar" data-c="c3">Copiar</button></div>
+        <pre id="c3">mkdir -p ~/apagon &amp;&amp; mv ~/index.js ~/package.json ~/apagon/ &amp;&amp; ls ~/apagon</pre>
+      </div>
+      <div class="ojo">Debe responder <code>index.js  package.json</code>. Si no, es que se subieron a otro sitio.</div>
+    </li>
+
+    <li>
+      <span class="paso-t">Publica la función</span>
+      <p class="paso-d">Esto tarda unos minutos: Google la compila y la deja esperando. El <code>TOPE=1</code> del final es el dólar; si algún día lo quieres en otro número, se cambia ahí.</p>
+      <div class="bloque">
+        <div class="bloque-top"><span class="bloque-nom">Desplegar</span><button class="copiar" data-c="c4">Copiar</button></div>
+        <pre id="c4">gcloud functions deploy apagon-vellum \
+  --gen2 --runtime=nodejs24 --region=us-central1 \
+  --trigger-topic=presupuesto-vellum \
+  --entry-point=apagon \
+  --set-env-vars TOPE=1,PROYECTO_VIGILADO=infiniity-vellum \
+  --source=./apagon</pre>
+      </div>
+      <div class="ojo"><b>Si se queja de <code>nodejs24</code></b>, es que Google lo retiró. <code>gcloud functions runtimes list</code> te dice cuáles hay: sirve el Node más nuevo de la lista.</div>
+    </li>
+
+    <li>
+      <span class="paso-t">Dale permiso para cortar</span>
+      <p class="paso-d">Sin esto, la función se despierta y no puede hacer nada. Primero, mira con qué identidad corre:</p>
+      <div class="bloque">
+        <div class="bloque-top"><span class="bloque-nom">Ver su identidad</span><button class="copiar" data-c="c5">Copiar</button></div>
+        <pre id="c5">gcloud functions describe apagon-vellum --gen2 --region=us-central1 \
+  --format='value(serviceConfig.serviceAccountEmail)'</pre>
+      </div>
+      <p class="paso-d">Te devuelve un correo largo acabado en <code>.gserviceaccount.com</code>. Cópialo. Luego ve a facturación, pestaña <strong>Permisos</strong>, y añádelo como principal con el rol <strong>Administrador de la cuenta de facturación</strong>.</p>
+      <a class="enlace" href="https://console.cloud.google.com/billing" target="_blank" rel="noopener">console.cloud.google.com/billing</a>
+      <div class="ojo rojo"><b>Sí, es un rol fuerte.</b> Es el único que permite desenganchar la facturación, así que no hay forma de hacerlo con menos. Por eso la función no hace absolutamente nada más: lee un número y, si se pasa, desengancha. Nada de red, nada de archivos, nada de tus datos.</div>
+    </li>
+
+    <li>
+      <span class="paso-t">Conecta el presupuesto al canal</span>
+      <p class="paso-d">En <strong>Facturación → Presupuestos y alertas</strong>, abre el presupuesto de 1 dólar que ya creaste (o créalo ahora: ámbito solo <code>infiniity-vellum</code>, importe 1 USD, mensual, umbrales al 50 %, 90 % y 100 % del gasto <strong>real</strong>).</p>
+      <p class="paso-d">Baja hasta <strong>Gestionar notificaciones</strong> y marca <strong>«Conectar un tema de Pub/Sub a este presupuesto»</strong>. Elige el proyecto <code>infiniity-vellum</code> y el tema <code>presupuesto-vellum</code>. Guarda.</p>
+      <div class="ojo">Este paso es el que une las dos mitades. Sin él la función existe pero nadie la llama nunca.</div>
+    </li>
+
+    <li>
+      <span class="paso-t">Comprueba que está viva</span>
+      <p class="paso-d">Mándale un aviso falso de diez centavos y mira qué contesta:</p>
+      <div class="bloque">
+        <div class="bloque-top"><span class="bloque-nom">Ensayo</span><button class="copiar" data-c="c6">Copiar</button></div>
+        <pre id="c6">gcloud pubsub topics publish presupuesto-vellum \
+  --message='{"costAmount":0.10,"budgetAmount":1,"currencyCode":"USD"}'
+sleep 20
+gcloud functions logs read apagon-vellum --region=us-central1 --limit=5</pre>
+      </div>
+      <p class="paso-d">Tiene que aparecer una línea que diga <strong>«Va por 0.1 USD, el tope es 1. Nada que hacer.»</strong> Si sale eso, la cadena entera funciona: el presupuesto habla, el canal transporta y la función entiende.</p>
+      <div class="ojo rojo"><b>No pruebes con un número mayor que 1.</b> La función haría su trabajo y te dejaría el proyecto sin facturación de verdad.</div>
+    </li>
+  </ol>
+
+  <div class="cabeza"><span class="cual">Honestidad</span><h2>Lo que esto no cubre</h2></div>
+  <p>Hay 14 comprobaciones automáticas que vigilan <strong>la decisión</strong>: con qué avisos corta y con cuáles no. Un mensaje vacío no corta. Un importe que no es un número no corta. Justo en el tope no corta. Un céntimo por encima, sí.</p>
+  <p>Lo que ninguna prueba de aquí puede comprobar es <strong>que Google acepte el corte el día que toque</strong>. Eso solo se sabe cuando pasa. Por eso el tope está en un dólar y no en cincuenta: si algo fallara, el margen de error es el precio de un café.</p>
+
+  <footer>
+    <p>Esta página se guarda sola: puedes cerrarla a medias y volver.</p>
+    <button class="reset" id="reset">Empezar de cero</button>
+  </footer>
+</div>
+
+<script>
+  var LLAVE = 'vellum-apagon-v1'
+  var guardado = {}
+  try { guardado = JSON.parse(localStorage.getItem(LLAVE) || '{}') || {} } catch (e) { guardado = {} }
+
+  var pasos = []
+  document.querySelectorAll('ol.pasos').forEach(function (lista) {
+    var parte = lista.dataset.parte
+    lista.querySelectorAll(':scope > li').forEach(function (li, i) {
+      var id = parte + '-' + (i + 1)
+      var eti = document.createElement('label')
+      eti.className = 'marca'
+      var caja = document.createElement('input')
+      caja.type = 'checkbox'
+      caja.checked = !!guardado[id]
+      var txt = document.createElement('span')
+      txt.textContent = 'Hecho'
+      eti.appendChild(caja); eti.appendChild(txt)
+      li.appendChild(eti)
+      li.classList.toggle('ok', caja.checked)
+      caja.addEventListener('change', function () {
+        guardado[id] = caja.checked
+        li.classList.toggle('ok', caja.checked)
+        try { localStorage.setItem(LLAVE, JSON.stringify(guardado)) } catch (e) {}
+        pintar()
+      })
+      pasos.push(caja)
+    })
+  })
+
+  document.getElementById('total').textContent = pasos.length
+  function pintar () {
+    var n = pasos.filter(function (c) { return c.checked }).length
+    document.getElementById('hechos').textContent = n
+    document.getElementById('via').style.width = (n / pasos.length * 100) + '%'
+  }
+  pintar()
+
+  document.getElementById('reset').addEventListener('click', function () {
+    pasos.forEach(function (c) { c.checked = false; c.dispatchEvent(new Event('change')) })
+  })
+
+  document.querySelectorAll('.copiar').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var texto = document.getElementById(b.dataset.c).textContent
+      var listo = function () {
+        var antes = b.textContent
+        b.textContent = 'Copiado'; b.classList.add('ok')
+        setTimeout(function () { b.textContent = antes; b.classList.remove('ok') }, 1800)
+      }
+      function manual () {
+        var a = document.createElement('textarea')
+        a.value = texto; document.body.appendChild(a); a.select()
+        try { document.execCommand('copy'); listo() } catch (e) { b.textContent = 'Selecciónalo a mano' }
+        document.body.removeChild(a)
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(texto).then(listo, manual)
+      } else manual()
+    })
+  })
+</script>
