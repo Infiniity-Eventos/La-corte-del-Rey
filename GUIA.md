@@ -313,6 +313,27 @@ técnicas que descartan opciones desde el primer día. Implican, como mínimo:
   Google: `apagon/LEEME.md` y `guia/paginas/apagon.html`.
 - **Origen:** P69, y T13.
 
+### D-24 · La traducción se guarda sola
+- **Decisión:** ya no hay botón de guardar. En cuanto la traducción está
+  entera, se guarda y la página queda marcada. La burbuja lo dice —«Guardada en
+  la página 4»— y ofrece **Quitar** al lado.
+- **Por qué se dice y se puede deshacer:** guardar en silencio y sin salida
+  sería peor que no guardar. Lo que se quita es un botón, no el control.
+- **Se guarda entera o no se guarda.** Lo que va llegando a medias no vale: una
+  traducción cortada en el vocabulario habría que corregirla después a mano.
+- **Traducir lo mismo dos veces no duplica.** Se busca por libro + página +
+  texto, y si ya estaba se actualiza en su sitio conservando su fecha. Releer
+  un párrafo es de lo más normal, y sin esto la lista se llenaría de copias.
+- **Y revive lo que quitaste.** Si vuelves a traducir algo que habías quitado,
+  se reutiliza su misma entrada en vez de dejar una lápida huérfana al lado de
+  una copia nueva.
+- **Lo que esto destapó:** quitar una palabra **borraba de verdad, sin dejar
+  lápida**, así que la nube la devolvía en la siguiente sincronización; y lo que
+  se quitaba en el otro aparato no llegaba a borrarse aquí nunca. Con el botón,
+  quitar era raro y no se notaba. Guardando solo, quitar pasa a ser frecuente.
+  Las dos cosas arregladas.
+- **Origen:** pedido en el uso, 2026-08-27.
+
 ### D-23 · Lo traducido queda marcado en su página
 - **Decisión:** al guardar una traducción, la página donde la hiciste queda con
   un **marcapáginas en el borde derecho** con cuántas hay. Se toca y se abre lo
@@ -665,6 +686,12 @@ construir lo que viene:
   los llevaba. Cuando pasó a componer también el encargo, marcar «Cómic» y
   añadir etiquetas antes de guardar no llegaba al prompt. Una estructura que
   sirve para dos cosas tiene que estar completa para las dos.
+- **Automatizar algo convierte sus fallos raros en fallos de todos los días.**
+  Quitar una palabra borraba sin dejar lápida, y la sincronización nunca
+  aplicaba lo quitado en el otro aparato. Con un botón de guardar, quitar era
+  algo que pasaba una vez al mes y el fallo no se veía. En cuanto se guarda
+  solo, quitar pasa a ser lo normal — y el fallo, diario. **Antes de automatizar
+  algo conviene mirar qué se vuelve frecuente por su culpa.**
 - **Un panel que se abre tocando tiene que cerrarse tocando fuera.** El de las
   notas salía solo con su ✕, que es pequeña y está lejos del pulgar. Lleva un
   telón transparente por debajo que lo cierra al tocar la página — pero que **no
@@ -802,3 +829,11 @@ construir lo que viene:
   «Guardar en la página», que es lo que de verdad hace ahora. 13 comprobaciones
   más, entre ellas que la marca no se pisa con nada — que ya pasó una vez con el
   aviso de retomar. 208 comprobaciones.
+- **2026-08-27** — **La traducción se guarda sola** (D-24). Se quita el botón:
+  en cuanto está entera, se guarda y la página queda marcada. La burbuja lo dice
+  y ofrece Quitar al lado, porque guardar en silencio y sin salida sería peor.
+  Traducir lo mismo dos veces no duplica, y volver a traducir algo que quitaste
+  revive su entrada. Al hacerlo aparecieron dos fallos de la sincronización que
+  el botón tapaba: quitar una palabra borraba sin dejar lápida —la nube la
+  devolvía— y lo quitado en el otro aparato no se aplicaba aquí nunca. 215
+  comprobaciones.

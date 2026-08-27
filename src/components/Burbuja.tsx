@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { Libro, Palabra } from '../lib/tipos'
 import { ErrorTraductor, explicar, traducir } from '../lib/traductor'
 import type { Traduccion } from '../lib/traductor'
-import { guardarPalabra } from '../lib/almacen'
+import { borrarPalabra, guardarTraduccion } from '../lib/almacen'
 
 /**
  * La burbuja del traductor: una barra fija abajo, siempre lista (P55).
@@ -27,9 +27,11 @@ interface Props {
   onEnUso: (enUso: boolean) => void
   /** Para que la página se entere en el momento y ponga su marca. */
   onGuardada: (palabra: Palabra) => void
+  /** Y de que la has quitado, para que la marca desaparezca sola. */
+  onQuitada: (id: string) => void
 }
 
-export function Burbuja({ clave, libro, pagina, seleccion, onUsarSeleccion, onIrAAjustes, onEnUso, onGuardada }: Props) {
+export function Burbuja({ clave, libro, pagina, seleccion, onUsarSeleccion, onIrAAjustes, onEnUso, onGuardada, onQuitada }: Props) {
   const [texto, setTexto] = useState('')
   const [abierta, setAbierta] = useState(false)
   const [pidiendo, setPidiendo] = useState(false)
@@ -37,7 +39,13 @@ export function Burbuja({ clave, libro, pagina, seleccion, onUsarSeleccion, onIr
   const [resultado, setResultado] = useState<Traduccion | null>(null)
   const [fallo, setFallo] = useState<{ titulo: string; detalle: string } | null>(null)
   const [solapa, setSolapa] = useState<Solapa>('contexto')
-  const [guardada, setGuardada] = useState(false)
+  /**
+   * La frase queda guardada sola, sin botón.
+   *
+   * Aquí se recuerda cuál, para poder decirlo y para poder deshacerlo: guardar
+   * sin avisar y sin salida sería peor que no guardar.
+   */
+  const [guardada, setGuardada] = useState<Palabra | null>(null)
   const [consultado, setConsultado] = useState('')
   const campo = useRef<HTMLTextAreaElement>(null)
   const corte = useRef<AbortController | null>(null)
@@ -81,8 +89,11 @@ export function Burbuja({ clave, libro, pagina, seleccion, onUsarSeleccion, onIr
     setResultado(null)
     setNatural('')
     setFallo(null)
-    setGuardada(false)
+    setGuardada(null)
     setConsultado(t)
+    // Una copia local: para cuando llegue la respuesta, el estado puede haber
+    // cambiado, y lo que se guarda tiene que ser lo que se preguntó.
+    const consultadoAhora = t
     setSolapa('contexto')
 
     try {
@@ -96,6 +107,21 @@ export function Burbuja({ clave, libro, pagina, seleccion, onUsarSeleccion, onIr
       setResultado(r)
       setNatural(r.natural)
       setSolapa(r.palabra ? 'palabra' : r.aviso ? 'aviso' : 'contexto')
+
+      // Se guarda sola, en cuanto la traducción está entera. No se guarda lo
+      // que va llegando a medias: media traducción en el vocabulario no vale
+      // para nada y habría que corregirla después.
+      const p = await guardarTraduccion({
+        texto: consultadoAhora,
+        traduccion: r.natural,
+        frase: consultadoAhora,
+        libroId: libro.id,
+        libroTitulo: libro.titulo,
+        pagina,
+      })
+      if (control.signal.aborted) return
+      setGuardada(p)
+      onGuardada(p)
     } catch (e) {
       if (control.signal.aborted) return
       setFallo(explicar(e instanceof ErrorTraductor ? e.fallo : { tipo: 'raro', detalle: 'inesperado' }))
@@ -104,21 +130,11 @@ export function Burbuja({ clave, libro, pagina, seleccion, onUsarSeleccion, onIr
     }
   }
 
-  const alVocabulario = async () => {
-    if (!resultado) return
-    const p: Palabra = {
-      id: crypto.randomUUID(),
-      texto: consultado,
-      traduccion: resultado.natural,
-      frase: consultado,
-      libroId: libro.id,
-      libroTitulo: libro.titulo,
-      pagina,
-      fecha: Date.now(),
-    }
-    await guardarPalabra(p)
-    setGuardada(true)
-    onGuardada(p)
+  const quitar = async () => {
+    if (!guardada) return
+    await borrarPalabra(guardada.id)
+    onQuitada(guardada.id)
+    setGuardada(null)
   }
 
   const limpiar = () => {
@@ -194,16 +210,17 @@ export function Burbuja({ clave, libro, pagina, seleccion, onUsarSeleccion, onIr
                     )}
                   </div>
 
-                  <button
-                    className="btn fantasma peq guardar-voc"
-                    onClick={alVocabulario}
-                    disabled={guardada}
-                  >
-                    {/* Antes decía «vocabulario». Ahora el efecto que se ve
-                        primero es la marca en la página, y el nombre del botón
-                        tiene que decir lo que va a pasar, no dónde acaba. */}
-                    {guardada ? 'Guardada en la página ✓' : 'Guardar en la página'}
-                  </button>
+                  {/* Ya no hay botón de guardar: se guarda sola. Pero se dice
+                      que pasó y se deja la salida, porque guardar en silencio y
+                      sin poder deshacerlo sería peor que no guardar. */}
+                  {guardada ? (
+                    <p className="guardada">
+                      <span className="guardar-voc">Guardada en la página {guardada.pagina}</span>
+                      <button className="icono peq" onClick={() => void quitar()}>Quitar</button>
+                    </p>
+                  ) : (
+                    <p className="guardada"><span className="guardar-voc tenue">Guardando…</span></p>
+                  )}
                 </>
               )}
             </>

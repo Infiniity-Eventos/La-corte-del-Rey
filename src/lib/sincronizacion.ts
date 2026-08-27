@@ -21,6 +21,7 @@ import {
   listarLibrosCrudo,
   listarVocabularioCrudo,
   olvidarLibro,
+  olvidarPalabra,
 } from './almacen'
 import {
   bajarPdf,
@@ -71,6 +72,9 @@ export async function sincronizarDatos(uid: string): Promise<Resumen> {
   }
   for (const id of fl.quitarAqui) await olvidarLibro(id)
   for (const p of fv.paraAqui) await guardarPalabraTalCual(p)
+  // Lo que ya se quitó en todas partes se puede borrar del todo aquí. Sin esta
+  // línea las lápidas se acumulaban para siempre.
+  for (const id of fv.quitarAqui) await olvidarPalabra(id)
 
   await escribirCajon(uid, 'libros', fl.paraAlla)
   await escribirCajon(uid, 'vocabulario', fv.paraAlla)

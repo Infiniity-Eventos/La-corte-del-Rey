@@ -10,7 +10,7 @@ npm run build
 npx vite preview --port 4173 --host 127.0.0.1 &
 node pruebas/lectura.mjs      # 30 comprobaciones · hito 1, leer
 node pruebas/biblioteca.mjs   # 47 comprobaciones · la estantería y crear portada
-node pruebas/traductor.mjs    # 53 comprobaciones · el traductor y las notas de página
+node pruebas/traductor.mjs    # 60 comprobaciones · el traductor y las notas de página
 node pruebas/comic.mjs        # 16 comprobaciones · tamaños mezclados y zoom
 node pruebas/nube.mjs         # 14 comprobaciones · hito 4, la nube sin cuenta
 node pruebas/capturas.mjs     # capturas de cada estado
@@ -112,7 +112,12 @@ resto.
 | Con un modismo, la pestaña de aviso va primero y se abre sola | R20 · P28 |
 | Con una palabra suelta, su ficha va primero, con pronunciación y ejemplo | R20 · P28 |
 | Las pestañas de literal y contexto | R30 · P54 |
-| Guardar en vocabulario, con libro y página | R17 · P57 |
+| **La traducción se guarda sola, sin botón** | D-24 |
+| Traducir lo mismo dos veces no duplica ni crea dos marcas | D-24 |
+| «Quitar» la borra y la marca desaparece | D-24 |
+| Y volver a traducirla la devuelve, sin lápida huérfana | D-24 |
+| Quitar deja lápida, no borra: la nube no la devuelve | D-21 · D-24 |
+| El vocabulario guarda lo consultado, con libro y página | R17 · P57 |
 | Cuota agotada: lo dice y a qué hora vuelve | P31 |
 | Clave inválida, servidor saturado y sin red, cada uno con su mensaje | R8 |
 | El modo selección avisa de cómo funciona | D-18 · P56 |

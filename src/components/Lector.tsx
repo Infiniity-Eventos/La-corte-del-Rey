@@ -660,7 +660,10 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
           onUsarSeleccion={() => setSeleccion('')}
           onIrAAjustes={onIrAAjustes}
           onEnUso={setTraduciendo}
-          onGuardada={p => setNotas(ns => [...ns, p])}
+          // Reemplaza si ya estaba: volver a traducir lo mismo en la misma
+          // página actualiza su entrada, no añade otra.
+          onGuardada={p => setNotas(ns => [...ns.filter(n => n.id !== p.id), p])}
+          onQuitada={id => setNotas(ns => ns.filter(n => n.id !== id))}
         />
       </div>
 

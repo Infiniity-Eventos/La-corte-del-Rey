@@ -231,6 +231,44 @@ export async function guardarPalabraTalCual(p: Palabra): Promise<void> {
   await tx(VOCABULARIO, 'readwrite', s => s.put(p))
 }
 
+/**
+ * Quitar deja lápida, no borra.
+ *
+ * Es lo mismo que hacen los libros y por el mismo motivo: si aquí no queda
+ * rastro, la nube devuelve la frase en la siguiente sincronización y quitarla
+ * no sirve de nada (D-21).
+ */
 export async function borrarPalabra(id: string): Promise<void> {
+  const p = (await listarVocabularioCrudo()).find(x => x.id === id)
+  if (!p) return
+  await tx(VOCABULARIO, 'readwrite', s => s.put(sellar({ ...p, borrado: true })))
+}
+
+/** Borrar de verdad. Solo cuando la lápida ya viajó a todas partes. */
+export async function olvidarPalabra(id: string): Promise<void> {
   await tx(VOCABULARIO, 'readwrite', s => s.delete(id))
+}
+
+/**
+ * Guarda una traducción sin duplicarla.
+ *
+ * Con el guardado automático, volver a traducir lo mismo en la misma página es
+ * de lo más normal —se relee un párrafo— y sin esto la lista se llenaría de
+ * copias. Si ya estaba, se actualiza en su sitio y conserva su fecha.
+ */
+export async function guardarTraduccion(nueva: Omit<Palabra, 'id' | 'fecha'>): Promise<Palabra> {
+  // Se busca también entre las quitadas: si vuelves a traducir algo que
+  // quitaste, revive su misma entrada en vez de dejar una lápida huérfana al
+  // lado de una copia nueva.
+  const igual = (await listarVocabularioCrudo()).find(
+    p => p.libroId === nueva.libroId && p.pagina === nueva.pagina && p.texto === nueva.texto,
+  )
+  const p: Palabra = {
+    ...nueva,
+    id: igual?.id ?? crypto.randomUUID(),
+    fecha: igual?.fecha ?? Date.now(),
+    borrado: false,
+  }
+  await guardarPalabra(p)
+  return p
 }

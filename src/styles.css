@@ -588,7 +588,13 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .palabra .ejemplo span:first-child { font-style: italic; opacity: .75; }
 .palabra .ejemplo-es { opacity: .95; }
 
-.guardar-voc { margin: var(--e2) 0 var(--e3); }
+/* La frase se guarda sola. Esto solo lo cuenta, y ofrece la salida. */
+.guardada {
+  display: flex; align-items: center; gap: var(--e2);
+  margin: var(--e2) 0 var(--e3); min-height: 1.6rem;
+}
+.guardar-voc { font-size: .78rem; color: var(--ocre); }
+.guardar-voc.tenue { color: var(--tinta-3); }
 .btn.fantasma.peq[disabled] { opacity: 1; border-color: var(--ocre); color: var(--ocre); }
 
 .panel-fallo { padding-bottom: var(--e3); }

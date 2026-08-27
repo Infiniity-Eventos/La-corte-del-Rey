@@ -54,6 +54,14 @@ export interface Palabra {
   pagina: number
   fecha: number
   actualizadoEn?: number
+  /**
+   * Marcada como quitada, no borrada del todo.
+   *
+   * Sin esto, quitar una frase aquí no dejaba rastro y la nube te la devolvía
+   * entera en la siguiente sincronización. Con el guardado automático se quitan
+   * frases a menudo, así que deja de ser un detalle.
+   */
+  borrado?: boolean
 }
 
 export interface Ajustes {

@@ -196,10 +196,32 @@ paso('la pestaña literal funciona', (await page.textContent('.hoja-solapa .lite
 await page.click('.solapa:has-text("En contexto")')
 paso('la pestaña de contexto funciona', (await page.textContent('.hoja-solapa p')) === RESPUESTA.contexto)
 
-/* --- Guardar en vocabulario (R17 / P57) --- */
-await page.click('.guardar-voc')
+/* --- Se guarda sola, sin botón (R17 / P57) --- */
+await page.waitForSelector('.guardada .icono', { timeout: 8000 })
+paso('la traducción se guarda sola, sin pulsar nada',
+  /^Guardada en la página \d+$/.test((await page.textContent('.guardar-voc')).trim()),
+  (await page.textContent('.guardar-voc')).trim())
+paso('y no queda ningún botón de guardar',
+  (await page.locator('.btn:has-text("Guardar en la página")').count()) === 0)
+
+/* --- Traducir lo mismo otra vez no duplica --- */
+await page.click('.panel-top .icono')
+await pedir('he was over the moon about it')
+await page.waitForSelector('.guardada .icono', { timeout: 10000 })
+paso('traducir lo mismo dos veces no crea dos marcas',
+  (await page.textContent('.marca-notas .marca-n')) === '1',
+  `la marca dice ${await page.textContent('.marca-notas .marca-n')}`)
+
+/* --- Y se puede deshacer desde la propia burbuja --- */
+await page.click('.guardada .icono')
 await page.waitForTimeout(400)
-paso('se guarda en el vocabulario', (await page.textContent('.guardar-voc')).includes('✓'))
+paso('«Quitar» la borra y la marca desaparece',
+  (await page.locator('.marca-notas').count()) === 0)
+// Se vuelve a traducir para seguir con el resto de comprobaciones.
+await page.click('.panel-top .icono')
+await pedir('he was over the moon about it')
+await page.waitForSelector('.guardada .icono', { timeout: 10000 })
+paso('y volver a traducirla la devuelve', (await page.locator('.marca-notas').count()) === 1)
 
 /* --- Y queda marcado en la página donde lo tradujiste --- */
 const paginaDeLaNota = Number((await page.textContent('.folio')).split('/')[0].trim())
@@ -388,15 +410,36 @@ await page.click('.chrome.arriba .icono:first-child')
 await page.waitForSelector('.biblio-top', { timeout: 10000 })
 await page.click('.biblio-top .icono:has-text("Vocabulario")')
 await page.waitForSelector('.voc-fila', { timeout: 8000 })
-paso('el vocabulario guarda lo consultado', (await page.textContent('.voc-en')) === 'he was over the moon about it')
-paso('y su traducción', (await page.textContent('.voc-es')) === RESPUESTA.natural)
-const de = await page.textContent('.voc-de')
+// Ahora se guarda todo lo que traduces, así que hay varias entradas: se busca
+// la que interesa en vez de dar por hecho que es la única.
+const laFila = page.locator('.voc-fila:has(.voc-en:text-is("he was over the moon about it"))')
+paso('el vocabulario guarda lo consultado', (await laFila.count()) === 1,
+  `${await page.locator('.voc-fila').count()} entradas en total`)
+paso('sin duplicarla aunque se traduzca dos veces', (await laFila.count()) === 1)
+paso('y su traducción', (await laFila.locator('.voc-es').textContent()) === RESPUESTA.natural)
+const de = await laFila.locator('.voc-de').textContent()
 paso('y de qué libro y página salió', /Crónica de una prueba · pág\. \d+/.test(de), de)
 
 await page.screenshot({ path: `${SC}/t-vocabulario.png` })
-await page.click('.voc-fila .mas')
+const antesDeQuitar = await page.locator('.voc-fila').count()
+await laFila.locator('.mas').click()
 await page.waitForTimeout(500)
-paso('se puede quitar una entrada', (await page.locator('.voc-fila').count()) === 0)
+paso('se puede quitar una entrada',
+  (await page.locator('.voc-fila').count()) === antesDeQuitar - 1 && (await laFila.count()) === 0,
+  `${antesDeQuitar} → ${await page.locator('.voc-fila').count()}`)
+
+// Quitar deja lápida en vez de borrar: sin ella la nube devolvería la frase en
+// la siguiente sincronización, y con el guardado automático se quitan a menudo.
+const lapida = await page.evaluate(() => new Promise(res => {
+  const q = indexedDB.open('vellum')
+  q.onsuccess = () => {
+    const bd = q.result
+    const t = bd.transaction('vocabulario', 'readonly').objectStore('vocabulario').getAll()
+    t.onsuccess = () => res(t.result.filter(p => p.borrado).length)
+  }
+}))
+paso('y queda marcada como quitada, no borrada del todo', lapida === 1, `${lapida} lápida(s)`)
+paso('pero ya no se ve en la lista', (await laFila.count()) === 0)
 
 console.log(errores.length ? `\nErrores de consola (${errores.length}):\n` + errores.join('\n') : '\nSin errores de consola.')
 await browser.close()
