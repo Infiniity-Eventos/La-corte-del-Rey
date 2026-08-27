@@ -12,6 +12,21 @@ const NOMBRE_TEMA: Record<Tema, string> = { papel: 'Papel', sepia: 'Sepia', oscu
 const UMBRAL = 0.3
 /** Por debajo de esto no es un arrastre, es un toque. */
 const TOQUE = 8
+/** Dos toques más separados que esto ya son dos toques, no uno doble. */
+const DOBLE = 320
+/** Cuánto acerca el doble toque. Suficiente para leer una viñeta pequeña. */
+const AUMENTO = 2.6
+
+interface Lupa { s: number; x: number; y: number }
+
+/** Que la vista no se salga de la página al acercar o al arrastrar. */
+function encajar(l: Lupa, caja: { w: number; h: number }): Lupa {
+  return {
+    s: l.s,
+    x: Math.min(0, Math.max(caja.w - caja.w * l.s, l.x)),
+    y: Math.min(0, Math.max(caja.h - caja.h * l.s, l.y)),
+  }
+}
 
 type Direccion = 'siguiente' | 'anterior' | null
 
@@ -89,6 +104,8 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
   const [seleccionando, setSeleccionando] = useState(false)
   const [hayTexto, setHayTexto] = useState<boolean | null>(null)
   const [seleccion, setSeleccion] = useState('')
+  const [lupa, setLupa] = useState<Lupa | null>(null)
+  const [acercando, setAcercando] = useState(false)
   const textoRef = useRef<HTMLDivElement>(null)
   const zonaRef = useRef<HTMLDivElement>(null)
   const lectorRef = useRef<HTMLDivElement>(null)
@@ -96,6 +113,9 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
   // El arrastre vive en refs, no en el estado: mover el dedo no puede provocar
   // un renderizado de React por fotograma o se nota el tirón.
   const gesto = useRef({ activo: false, x0: 0, dx: 0, p: 0, dir: null as Direccion, asentando: false })
+  // Del doble toque solo hace falta recordar cuándo y dónde fue el anterior.
+  const ultimoToque = useRef({ t: 0, x: 0, y: 0 })
+  const arrastreLupa = useRef({ x: 0, y: 0, ox: 0, oy: 0 })
 
   /* ------------------------------ medir ------------------------------ */
 
@@ -303,6 +323,7 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
         g.dir = null
         setDir(null)
         if (completa) {
+          setLupa(null)
           const nueva = d === 'siguiente' ? pagina + 1 : pagina - 1
           setPagina(nueva)
           onPagina(nueva)
@@ -313,10 +334,33 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
     [ajustes.sonido, ajustes.vibracion, aplicar, pagina, onPagina],
   )
 
+  /**
+   * Después de cada renderizado, la hoja vuelve a donde la dejó el dedo.
+   *
+   * El giro se aplicaba en el estilo del renderizado, así que cualquier
+   * repintado a mitad del gesto —y hay varios, porque dibujar la página vecina
+   * provoca uno— devolvía la hoja a su posición de partida. Al avanzar se
+   * notaba poco, porque partir de cero es casi lo mismo que empezar. Al volver,
+   * la posición de partida es «de canto e invisible», así que la página
+   * desaparecía y luego aparecía de golpe.
+   */
+  useLayoutEffect(() => {
+    const el = movilRef.current
+    if (!el || !dir) return
+    el.style.transition = 'none'
+    aplicar(gesto.current.p, dir)
+  }, [dir, sello, hojas, aplicar])
+
   const alBajar = (e: React.PointerEvent) => {
     const g = gesto.current
     if (!lista || g.asentando || seleccionando) return
     despertarSonido()
+    setAcercando(false)
+    if (lupa) {
+      // Acercado, arrastrar mueve la vista. Pasar página aquí no tendría
+      // sentido: no se ve la página entera.
+      arrastreLupa.current = { x: e.clientX, y: e.clientY, ox: lupa.x, oy: lupa.y }
+    }
     g.activo = true
     g.x0 = e.clientX
     g.dx = 0
@@ -333,6 +377,14 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
   const alMover = (e: React.PointerEvent) => {
     const g = gesto.current
     if (!g.activo) return
+
+    if (lupa) {
+      const a = arrastreLupa.current
+      setLupa(encajar({ s: lupa.s, x: a.ox + (e.clientX - a.x), y: a.oy + (e.clientY - a.y) }, caja))
+      g.dx = e.clientX - g.x0
+      return
+    }
+
     g.dx = e.clientX - g.x0
 
     if (!g.dir) {
@@ -351,17 +403,49 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
     aplicar(g.p, g.dir)
   }
 
-  const alSoltar = () => {
+  const alSoltar = (e: React.PointerEvent) => {
     const g = gesto.current
     if (!g.activo) return
     g.activo = false
 
-    // Sin dirección y sin recorrido: era un toque. Aparece la interfaz (P62).
+    // Sin dirección y sin recorrido: era un toque.
     if (!g.dir) {
-      if (Math.abs(g.dx) < TOQUE) setChrome(c => !c)
+      if (Math.abs(g.dx) < TOQUE) alTocar(e)
       return
     }
     asentar(g.p > UMBRAL, g.dir)
+  }
+
+  /**
+   * Un toque muestra la interfaz (P62). Dos seguidos, además, acercan la
+   * página al punto tocado, y otros dos la devuelven.
+   *
+   * El segundo toque vuelve a alternar la interfaz, así que un doble toque la
+   * deja como estaba. Es lo que evita tener que esperar a ver si viene un
+   * segundo toque antes de reaccionar al primero.
+   */
+  const alTocar = (e: React.PointerEvent) => {
+    setChrome(c => !c)
+
+    const ahora = Date.now()
+    const u = ultimoToque.current
+    const seguido = ahora - u.t < DOBLE && Math.hypot(e.clientX - u.x, e.clientY - u.y) < 40
+    ultimoToque.current = { t: ahora, x: e.clientX, y: e.clientY }
+    if (!seguido) return
+    ultimoToque.current.t = 0
+
+    const escena = escenaRef.current
+    if (!escena) return
+    setAcercando(true)
+    if (lupa) {
+      setLupa(null)
+      return
+    }
+    const r = escena.getBoundingClientRect()
+    const px = e.clientX - r.left
+    const py = e.clientY - r.top
+    // Lo tocado se queda en el centro de la pantalla.
+    setLupa(encajar({ s: AUMENTO, x: caja.w / 2 - px * AUMENTO, y: caja.h / 2 - py * AUMENTO }, caja))
   }
 
   /* ---------------------------- controles ---------------------------- */
@@ -369,6 +453,7 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
   const irA = (n: number) => {
     const destino = Math.max(1, Math.min(libro.paginas, n))
     if (destino === pagina) return
+    setLupa(null)
     setPagina(destino)
     onPagina(destino)
     setVolverAlInicio(false)
@@ -421,7 +506,7 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
       </div>
 
       <div
-        className={`escena${seleccionando ? ' seleccionando' : ''}`}
+        className={`escena${seleccionando ? ' seleccionando' : ''}${lupa ? ' lupa' : ''}`}
         ref={escenaRef}
         onPointerDown={alBajar}
         onPointerMove={alMover}
@@ -430,7 +515,10 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
       >
         {!lista && <span className="cargando">Abriendo</span>}
         {hojas.abajo && (
-          <div className="marco">
+          <div
+            className={`marco${acercando ? ' acercando' : ''}`}
+            style={lupa ? { transform: `translate(${lupa.x}px, ${lupa.y}px) scale(${lupa.s})` } : undefined}
+          >
             <div className="hoja debajo" style={sitio(area)}>
               <div className="cara">
                 <div className="papel">
@@ -451,11 +539,6 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
                 style={{
                   ...sitio(area),
                   display: dir ? 'block' : 'none',
-                  transform: dir === 'anterior' ? 'rotateY(-90deg)' : 'rotateY(0deg)',
-                  // Al empezar a volver, la hoja arranca de canto: invisible.
-                  // Sin esto asomaba un instante opaca antes del primer
-                  // movimiento del dedo.
-                  ['--visible' as string]: dir === 'anterior' ? 0 : 1,
                 }}
               >
                 <div className="cara frente">

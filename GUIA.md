@@ -73,6 +73,8 @@ descartan.
 | R47 | Sonido de **clic seco** al pasar página, con interruptor rápido | P75 · P76 |
 | R48 | Vibración corta al completarse la página | P77 |
 | R49 | Orden de construcción: **leer primero** | P80 |
+| R50 | Doble toque para acercar la página al punto tocado; otro doble toque la devuelve | petición del 27 de agosto |
+| R51 | Lo que sobra alrededor de la página toma el color del fondo, no blanco | petición del 27 de agosto |
 
 **No entra:** lectura en voz alta (P16), OCR de cómics (P8), traducción de
 página completa (P8), subrayados ni notas manuales (P15), EPUB / CBZ / MOBI en
@@ -511,6 +513,13 @@ construir lo que viene:
   cambio: nadie tiene que acordarse de subirlo. Y se toca para preguntar si hay
   algo más nuevo, porque la duda real no es «qué versión tengo» sino «¿estoy
   viendo lo último?».
+- **Lo que se dibuja en el renderizado, el renderizado lo deshace.** El giro de
+  la hoja se aplicaba en el estilo del componente, así que cualquier repintado a
+  mitad del gesto —y dibujar la página vecina provoca uno— la devolvía a su
+  posición de partida. Al avanzar se notaba poco, porque partir de cero se parece
+  a empezar. Al volver, la posición de partida es «de canto e invisible», así que
+  la página desaparecía y saltaba de golpe. Lo que el dedo controla lo aplica el
+  dedo, y se vuelve a aplicar después de cada renderizado.
 - **Media vuelta no cabe en una pantalla.** El volteo giraba 180°, y al volver
   atrás la página pasaba **la primera mitad del gesto fuera de la pantalla**, a la
   izquierda del lomo: arrastrabas y no se movía nada. Con un cuarto de vuelta la
@@ -627,3 +636,8 @@ construir lo que viene:
   hoja de detrás; y el giro pasa de media vuelta a un cuarto, porque al volver
   atrás la página pasaba media pantalla fuera del encuadre y arrastrar se sentía
   muerto. 113 comprobaciones.
+- **2026-08-27** — Tercera ronda sobre el mismo cómic. El relleno de la hoja pasa
+  de blanco al color del fondo. Se arregla que volver atrás saltara de golpe: el
+  giro se perdía en cada repintado. Y entra el **zoom con doble toque**, que
+  centra lo tocado y se deshace con otro doble toque; acercado, arrastrar pasea
+  la vista en vez de pasar página. 121 comprobaciones.

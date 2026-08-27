@@ -91,8 +91,34 @@ const dentroDeLaPantalla = async (desde, hasta) => {
 }
 paso('avanzar mantiene la hoja dentro de la pantalla',
   (await dentroDeLaPantalla(0.88, 0.06)) === null)
-paso('volver también, con el mismo recorrido',
-  (await dentroDeLaPantalla(0.1, 0.92)) === null)
+const fueraAtras = await dentroDeLaPantalla(0.1, 0.92)
+paso('volver también, con el mismo recorrido', fueraAtras === null, fueraAtras ?? 'dentro')
+
+// Volver atrás tiene que animarse durante todo el gesto. El giro se aplicaba
+// en el renderizado, y cualquier repintado a mitad devolvía la hoja a su
+// posición de partida: al volver, esa posición es «de canto e invisible», así
+// que la página desaparecía y luego saltaba de golpe.
+const pasos = []
+await page.mouse.move(caja.x + caja.width * 0.1, y)
+await page.mouse.down()
+// Se queda por debajo del umbral a propósito: así la página vuelve sola y las
+// comprobaciones siguientes siguen contando desde donde estaban.
+for (let i = 1; i <= 6; i++) {
+  await page.mouse.move(caja.x + caja.width * (0.1 + 0.22 * (i / 6)), y)
+  await page.waitForTimeout(40)
+  pasos.push(await page.evaluate(() => {
+    const m = document.querySelector('.hoja.movil')
+    const cs = m && getComputedStyle(m)
+    return m && cs.display !== 'none' ? `${cs.transform}|${Number(cs.opacity).toFixed(2)}` : 'sin hoja'
+  }))
+}
+await page.mouse.up()
+await page.waitForTimeout(900)
+const distintos = new Set(pasos).size
+paso('volver atrás se anima durante todo el gesto', distintos >= 5,
+  `${distintos} posiciones distintas de ${pasos.length}`)
+paso('y la hoja se ve mientras vuelve',
+  pasos.filter(p => p !== 'sin hoja' && Number(p.split('|')[1]) > 0.5).length >= 4)
 
 // 6. Arrastre corto: la página debe volver
 await page.mouse.move(caja.x + caja.width * 0.8, y)

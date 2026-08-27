@@ -82,10 +82,18 @@ paso('las dos hojas de papel miden lo mismo',
 
 const relleno = await page.evaluate(() => {
   const papel = document.querySelector('.hoja.movil .papel')
-  return papel ? getComputedStyle(papel).backgroundColor : null
+  if (!papel) return null
+  // El fondo de lectura lo pone el lector, no la escena.
+  const lector = document.querySelector('.lector')
+  return {
+    papel: getComputedStyle(papel).backgroundColor,
+    fondo: getComputedStyle(lector).backgroundColor,
+  }
 })
-paso('el papel sobrante va relleno, no transparente',
-  relleno === 'rgb(255, 255, 255)', relleno)
+// Opaco y del color del fondo: no se ve la hoja, pero sí tapa a la de detrás.
+paso('el papel sobrante toma el color del fondo',
+  relleno && relleno.papel === relleno.fondo && !/rgba\(0, 0, 0, 0\)/.test(relleno.papel),
+  relleno && relleno.papel)
 
 // Se completa el volteo: por debajo del umbral la página vuelve y seguiríamos
 // mirando la misma.
@@ -98,6 +106,50 @@ paso('la doble página se dibuja sin deformar',
   Math.abs(p2.hoja - p2.lienzo) < 0.02, `caja ${p2.hoja.toFixed(2)} · lienzo ${p2.lienzo.toFixed(2)}`)
 paso('y es más ancha que alta', p2.hoja > 1, p2.hoja.toFixed(2))
 paso('aprovecha el ancho de la pantalla', p2.ancho > caja.width * 0.9, `${p2.ancho}px de ${Math.round(caja.width)}`)
+
+/* --- El zoom con doble toque --- */
+const marco = () => page.evaluate(() => {
+  const m = document.querySelector('.marco')
+  const cs = getComputedStyle(m)
+  return { transform: cs.transform, escala: Number((cs.transform.match(/matrix\(([\d.]+)/) || [0, 1])[1]) }
+})
+paso('sin doble toque no hay zoom', (await marco()).escala === 1)
+
+const c2 = await page.locator('.escena').boundingBox()
+const punto = { x: c2.x + c2.width * 0.28, y: c2.y + c2.height * 0.32 }
+await page.mouse.click(punto.x, punto.y)
+await page.mouse.click(punto.x, punto.y, { delay: 30 })
+await page.waitForTimeout(500)
+const conZoom = await marco()
+paso('el doble toque acerca la página', conZoom.escala > 2, `×${conZoom.escala.toFixed(1)}`)
+
+// Lo tocado tiene que acabar cerca del centro, no en otro sitio.
+const centrado = await page.evaluate(({ px, py, s }) => {
+  const m = document.querySelector('.marco')
+  const t = new DOMMatrix(getComputedStyle(m).transform)
+  const r = document.querySelector('.escena').getBoundingClientRect()
+  const dondeQueda = { x: t.e + px * s, y: t.f + py * s }
+  return { dx: Math.abs(dondeQueda.x - r.width / 2), dy: Math.abs(dondeQueda.y - r.height / 2) }
+}, { px: punto.x - c2.x, py: punto.y - c2.y, s: conZoom.escala })
+paso('y centra lo que tocaste', centrado.dx < 60 && centrado.dy < 60,
+  `a ${Math.round(centrado.dx)}px y ${Math.round(centrado.dy)}px del centro`)
+
+// Arrastrar acercado mueve la vista en vez de pasar página
+const antesDePasear = (await marco()).transform
+const yy = c2.y + c2.height / 2
+await page.mouse.move(c2.x + c2.width * 0.7, yy)
+await page.mouse.down()
+for (let i = 1; i <= 6; i++) { await page.mouse.move(c2.x + c2.width * (0.7 - 0.4 * (i / 6)), yy); await page.waitForTimeout(16) }
+await page.mouse.up()
+await page.waitForTimeout(400)
+paso('arrastrar acercado mueve la vista', (await marco()).transform !== antesDePasear)
+paso('y no pasa de página', (await page.textContent('.folio')).trim() === '2 / 6',
+  (await page.textContent('.folio')).trim())
+
+await page.mouse.click(punto.x, punto.y)
+await page.mouse.click(punto.x, punto.y, { delay: 30 })
+await page.waitForTimeout(500)
+paso('otro doble toque la devuelve a su sitio', (await marco()).escala === 1)
 
 await page.screenshot({ path: `${SC}/comic-doble.png` })
 console.log(errores.length ? `\nErrores de consola:\n${errores.join('\n')}` : '\nSin errores de consola.')

@@ -222,8 +222,10 @@ button { font: inherit; color: inherit; cursor: pointer; }
   flex: 1; position: relative; overflow: hidden;
   /* Perspectiva floja a propósito: con una fuerte, al acercarse a los 90° la
      hoja se magnifica y se sale del marco. Correcto en geometría, roto a la
-     vista. */
-  perspective: 2600px; touch-action: none; user-select: none; -webkit-user-select: none;
+     vista.
+     El punto de fuga va en el lomo, no en el centro: así la hoja que gira
+     nunca se proyecta al otro lado del eje sobre el que gira. */
+  perspective: 2600px; perspective-origin: 3% 50%; touch-action: none; user-select: none; -webkit-user-select: none;
   display: grid; place-items: center;
 }
 
@@ -239,8 +241,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .cara {
   position: absolute; inset: 0;
   backface-visibility: hidden; -webkit-backface-visibility: hidden;
-  box-shadow: 0 2px 16px rgba(0, 0, 0, .2), 0 0 0 1px var(--canto-hoja, transparent);
-  border-radius: 3px; overflow: hidden;
 }
 
 /* El aviso apilado dentro de la zona de abajo: deja de flotar y de aterrizar
@@ -252,14 +252,17 @@ button { font: inherit; color: inherit; cursor: pointer; }
 @keyframes sube-plano { from { opacity: 0; transform: translateY(8px); } }
 
 /* El papel: una hoja del tamaño del área de lectura, con la página centrada.
-   Lo que sobra queda en blanco en vez de dejar ver la página de detrás. */
+   Lo que sobra toma el color del fondo, así que la hoja no se ve pero sí tapa
+   por completo a la de detrás durante el volteo. */
 .papel {
-  position: absolute; inset: 0; background: #fff;
+  position: absolute; inset: 0; background: var(--fondo-lectura);
   display: flex; align-items: center; justify-content: center;
-  filter: var(--filtro);
 }
-.pagina { position: relative; flex: none; }
-.pagina canvas { display: block; }
+.pagina {
+  position: relative; flex: none;
+  box-shadow: 0 2px 14px rgba(0, 0, 0, .18), 0 0 0 1px var(--canto-hoja, transparent);
+}
+.pagina canvas { display: block; filter: var(--filtro); }
 
 /* La sombra del pliegue: lo que hace que el giro parezca papel y no una
    diapositiva. Va fuera del papel para que el tema no la invierta. */
@@ -341,10 +344,13 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 .importando p { color: var(--tinta-2); font-size: .9rem; margin-top: var(--e2); }
 
-/* El marco ocupa toda la escena y solo aporta el plano 3D compartido. Ya no
-   impone tamaño: cada hoja se coloca con el suyo, porque en un cómic conviven
-   páginas verticales con dobles páginas horizontales. */
-.marco { position: absolute; inset: 0; transform-style: preserve-3d; }
+/* El marco ocupa toda la escena y aporta el plano 3D compartido. También es
+   lo que se acerca al hacer zoom, para que la página y su capa de texto se
+   muevan juntas. */
+.marco { position: absolute; inset: 0; transform-style: preserve-3d; transform-origin: 0 0; }
+.marco.acercando { transition: transform 260ms var(--curva); }
+.escena.lupa { cursor: grab; }
+.escena.lupa.arrastrando { cursor: grabbing; }
 
 
 /* ------------------------------------------------------------------ */
