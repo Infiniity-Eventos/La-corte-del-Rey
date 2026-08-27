@@ -13,14 +13,16 @@ import { registerSW } from 'virtual:pwa-register'
 const MEDIA_HORA = 30 * 60 * 1000
 
 let aplicar: ((recargar?: boolean) => Promise<void>) | null = null
+let registro: ServiceWorkerRegistration | null = null
 
 export function vigilarActualizaciones(alHaberUna: () => void): void {
   aplicar = registerSW({
     immediate: true,
     onNeedRefresh: alHaberUna,
-    onRegisteredSW(_url, registro) {
-      if (!registro) return
-      const mirar = () => { void registro.update().catch(() => {}) }
+    onRegisteredSW(_url, reg) {
+      if (!reg) return
+      registro = reg
+      const mirar = () => { void reg.update().catch(() => {}) }
       window.setInterval(mirar, MEDIA_HORA)
       // Volver a la app es el mejor momento para mirar: es cuando toca esperar
       // menos y cuando es más probable que haya pasado el tiempo suficiente.
@@ -29,6 +31,22 @@ export function vigilarActualizaciones(alHaberUna: () => void): void {
       })
     },
   })
+}
+
+/**
+ * Busca ahora mismo, sin esperar al reloj. Devuelve si hay algo nuevo llegando.
+ *
+ * Es lo que pasa al tocar el número de versión: la pregunta de fondo no es
+ * «¿qué versión tengo?» sino «¿estoy viendo lo último?», y esto la responde.
+ */
+export async function buscarAhora(): Promise<boolean> {
+  if (!registro) return false
+  try {
+    await registro.update()
+  } catch {
+    return false
+  }
+  return !!(registro.installing || registro.waiting)
 }
 
 /** Entra en la versión nueva. Recarga, así que se ofrece, no se impone. */

@@ -1,6 +1,27 @@
+import { execSync } from 'node:child_process'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+
+/**
+ * La versión es el commit del que salió esta compilación.
+ *
+ * No es un número que alguien tenga que acordarse de subir: cambia solo con
+ * cada cambio, que es justo lo que hace falta para poder mirar la pantalla y
+ * saber si lo que tienes delante es lo último.
+ */
+function version(): string {
+  try {
+    return execSync('git rev-parse --short=7 HEAD').toString().trim()
+  } catch {
+    // Fuera de un repositorio —una compilación suelta— aún queda lo que da CI.
+    return (process.env.GITHUB_SHA ?? 'local').slice(0, 7)
+  }
+}
+
+function cuando(): string {
+  return new Date().toISOString()
+}
 
 // Vellum se publica en dos sitios: en GitHub Pages vive en una subcarpeta con
 // el nombre del repositorio, y en Firebase Hosting vivirá en la raíz. La ruta
@@ -9,6 +30,10 @@ const base = process.env.VITE_BASE ?? '/'
 
 export default defineConfig({
   base,
+  define: {
+    __VERSION__: JSON.stringify(version()),
+    __COMPILADO__: JSON.stringify(cuando()),
+  },
   plugins: [
     react(),
     VitePWA({

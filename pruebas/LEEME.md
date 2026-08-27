@@ -7,7 +7,7 @@ usan la app como la usarías tú y dicen si algo se rompió.
 npm run build
 npx vite preview --port 4173 --host 127.0.0.1 &
 node pruebas/lectura.mjs      # 26 comprobaciones · hito 1, leer
-node pruebas/biblioteca.mjs   # 33 comprobaciones · hito 2, la estantería
+node pruebas/biblioteca.mjs   # 35 comprobaciones · hito 2, la estantería
 node pruebas/traductor.mjs    # 40 comprobaciones · hito 3, el traductor
 node pruebas/comic.mjs        # 8 comprobaciones · páginas de tamaños mezclados
 node pruebas/capturas.mjs     # capturas de cada estado
@@ -75,6 +75,7 @@ vea de dónde sale y no parezca una prueba puesta por costumbre.
 | Al buscar no se destaca nada | — |
 | Preguntar antes de borrar, y borrar de verdad | — |
 | Que todo sobreviva a recargar | D-03 |
+| La versión se ve al pie del inicio, y tocarla busca actualizaciones | — |
 
 ## Qué comprueba `traductor.mjs`
 

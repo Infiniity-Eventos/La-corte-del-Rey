@@ -497,6 +497,12 @@ construir lo que viene:
   por la página X» estaba posicionado por su cuenta y aterrizaba justo encima de
   los controles del lector. Va dentro de la misma zona que la burbuja, y lo demás
   se apoya encima midiéndola.
+- **La versión tiene que verse en pantalla.** Sin ella, la única forma de saber
+  si lo que tienes delante es lo último era cerrar la app y volver a abrirla a
+  ciegas. Es el commit del que salió la compilación, así que cambia solo con cada
+  cambio: nadie tiene que acordarse de subirlo. Y se toca para preguntar si hay
+  algo más nuevo, porque la duda real no es «qué versión tengo» sino «¿estoy
+  viendo lo último?».
 - **Cada hoja necesita su propia medida.** Un cómic mezcla páginas verticales con
   dobles páginas horizontales, y durante el volteo hay dos en pantalla a la vez.
   Con una sola medida compartida, la que no encajaba se estiraba dentro del marco
@@ -590,3 +596,5 @@ construir lo que viene:
   medirse por su cuenta. Se añade `pruebas/comic.mjs` con un PDF de tamaños
   mezclados, que es el caso que ningún PDF uniforme habría destapado. 107
   comprobaciones.
+- **2026-08-27** — La versión se muestra al pie de la biblioteca y en los
+  ajustes, y tocarla busca actualizaciones al momento. 109 comprobaciones.

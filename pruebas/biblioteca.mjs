@@ -171,6 +171,16 @@ await page.reload({ waitUntil: 'networkidle' })
 await page.waitForTimeout(1300)
 paso('el borrado sobrevive a recargar', (await page.locator(LIBROS).count()) === antes - 1)
 
+/* --- La versión, al pie de la estantería --- */
+const version = (await page.textContent('.version')).trim()
+paso('la versión se ve en el inicio', /^Vellum [0-9a-f]{7} · /.test(version), version)
+await page.click('.version')
+await page.waitForSelector('.aviso', { timeout: 10000 })
+paso('tocarla comprueba si hay algo más nuevo',
+  /última versión/.test(await page.textContent('.aviso')),
+  (await page.textContent('.aviso')).trim())
+
 await page.screenshot({ path: `${SC}/b-final.png` })
 console.log(errores.length ? `\nErrores de consola (${errores.length}):\n` + errores.join('\n') : '\nSin errores de consola.')
 await browser.close()
+

@@ -11,6 +11,8 @@ interface Props {
   vocabulario: number
   onAjustes: () => void
   onVocabulario: () => void
+  onComprobarVersion: () => void
+  comprobando: boolean
 }
 
 function porcentaje(l: Libro): number {
@@ -23,8 +25,20 @@ function plano(s: string): string {
   return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
 }
 
+/** El día y la hora en que se compiló lo que estás viendo. */
+function compilado(): string {
+  try {
+    return new Date(__COMPILADO__).toLocaleString('es-ES', {
+      day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
+    })
+  } catch {
+    return ''
+  }
+}
+
 export function Biblioteca({
   libros, importando, onImportar, onAbrir, onEditar, vocabulario, onAjustes, onVocabulario,
+  onComprobarVersion, comprobando,
 }: Props) {
   const input = useRef<HTMLInputElement>(null)
   const [busqueda, setBusqueda] = useState('')
@@ -169,6 +183,13 @@ export function Biblioteca({
           )}
         </>
       )}
+
+      {/* La versión es el commit del que salió esta compilación: cambia con cada
+          cambio. Se toca para preguntar si hay algo más nuevo, que es la duda
+          real detrás de mirarla. */}
+      <button className="version mono" onClick={onComprobarVersion} disabled={comprobando}>
+        {comprobando ? 'Comprobando…' : `Vellum ${__VERSION__} · ${compilado()}`}
+      </button>
     </div>
   )
 }

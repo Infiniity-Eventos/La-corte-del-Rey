@@ -575,3 +575,13 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .prueba { font-size: .88rem; margin: 0; padding: .6rem .75rem; border-radius: 6px; }
 .prueba.bien { background: #E7EDDE; border: 1px solid #C3D2B0; color: #3E5530; }
 .prueba.mal { background: #F5E1D6; border: 1px solid #DCB49A; color: #8C3F1D; }
+
+/* La versión, al pie de la estantería. Discreta hasta que la buscas. */
+.version {
+  display: block; margin: var(--e5) auto 0; padding: .4rem .8rem;
+  background: transparent; border: 1px solid transparent; border-radius: 999px;
+  font-size: .68rem; letter-spacing: .06em; color: var(--tinta-3);
+  transition: color var(--paso) var(--curva), border-color var(--paso) var(--curva);
+}
+.version:hover { color: var(--ocre); border-color: var(--linea); }
+.version[disabled] { opacity: .6; cursor: default; }

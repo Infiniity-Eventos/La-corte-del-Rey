@@ -120,6 +120,15 @@ export function Ajustes({ clave, onGuardar, onCerrar }: Props) {
       </section>
 
       <section className="tarjeta">
+        <h2 className="display tarjeta-tit">Esta versión</h2>
+        <p className="tarjeta-txt">
+          Vellum <strong>{__VERSION__}</strong>, compilada el{' '}
+          {new Date(__COMPILADO__).toLocaleString('es-ES')}. Se actualiza sola: cuando
+          haya una versión nueva, la biblioteca te lo dice.
+        </p>
+      </section>
+
+      <section className="tarjeta">
         <h2 className="display tarjeta-tit">Dónde vive todo</h2>
         <p className="tarjeta-txt">
           Los PDF, el progreso, las etiquetas y esta clave están guardados en este

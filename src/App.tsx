@@ -17,7 +17,7 @@ import { Biblioteca } from './components/Biblioteca'
 import { FichaLibro } from './components/FichaLibro'
 import { Ajustes as PantallaAjustes } from './components/Ajustes'
 import { Vocabulario } from './components/Vocabulario'
-import { entrarEnLaNueva, vigilarActualizaciones } from './lib/actualizacion'
+import { buscarAhora, entrarEnLaNueva, vigilarActualizaciones } from './lib/actualizacion'
 
 /**
  * pdf.js pesa medio megabyte. Si entra en el paquete principal, la biblioteca
@@ -36,6 +36,15 @@ export default function App() {
   const [vocabulario, setVocabulario] = useState<Palabra[]>([])
   const [pantalla, setPantalla] = useState<'biblioteca' | 'ajustes' | 'vocabulario'>('biblioteca')
   const [hayVersionNueva, setHayVersionNueva] = useState(false)
+  const [comprobando, setComprobando] = useState(false)
+
+  const comprobarVersion = useCallback(async () => {
+    setComprobando(true)
+    const hay = await buscarAhora()
+    setComprobando(false)
+    if (hay) setHayVersionNueva(true)
+    else setNota(`Estás en la última versión · ${__VERSION__}`)
+  }, [])
   const [importando, setImportando] = useState(false)
   const [nota, setNota] = useState<string | null>(null)
   const [arrancando, setArrancando] = useState(true)
@@ -244,6 +253,8 @@ export default function App() {
         vocabulario={vocabulario.length}
         onAjustes={() => setPantalla('ajustes')}
         onVocabulario={() => setPantalla('vocabulario')}
+        onComprobarVersion={() => void comprobarVersion()}
+        comprobando={comprobando}
       />
       {enFicha && (
         <FichaLibro
