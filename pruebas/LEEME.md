@@ -13,7 +13,7 @@ node pruebas/comic.mjs        # 8 comprobaciones · páginas de tamaños mezclad
 node pruebas/capturas.mjs     # capturas de cada estado
 
 # Contra la app publicada
-node pruebas/en-vivo.mjs      # 13 comprobaciones sobre la app en su dirección real
+node pruebas/en-vivo.mjs      # 15 comprobaciones sobre la app en su dirección real
 ```
 
 `SC` es la carpeta donde están el PDF de prueba y donde se guardan las
@@ -137,6 +137,7 @@ ruta base.
 | Las tipografías cargan desde la propia app y Fraunces se aplica |
 | El manifiesto se sirve, con el ámbito correcto y sus iconos existentes |
 | El service worker queda registrado |
+| **El service worker no se queda esperando permiso, y toma el mando de las pestañas abiertas** |
 | Importar un PDF, dibujarlo y pasar página, ya publicada |
 | Ningún archivo devuelve 404 |
 

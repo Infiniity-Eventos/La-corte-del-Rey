@@ -68,6 +68,18 @@ const sw = await page.evaluate(() =>
   navigator.serviceWorker.getRegistrations().then(rs => rs.length))
 paso('el service worker queda registrado', sw > 0, `${sw} registro(s)`)
 
+/**
+ * El service worker tiene que tomar el mando en cuanto se instala. Si espera a
+ * que la página le dé paso, la página que espera es la vieja —que no sabe
+ * hacerlo— y la actualización se bloquea para siempre. Pasó de verdad.
+ */
+const mando = await page.evaluate(async base => {
+  const t = await (await fetch(base + 'sw.js')).text()
+  return { salta: /skipWaiting/.test(t), reclama: /clientsClaim|clients\.claim/.test(t) }
+}, new globalThis.URL(URL).pathname)
+paso('el service worker no se queda esperando permiso', mando.salta, 'skipWaiting')
+paso('y toma el mando de las pestañas abiertas', mando.reclama, 'clientsClaim')
+
 // Un PDF de verdad, traído desde la app publicada
 await page.setInputFiles('input[type=file]', `${SC}/Cronica_de_una_prueba.pdf`)
 await page.waitForSelector('.ficha', { timeout: 40000 })

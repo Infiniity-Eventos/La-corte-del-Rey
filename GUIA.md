@@ -497,6 +497,14 @@ construir lo que viene:
   por la página X» estaba posicionado por su cuenta y aterrizaba justo encima de
   los controles del lector. Va dentro de la misma zona que la burbuja, y lo demás
   se apoya encima midiéndola.
+- **Un service worker que espera permiso bloquea las actualizaciones para
+  siempre.** Se configuró para que pidiera paso a la página antes de tomar el
+  mando, con la idea de no recargar a mitad de lectura. Pero la página que tenía
+  que darle paso era la vieja, que no sabe hacerlo, así que la versión nueva se
+  quedó esperando indefinidamente; y con varias pestañas abiertas tampoco podía
+  activarse por su cuenta. **El service worker toma el mando siempre; quien
+  decide cuándo recargar es la app**, que para eso avisa. Son dos decisiones
+  distintas y mezclarlas costó una versión atascada.
 - **La versión tiene que verse en pantalla.** Sin ella, la única forma de saber
   si lo que tienes delante es lo último era cerrar la app y volver a abrirla a
   ciegas. Es el commit del que salió la compilación, así que cambia solo con cada
@@ -598,3 +606,8 @@ construir lo que viene:
   comprobaciones.
 - **2026-08-27** — La versión se muestra al pie de la biblioteca y en los
   ajustes, y tocarla busca actualizaciones al momento. 109 comprobaciones.
+- **2026-08-27** — La versión no llegaba al teléfono: el service worker esperaba
+  un permiso que la versión vieja no sabía darle y se quedó bloqueado. Se separa
+  quién toma el mando (el service worker, siempre) de quién decide recargar (la
+  app, avisando). Se añaden dos comprobaciones en `en-vivo.mjs` para que no
+  vuelva a colarse. 111 comprobaciones.

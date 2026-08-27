@@ -37,11 +37,17 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      // 'prompt' y no 'autoUpdate': con autoUpdate la versión nueva se instala
-      // pero no entra hasta que cierras la app, y mientras tanto no hay forma
-      // de saberlo. Así Vellum busca versiones por su cuenta y, cuando hay una,
-      // te ofrece entrar en ella sin interrumpirte a mitad de lectura.
-      registerType: 'prompt',
+      // El service worker nuevo toma el mando en cuanto se instala, sin pedir
+      // permiso a nadie.
+      //
+      // Con 'prompt' se quedaba esperando a que la página le diera paso, y la
+      // página que estaba corriendo era la vieja, que no sabe hacerlo: la
+      // actualización se quedaba bloqueada para siempre. Con varias pestañas
+      // abiertas, tampoco podía activarse por su cuenta.
+      //
+      // Quien decide cuándo recargar sigue siendo el lector: eso lo lleva la
+      // app en src/lib/actualizacion.ts, no el service worker.
+      registerType: 'autoUpdate',
       injectRegister: null,
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
@@ -71,6 +77,8 @@ export default defineConfig({
         // deja de abrir libros en cuanto no hay red.
         globPatterns: ['**/*.{js,mjs,css,html,svg,png,woff2}'],
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
+        skipWaiting: true,
+        clientsClaim: true,
       },
     }),
   ],
