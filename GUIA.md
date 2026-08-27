@@ -488,6 +488,19 @@ construir lo que viene:
   API: responde al preflight autorizando el dominio de la app y la cabecera
   `x-goog-api-key`. Sin eso, todo el hito 3 habría necesitado un servidor de por
   medio, y con él se habría ido el «cero costo».
+- **Guardar el progreso «cada rato» abre una ventana para perderlo.** Escribir en
+  disco en cada página es un desperdicio, así que se acumulaba y se guardaba cada
+  segundo y medio. Pero salir del libro dentro de esa ventana perdía la última
+  página, y perder por dónde ibas es de las peores cosas que puede hacer un
+  lector. Ahora se guarda **antes** de salir, y también al irte de la app.
+- **Todo lo que vive abajo tiene que ir apilado, no flotando.** El aviso de «vas
+  por la página X» estaba posicionado por su cuenta y aterrizaba justo encima de
+  los controles del lector. Va dentro de la misma zona que la burbuja, y lo demás
+  se apoya encima midiéndola.
+- **Los redibujados llevan número.** Dibujar una página tarda, y si mientras
+  tanto cambia el tamaño —el teclado abriéndose, por ejemplo— el resultado que
+  llega tarde ya no vale. Aplicarlo era lo que dejaba la página achatada: un
+  lienzo viejo estirado dentro de un marco nuevo.
 - **Con el teclado abierto no cabe todo.** La barra del traductor, los controles
   del lector y el aviso de «vas por la página X» se amontonaban al escribir. Se
   resolvió por tres lados: la ventana se encoge con el teclado en vez de quedar
@@ -560,3 +573,9 @@ construir lo que viene:
   teclado abierto se amontonaban tres cosas en el mismo sitio. El modelo pasa a
   descubrirse preguntándole a Google, con reintento si se retira; y la interfaz
   del lector se aparta mientras escribes. 94 comprobaciones en total.
+- **2026-08-27** — Segunda ronda de uso real. Se corrige que el aviso de retomar
+  se pisara con los controles, y que la página apareciera achatada al cambiarla
+  con el teclado abierto. Al escribir la prueba del aviso apareció un fallo peor
+  que no se había visto: **salir de un libro en menos de segundo y medio perdía
+  por dónde ibas**. La app pasa a buscar sus propias actualizaciones y a
+  ofrecerlas sin interrumpir la lectura. 99 comprobaciones.

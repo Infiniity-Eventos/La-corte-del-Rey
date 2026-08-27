@@ -239,6 +239,14 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .hoja.movil { opacity: var(--visible, 1); }
 .hoja.debajo { z-index: 1; }
 .hoja.movil  { z-index: 2; }
+/* El aviso apilado dentro de la zona de abajo: deja de flotar y de aterrizar
+   encima de otras cosas. */
+.aviso.enPila {
+  position: static; transform: none; align-self: center;
+  margin: 0 auto .5rem; animation: sube-plano var(--paso) var(--curva);
+}
+@keyframes sube-plano { from { opacity: 0; transform: translateY(8px); } }
+
 /* La sombra del pliegue: lo que hace que el giro parezca papel y no una diapositiva */
 .hoja.movil::after {
   content: ''; position: absolute; inset: 0; pointer-events: none;
@@ -410,7 +418,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
    comentario del ResizeObserver en Lector.tsx. */
 .zona-burbuja {
   position: absolute; left: 0; right: 0; bottom: 0; z-index: 8;
-  max-height: 82%; display: flex;
+  max-height: 82%; display: flex; flex-direction: column;
 }
 .burbuja {
   flex: 1; min-width: 0; display: flex; flex-direction: column;

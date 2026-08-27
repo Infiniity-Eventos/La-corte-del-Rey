@@ -6,7 +6,7 @@ usan la app como la usarías tú y dicen si algo se rompió.
 ```bash
 npm run build
 npx vite preview --port 4173 --host 127.0.0.1 &
-node pruebas/lectura.mjs      # 21 comprobaciones · hito 1, leer
+node pruebas/lectura.mjs      # 26 comprobaciones · hito 1, leer
 node pruebas/biblioteca.mjs   # 33 comprobaciones · hito 2, la estantería
 node pruebas/traductor.mjs    # 40 comprobaciones · hito 3, el traductor
 node pruebas/capturas.mjs     # capturas de cada estado
@@ -47,7 +47,9 @@ vea de dónde sale y no parezca una prueba puesta por costumbre.
 | Cambiar de tema | R14 |
 | Guarda por dónde ibas | R16 · P15 |
 | La biblioteca sobrevive a recargar | D-03 |
-| Ofrece volver al principio | P63 |
+| Ofrece volver al principio, y el aviso no se pisa con los controles | P62 · P63 |
+| El aviso se va solo a los pocos segundos | P63 |
+| Salir enseguida de saltar de página no pierde por dónde ibas | R16 · P15 |
 
 ## Qué comprueba `biblioteca.mjs`
 

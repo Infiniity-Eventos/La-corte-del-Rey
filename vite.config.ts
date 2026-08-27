@@ -12,7 +12,12 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // 'prompt' y no 'autoUpdate': con autoUpdate la versión nueva se instala
+      // pero no entra hasta que cierras la app, y mientras tanto no hay forma
+      // de saberlo. Así Vellum busca versiones por su cuenta y, cuando hay una,
+      // te ofrece entrar en ella sin interrumpirte a mitad de lectura.
+      registerType: 'prompt',
+      injectRegister: null,
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
         name: 'Infiniity Vellum',

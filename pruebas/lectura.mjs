@@ -114,6 +114,34 @@ await page.click('.seguir-abrir')
 await page.waitForSelector('.aviso', { timeout: 10000 })
 paso('ofrece volver al principio (P63)', /Vas por la página 5/.test(await page.textContent('.aviso')))
 
+// Con la interfaz abierta, el aviso y los controles competían por el mismo
+// sitio y acababan uno encima del otro. Hay que esperar a que la barra esté
+// visible de verdad: medir una barra escondida da un falso «todo bien».
+// Mientras el PDF carga, tocar la página no hace nada: no hay nada que
+// mostrar todavía. Hay que esperar a que esté dibujada.
+await page.waitForSelector('.hoja.debajo canvas', { timeout: 25000 })
+await page.click('.escena', { position: { x: 200, y: 300 } })
+await page.waitForSelector('.chrome.abajo[data-visible="true"]', { timeout: 5000 })
+await page.waitForTimeout(320)
+const choque = await page.evaluate(() => {
+  const aviso = document.querySelector('.aviso.enPila')
+  const barra = document.querySelector('.chrome.abajo')
+  if (!aviso) return 'el aviso no está'
+  if (!barra) return 'la barra no está'
+  const a = aviso.getBoundingClientRect(), b = barra.getBoundingClientRect()
+  if (a.height === 0 || b.height === 0) return 'algo mide cero'
+  return a.bottom > b.top && a.top < b.bottom ? 'se pisan' : 'separados'
+})
+paso('el aviso no se pisa con los controles', choque === 'separados', choque)
+
+const bajoLaBurbuja = await page.evaluate(() => {
+  const barra = document.querySelector('.chrome.abajo')
+  const zona = document.querySelector('.zona-burbuja')
+  return barra.getBoundingClientRect().bottom <= zona.getBoundingClientRect().top + 2
+})
+paso('los controles se apoyan encima de la burbuja', bajoLaBurbuja)
+
+
 await page.screenshot({ path: `${SC}/lector.png` })
 await page.click('.aviso button')
 await page.waitForTimeout(600)
@@ -122,6 +150,28 @@ paso('«Al principio» funciona', (await page.textContent('.folio')).trim() === 
 await page.click('.escena', { position: { x: 200, y: 400 } })
 await page.waitForTimeout(300)
 await page.screenshot({ path: `${SC}/lector-chrome.png` })
+
+// El aviso se va solo: útil el primer segundo, estorbo a partir del quinto.
+// Hay que dejar progreso otra vez para que vuelva a aparecer, y para eso hace
+// falta la interfaz abierta: la captura de antes la dejó escondida.
+await page.click('.escena', { position: { x: 200, y: 300 } })
+await page.waitForSelector('.chrome.abajo[data-visible="true"]', { timeout: 5000 })
+await page.fill('.salto input', '4')
+await page.press('.salto input', 'Enter')
+await page.waitForTimeout(600)
+// Salir enseguida de saltar de página: si el progreso solo se guardara cada
+// segundo y medio, aquí se perdería.
+await page.click('.chrome.arriba .icono:first-child')
+await page.waitForSelector('.seguir', { timeout: 10000 })
+paso('salir enseguida no pierde por dónde ibas',
+  /página 4 de 6/.test(await page.textContent('.seguir-sub')),
+  (await page.textContent('.seguir-sub')).trim())
+await page.click('.seguir-abrir')
+await page.waitForSelector('.aviso.enPila', { timeout: 15000 })
+paso('el aviso vuelve al retomar', true)
+await page.waitForTimeout(7400)
+paso('y se va solo a los pocos segundos', (await page.locator('.aviso.enPila').count()) === 0)
+
 await page.goBack().catch(() => {})
 
 console.log(errores.length ? `\nErrores de consola (${errores.length}):\n` + errores.join('\n') : '\nSin errores de consola.')

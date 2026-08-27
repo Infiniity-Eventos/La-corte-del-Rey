@@ -62,12 +62,19 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
   useEffect(() => {
     const el = escenaRef.current
     if (!el) return
+    let espera = 0
     const ro = new ResizeObserver(([e]) => {
+      // Al abrirse y cerrarse el teclado, la ventana cambia de alto varias
+      // veces seguidas. Sin esperar a que se asiente, cada paso dispara un
+      // redibujado y la página aparece deformada un instante.
+      window.clearTimeout(espera)
       const { width, height } = e.contentRect
-      setCaja({ w: Math.floor(width), h: Math.floor(height) })
+      espera = window.setTimeout(() => {
+        setCaja({ w: Math.floor(width), h: Math.floor(height) })
+      }, 180)
     })
     ro.observe(el)
-    return () => ro.disconnect()
+    return () => { window.clearTimeout(espera); ro.disconnect() }
   }, [])
 
   /* ------------------------------ abrir ------------------------------ */
@@ -114,17 +121,26 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
     [dir, pagina],
   )
 
+  // Cada redibujado lleva número. Dibujar tarda, y si mientras tanto cambia el
+  // tamaño o la página, el resultado que llega tarde ya no vale: aplicarlo era
+  // lo que dejaba la página achatada, con un lienzo viejo estirado dentro de un
+  // marco nuevo.
+  const turno = useRef(0)
+
   const pintar = useCallback(async () => {
     const c = cuadernoRef.current
     if (!c || caja.w === 0) return
+    const mio = ++turno.current
     c.redimensionar(caja.w, caja.h)
 
     const { abajo, arriba } = cuales()
     const p = await c.dibujar(abajo).catch(() => null)
+    if (mio !== turno.current) return
     // Sin comparar antes, cada pasada crearía un objeto nuevo y el efecto se
     // volvería a disparar para siempre.
     if (p) setHoja(h => (h.w === p.ancho && h.h === p.alto ? h : { w: p.ancho, h: p.alto }))
     if (arriba !== null) await c.dibujar(arriba).catch(() => null)
+    if (mio !== turno.current) return
 
     setSello(s => s + 1)
     c.adelantar(pagina)
@@ -394,14 +410,16 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
         </div>
       )}
 
-      {volverAlInicio && !traduciendo && (
-        <div className="aviso">
-          <span>Vas por la página {libro.pagina}</span>
-          <button onClick={() => { irA(1); setVolverAlInicio(false) }}>Al principio</button>
-        </div>
-      )}
-
+      {/* Todo lo que vive abajo va dentro de la misma zona, apilado. Cuando el
+          aviso flotaba por su cuenta, aterrizaba justo encima de los controles
+          del lector. */}
       <div className="zona-burbuja" ref={zonaRef}>
+        {volverAlInicio && !traduciendo && (
+          <div className="aviso enPila">
+            <span>Vas por la página {libro.pagina}</span>
+            <button onClick={() => { irA(1); setVolverAlInicio(false) }}>Al principio</button>
+          </div>
+        )}
         <Burbuja
           clave={clave}
           libro={libro}

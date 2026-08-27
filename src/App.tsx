@@ -17,6 +17,7 @@ import { Biblioteca } from './components/Biblioteca'
 import { FichaLibro } from './components/FichaLibro'
 import { Ajustes as PantallaAjustes } from './components/Ajustes'
 import { Vocabulario } from './components/Vocabulario'
+import { entrarEnLaNueva, vigilarActualizaciones } from './lib/actualizacion'
 
 /**
  * pdf.js pesa medio megabyte. Si entra en el paquete principal, la biblioteca
@@ -34,6 +35,7 @@ export default function App() {
   const [clave, setClave] = useState('')
   const [vocabulario, setVocabulario] = useState<Palabra[]>([])
   const [pantalla, setPantalla] = useState<'biblioteca' | 'ajustes' | 'vocabulario'>('biblioteca')
+  const [hayVersionNueva, setHayVersionNueva] = useState(false)
   const [importando, setImportando] = useState(false)
   const [nota, setNota] = useState<string | null>(null)
   const [arrancando, setArrancando] = useState(true)
@@ -52,6 +54,10 @@ export default function App() {
       setVocabulario(voc)
       setArrancando(false)
     })()
+  }, [])
+
+  useEffect(() => {
+    vigilarActualizaciones(() => setHayVersionNueva(true))
   }, [])
 
   useEffect(() => {
@@ -112,23 +118,32 @@ export default function App() {
     [abierto],
   )
 
+  /**
+   * Escribir en disco en cada página sería un desperdicio, así que se acumula y
+   * se guarda cada segundo y medio. Pero eso abre una ventana en la que sales
+   * del libro y lo último se pierde, y perder por dónde ibas es de las peores
+   * cosas que puede hacer un lector. Por eso hay una forma de guardar ya.
+   */
+  const guardarAhora = useCallback(async () => {
+    const p = pendiente.current
+    if (p === null || !abierto) return
+    pendiente.current = null
+    await actualizarLibro({ ...abierto, pagina: p, abiertoEn: Date.now() })
+  }, [abierto])
+
   useEffect(() => {
     if (!abierto) return
-    const t = window.setInterval(() => {
-      const p = pendiente.current
-      if (p === null) return
-      pendiente.current = null
-      void actualizarLibro({ ...abierto, pagina: p, abiertoEn: Date.now() })
-    }, 1500)
+    const t = window.setInterval(() => void guardarAhora(), 1500)
+    // Al irte de la app —cambiar de aplicación, apagar la pantalla— puede que
+    // no haya otra oportunidad de escribir.
+    const alOcultarse = () => { if (document.visibilityState === 'hidden') void guardarAhora() }
+    document.addEventListener('visibilitychange', alOcultarse)
     return () => {
       window.clearInterval(t)
-      const p = pendiente.current
-      if (p !== null) {
-        pendiente.current = null
-        void actualizarLibro({ ...abierto, pagina: p, abiertoEn: Date.now() })
-      }
+      document.removeEventListener('visibilitychange', alOcultarse)
+      void guardarAhora()
     }
-  }, [abierto])
+  }, [abierto, guardarAhora])
 
   const cambiarClave = useCallback(async (nueva: string) => {
     await guardarClave(nueva)
@@ -147,11 +162,14 @@ export default function App() {
   }, [])
 
   const cerrar = useCallback(async () => {
+    // Guardar primero y leer después. Al revés, la lista se leía antes de que
+    // se escribiera lo último y la biblioteca aparecía sin el progreso.
+    await guardarAhora()
     setAbierto(null)
     const [ls, voc] = await Promise.all([listarLibros(), listarVocabulario()])
     setLibros(ls)
     setVocabulario(voc)
-  }, [])
+  }, [guardarAhora])
 
   const guardarFicha = useCallback(async (libro: Libro) => {
     await actualizarLibro(libro)
@@ -246,6 +264,14 @@ export default function App() {
         </div>
       )}
       {nota && <div className="aviso" style={{ bottom: '1.4rem' }}><span>{nota}</span></div>}
+      {/* Solo en la biblioteca: interrumpir a mitad de un libro para ofrecer una
+          actualización es exactamente lo que no queremos. */}
+      {hayVersionNueva && !nota && (
+        <div className="aviso" style={{ bottom: '1.4rem' }}>
+          <span>Hay una versión nueva</span>
+          <button onClick={entrarEnLaNueva}>Actualizar</button>
+        </div>
+      )}
     </>
   )
 }
