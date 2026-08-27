@@ -325,8 +325,10 @@ service firebase.storage {
     </li>
     <li>
       <span class="paso-t">Copia los dos identificadores</span>
-      <a class="enlace" href="https://console.firebase.google.com/project/infiniity-vellum/authentication/users" target="_blank" rel="noopener">console.firebase.google.com › Authentication › Users</a>
-      <p class="paso-d">Salen las dos cuentas con una columna <strong>Identificador de usuario</strong> (<em>User UID</em>): una cadena larga de letras y números. Copia las dos, por ejemplo en una nota del teléfono.</p>
+      <p class="paso-d"><strong>El atajo:</strong> ya los tienes. En <strong>Firestore → Datos</strong>, dentro de la colección <code>gente</code> hay un documento por persona, y <strong>el nombre de cada documento es su identificador</strong>. Son dos cadenas de 28 caracteres.</p>
+      <a class="enlace" href="https://console.firebase.google.com/project/infiniity-vellum/firestore/data" target="_blank" rel="noopener">console.firebase.google.com › Firestore Database › Datos</a>
+      <div class="ojo">Si la lista los corta con puntos suspensivos, toca el documento: el nombre entero sale arriba, en la ruta. También están en <strong>Authentication → Users</strong>, en la columna <em>Identificador de usuario</em>.</div>
+      <p class="paso-d">Cópialos los dos donde puedas pegarlos luego: una nota del teléfono sirve.</p>
     </li>
     <li>
       <span class="paso-t">Crea la colección «casa»</span>
@@ -344,16 +346,29 @@ service firebase.storage {
     </li>
     <li>
       <span class="paso-t">Un solo campo, con los dos identificadores</span>
-      <p class="paso-d">En ese documento, añade un campo así:</p>
+      <p class="paso-d">Campo <code>uids</code>, tipo <strong>array</strong>. Aparece debajo un elemento <code>0</code>: ponle tipo <strong>string</strong> y pega el primer identificador en la caja <em>String</em>.</p>
+      <div class="ojo rojo">
+        <b>Aquí es donde todo el mundo se enreda.</b> Para el segundo identificador hay que pulsar el
+        <strong>«Agregar campo» de dentro</strong> — el que está indentado, alineado con el <code>0</code> —
+        y no el de más abajo a la izquierda. El de abajo añade otro <em>campo</em> al documento; el de
+        dentro añade otro <em>elemento</em> al array, que es lo que quieres.
+        <br><br>
+        Sabrás que acertaste porque aparece un <code>1</code> debajo del <code>0</code>, con su propio
+        selector de tipo. Ponle <strong>string</strong> y pega el segundo.
+      </div>
+      <p class="paso-d">Tiene que quedar así antes de guardar:</p>
       <div class="scroll">
         <table>
           <thead><tr><th>Campo</th><th>Tipo</th><th>Valor</th></tr></thead>
           <tbody>
-            <tr><th>uids</th><td>array</td><td>dos elementos de tipo <em>string</em>, uno por cada identificador</td></tr>
+            <tr><th>uids</th><td>array</td><td>—</td></tr>
+            <tr><th>0</th><td>string</td><td>el identificador de una persona</td></tr>
+            <tr><th>1</th><td>string</td><td>el de la otra</td></tr>
           </tbody>
         </table>
       </div>
-      <div class="ojo rojo"><b>Los tres nombres tienen que ser exactos y en minúsculas:</b> <code>casa</code>, <code>miembros</code>, <code>uids</code>. Las reglas buscan justo eso y no hay margen. Es el fallo número uno de este paso.</div>
+      <div class="ojo"><b>Y que ninguna caja quede vacía.</b> La estructura puede estar perfecta y no servir de nada si el <em>String</em> se queda en blanco.</div>
+      <div class="ojo rojo"><b>Los tres nombres, exactos y en minúsculas:</b> <code>casa</code>, <code>miembros</code>, <code>uids</code>. Las reglas buscan justo eso y no hay margen.</div>
     </li>
     <li>
       <span class="paso-t">Sincroniza en los dos aparatos</span>
