@@ -10,6 +10,9 @@ node pruebas/lectura.mjs      # 21 comprobaciones · hito 1, leer
 node pruebas/biblioteca.mjs   # 33 comprobaciones · hito 2, la estantería
 node pruebas/traductor.mjs    # 27 comprobaciones · hito 3, el traductor
 node pruebas/capturas.mjs     # capturas de cada estado
+
+# Contra la app publicada
+node pruebas/en-vivo.mjs      # 13 comprobaciones sobre la app en su dirección real
 ```
 
 `SC` es la carpeta donde están el PDF de prueba y donde se guardan las
@@ -92,6 +95,30 @@ resto.
 | Clave inválida, servidor saturado y sin red, cada uno con su mensaje | R8 |
 | El modo selección avisa de cómo funciona | D-18 · P56 |
 | Seleccionar sobre la página rellena la burbuja | R31 · P56 |
+
+## Qué comprueba `en-vivo.mjs`
+
+Es la única que puede fallar por motivos que no están en el código: una ruta
+mal formada bajo la subcarpeta, una fuente que no llega, el service worker mal
+registrado. Todo eso solo aparece cuando la app vive en una dirección de verdad.
+
+Por defecto apunta a `https://infiniity-eventos.github.io/La-corte-del-Rey/`.
+Con `URL=…` se apunta a otra, por ejemplo a un `vite preview` con la misma
+ruta base.
+
+| Comprueba |
+|---|
+| La dirección responde y la app arranca |
+| Las tipografías cargan desde la propia app y Fraunces se aplica |
+| El manifiesto se sirve, con el ámbito correcto y sus iconos existentes |
+| El service worker queda registrado |
+| Importar un PDF, dibujarlo y pasar página, ya publicada |
+| Ningún archivo devuelve 404 |
+
+**Desde este contenedor el navegador de pruebas no sale a internet**, así que la
+verificación se hace en dos partes: se comprueba con `curl` que cada archivo
+publicado es idéntico al que se compila aquí, y luego se corre esta prueba
+contra esos mismos archivos servidos en local con la misma ruta base.
 
 ## Lo que estas pruebas no cubren
 

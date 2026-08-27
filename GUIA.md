@@ -4,7 +4,8 @@ Documento vivo del proyecto. Todo lo que se decide queda aquí, y de aquí salen
 los parámetros para construir la app. Si algo no está en esta Guía, no está
 decidido.
 
-- **Estado:** Guía cerrada. **Hitos 1, 2 y 3 terminados y verificados.**
+- **Estado:** Guía cerrada. **Hitos 1, 2 y 3 terminados. La app está publicada.**
+- **Dirección:** https://infiniity-eventos.github.io/La-corte-del-Rey/
 - **Última actualización:** 2026-08-26
 - **Nombre:** **Infiniity Vellum** (P43)
 
@@ -382,7 +383,21 @@ Fuentes: [precios de Firebase](https://firebase.google.com/pricing),
 deja de ser un cuestionario y pasa a ser la especificación contra la que se
 construye.
 
-## 8. Plan de construcción
+## 8. Dónde vive
+
+| | |
+|---|---|
+| **La app** | https://infiniity-eventos.github.io/La-corte-del-Rey/ |
+| Se publica | sola, en cada cambio a `main`, con `.github/workflows/publicar.yml` |
+| Rama del proyecto | `main`. La app anterior queda en el historial de git. |
+| Preparado además | `firebase.json` y `.firebaserc`, para servirla desde el propio dominio con `npx firebase deploy` |
+
+**Por qué GitHub Pages y no Firebase Hosting, de momento.** Publicar en Firebase
+exige una credencial que solo puede crear el dueño de la cuenta. Pages funciona
+sin nada de eso y se actualiza sola. Cuando quieras un dominio propio, el
+proyecto ya está listo para mudarse: es un solo comando.
+
+## 9. Plan de construcción
 
 El orden lo fijó P80: **leer antes que nada**.
 
@@ -404,7 +419,7 @@ las portadas, en `guia/prompts/`.
 | Prompts | El icono y las portadas, listos para copiar | `guia/paginas/prompts.html` |
 | Instalación | Paso a paso de los dos proyectos de Google, con casillas | `guia/paginas/instalacion.html` |
 
-## 9. Hallazgos al construir
+## 10. Hallazgos al construir
 
 Cosas que solo aparecen escribiendo el código, y que cambian cómo hay que
 construir lo que viene:
@@ -445,6 +460,13 @@ construir lo que viene:
 - **La burbuja y los controles del lector querían los dos el borde de abajo.**
   Se mide lo que ocupa la burbuja y todo lo demás se apoya encima. Se mide en
   lugar de calcularse porque la burbuja cambia de alto al escribir y al abrirse.
+- **Publicar en una subcarpeta rompe todo lo que apunte a la raíz.** Las fuentes
+  vivían en `public/`, donde Vite no procesa el CSS, así que sus rutas quedaban
+  fijas al dominio. En GitHub Pages la app vive bajo `/La-corte-del-Rey/`, y ahí
+  se habría quedado sin tipografía. Ahora van empaquetadas y con hash.
+- **Un token de GitHub Actions no puede encender Pages.** Responde «Resource not
+  accessible by integration»: crear el sitio es cosa del dueño del repositorio,
+  una vez.
 - **La capa de texto no puede vivir dentro de la hoja.** Al redibujar la página
   se reemplazan los hijos de la hoja, y ahí dentro la capa desaparecía en
   silencio. Va como hermana, encima.
@@ -452,7 +474,7 @@ construir lo que viene:
   del día, la app dice a qué hora vuelven, calculado desde la medianoche del
   Pacífico que es cuando Google las repone (P31).
 
-## 10. Bitácora
+## 11. Bitácora
 
 - **2026-08-26** — Se reutiliza el repositorio de "La corte del Rey". Se crea la
   Guía y se envía el cuestionario 1.
@@ -504,3 +526,9 @@ construir lo que viene:
   se manda por el chat y qué no. Queda por escrito una cosa que conviene no
   olvidar: **un presupuesto de Google avisa pero no corta**. El corte de verdad
   es un proceso aparte que se monta en el hito 4.
+- **2026-08-27** — **Vellum está publicada** en
+  https://infiniity-eventos.github.io/La-corte-del-Rey/ y se actualiza sola en
+  cada cambio. El proyecto pasa a `main`. Entra la configuración de Firebase y
+  las reglas de Firestore y Storage. Se comprueba que los 17 archivos que sirve
+  GitHub son idénticos a los que se compilan aquí, y se pasa contra ellos una
+  prueba nueva de 13 comprobaciones.
