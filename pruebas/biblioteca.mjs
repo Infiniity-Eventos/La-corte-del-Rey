@@ -8,7 +8,14 @@ const paso = (n, ok, extra = '') => {
 }
 
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' })
-const ctx = await browser.newContext({ viewport: { width: 412, height: 900 }, deviceScaleFactor: 2, hasTouch: true })
+const ctx = await browser.newContext({
+  viewport: { width: 412, height: 900 }, deviceScaleFactor: 2, hasTouch: true,
+  // Para poder leer lo que el botón «Crear portada» deja en el portapapeles.
+  permissions: ['clipboard-read', 'clipboard-write'],
+})
+// El generador no existe desde aquí. Se responde en su lugar para que abrirlo
+// no deje la prueba esperando a una red que no hay.
+await ctx.route('**://gemini.google.com/**', r => r.fulfill({ contentType: 'text/html', body: 'ok' }))
 const page = await ctx.newPage()
 page.on('pageerror', e => errores.push(`pageerror: ${e.message}`))
 page.on('console', m => { if (m.type() === 'error') errores.push(`console: ${m.text()}`) })
@@ -137,6 +144,50 @@ paso('la portada aparece en la estantería', (await page.locator('.rejilla .port
 await page.reload({ waitUntil: 'networkidle' })
 await page.waitForSelector(LIBROS)
 paso('la portada sobrevive a recargar', (await page.locator('.rejilla .portada-img').count()) === 1)
+
+/* --- Crear portada: el encargo (D-13 / hito 5) --- */
+await page.click('.rejilla .libro:has(.portada-tit:text-is("Notas sueltas")) .mas')
+await page.waitForSelector('.ficha')
+// Se cambia el tipo y se añade una etiqueta SIN guardar: el encargo tiene que
+// llevarse lo que estás editando ahora, no lo que hay guardado.
+await page.click('.ficha .segmento-op:has-text("Cómic")')
+await page.fill(T, 'Tinta y ceniza')
+await page.fill(E, 'grabado')
+await page.press(E, 'Enter')
+
+const emergente = ctx.waitForEvent('page', { timeout: 8000 }).catch(() => null)
+await page.click('.ficha-acciones .btn:has-text("Crear portada")')
+await page.waitForSelector('.encargo', { timeout: 8000 })
+const encargo = await page.textContent('.encargo-txt')
+
+paso('«Crear portada» enseña el encargo', encargo.length > 500)
+paso('dice que lo copió', (await page.textContent('.encargo-tit')) === 'Encargo copiado')
+paso('el encargo lleva el título que estás escribiendo',
+  encargo.includes('Obra: «Tinta y ceniza»'))
+paso('y el tipo que acabas de marcar, sin haber guardado',
+  encargo.includes('portada para cómic'))
+paso('y la etiqueta que acabas de poner', encargo.includes('grabado'))
+paso('lleva el nombre del archivo original',
+  /Nombre del archivo original: .+\.pdf/.test(encargo), (encargo.match(/Nombre.*/) || [''])[0])
+paso('impone la paleta de la casa', encargo.includes('Ningún otro color'))
+paso('y le prohíbe escribir el título (D-15)',
+  encargo.includes('No escribas ningún texto en la imagen'))
+
+const enPortapapeles = await page.evaluate(() => navigator.clipboard.readText())
+paso('lo que se ve es exactamente lo que se copió',
+  enPortapapeles.trim() === encargo.trim())
+
+const gemini = await emergente
+paso('abre el generador', gemini !== null && /gemini\.google\.com/.test(gemini.url()),
+  gemini ? gemini.url() : 'no se abrió ninguna ventana')
+if (gemini) await gemini.close()
+
+paso('dice qué hacer al volver',
+  /vuelve aquí y pulsa/.test(await page.textContent('.encargo-pista')))
+await page.click('.encargo .icono')
+paso('el encargo se puede cerrar', (await page.locator('.encargo').count()) === 0)
+await page.keyboard.press('Escape')
+await page.waitForTimeout(300)
 
 /* --- Leer y volver: el destacado (R25 / P39) --- */
 await page.click('.rejilla .libro:has(.portada-tit:text-is("Manual de vuelo")) .libro-abrir')

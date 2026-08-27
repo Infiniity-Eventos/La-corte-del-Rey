@@ -459,7 +459,7 @@ El orden lo fijó P80: **leer antes que nada**.
 | **2 · Biblioteca** | Títulos, tipo, etiquetas con filtro, buscador, portada propia, "seguir leyendo", quitar libros | **hecho** · 33 comprobaciones en `pruebas/` |
 | **3 · Traductor** | La barra de abajo, Gemini con clave propia, pestañas, vocabulario, selección de texto donde el PDF lo permita | **hecho** · 27 comprobaciones en `pruebas/` |
 | **4 · Nube** | Sesión con Google, Firestore, subida de PDF con la regla de datos móviles, corte de facturación | **hecho** · 28 comprobaciones en `pruebas/` |
-| 5 · Portadas | Botón Crear portada, plantilla de prompt, composición del título | pendiente |
+| **5 · Portadas** | Botón Crear portada, plantilla de prompt, composición del título | **hecho** · 32 comprobaciones en `pruebas/` |
 
 Las respuestas están en `guia/respuestas/`. Los prompts para generar el icono y
 las portadas, en `guia/prompts/`.
@@ -471,6 +471,7 @@ las portadas, en `guia/prompts/`.
 | Prompts | El icono y las portadas, listos para copiar | `guia/paginas/prompts.html` |
 | Instalación | Paso a paso de los dos proyectos de Google, con casillas | `guia/paginas/instalacion.html` |
 | Apagón | Paso a paso del corte de facturación en 1 dólar, con las órdenes listas para copiar | `guia/paginas/apagon.html` |
+| Encender la nube | Autorizar el dominio y publicar las reglas de Firestore y Storage | `guia/paginas/reglas.html` |
 
 ## 10. Hallazgos al construir
 
@@ -632,6 +633,17 @@ construir lo que viene:
   fijar desde fuera y `verificar.sh` lee la de lo publicado y recompila con ella:
   22 de 22 archivos idénticos. **Una comprobación que se relaja para seguir
   pasando deja de comprobar; la que se arregla, sigue sirviendo.**
+- **`window.open` con `noopener` siempre devuelve `null`.** El botón de crear
+  portada abría el generador y decía «el navegador no dejó abrirlo», porque no
+  hay forma de distinguir «se abrió» de «lo bloquearon» cuando la respuesta es
+  siempre la misma. Se abre sin esa opción y se corta el enlace de vuelta a mano
+  (`ventana.opener = null`), que consigue lo mismo sin quedarse ciego. Lo
+  encontró la prueba, no el uso.
+- **La vista previa de la ficha tenía que llevar también el tipo y las
+  etiquetas.** Servía para pintar la portada, que no los necesita, así que no
+  los llevaba. Cuando pasó a componer también el encargo, marcar «Cómic» y
+  añadir etiquetas antes de guardar no llegaba al prompt. Una estructura que
+  sirve para dos cosas tiene que estar completa para las dos.
 - **Una clase de CSS reutilizada mezcla dos significados.** El error de sesión
   se pintaba con la clase del resultado de «probar la clave» porque se parecían.
   Se ven igual y son cosas distintas, y en cuanto una prueba mira «el aviso rojo»
@@ -747,3 +759,13 @@ construir lo que viene:
   no— y una página con el paso a paso, `guia/paginas/apagon.html`. Lo que ninguna
   prueba cubre queda escrito: que Google acepte el corte el día que toque solo se
   sabe cuando pase, y por eso el tope está en un dólar. 163 comprobaciones.
+- **2026-08-27** — **Hito 5: las portadas.** El botón *Crear portada* compone el
+  encargo con lo que estás editando —título, tipo, etiquetas, nombre del archivo
+  original—, lo copia y abre Gemini. El encargo se enseña entero: si el
+  portapapeles falla, que falla, tiene que estar a la vista. La comprobación que
+  importa no es que el texto salga, sino que **salga idéntico entre dos obras
+  distintas salvo el encabezado**: es lo único que notaría que alguien metió una
+  variable dentro del estilo y que, a los seis meses, la biblioteca dejó de
+  verse entera. Se comprobó rompiéndolo a propósito antes de creérselo. Los
+  libros nuevos guardan el nombre del archivo original, que a veces lleva el
+  tomo o el año que el título ya no dice. 195 comprobaciones.

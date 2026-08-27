@@ -9,6 +9,15 @@ export interface Libro {
   paginas: number
   bytes: number
   archivo: string
+  /**
+   * Cómo se llamaba el archivo al traerlo.
+   *
+   * El título lo reescribes tú, y al hacerlo se pierde lo que el nombre traía
+   * y el título no dice: el idioma, el número de tomo, el año. Eso le sirve al
+   * generador de portadas para acertar con la obra (D-13). Los libros traídos
+   * antes de esto no lo tienen, y la línea simplemente no aparece.
+   */
+  nombreOriginal?: string
   anadidoEn: number
   /** Página por la que va, 1-based. Se guarda sola (R16 / P15). */
   pagina: number

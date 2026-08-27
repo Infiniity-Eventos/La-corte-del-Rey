@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Libro } from '../lib/tipos'
+import { GENERADOR, copiar, promptPortada } from '../lib/portadas'
 import { Portada } from './Portada'
 
 /**
@@ -36,6 +37,11 @@ export function FichaLibro({ libro, etiquetasConocidas, onGuardar, onBorrar, onC
   const [tituloEnPortada, setTituloEnPortada] = useState(libro.tituloEnPortada ?? false)
   const [nueva, setNueva] = useState('')
   const [confirmando, setConfirmando] = useState(false)
+  // El encargo de la portada, cuando lo has pedido: qué se copió, si se copió y
+  // si el generador llegó a abrirse.
+  const [encargo, setEncargo] = useState<
+    { texto: string; copiado: boolean; abrio: boolean } | null
+  >(null)
   const imagen = useRef<HTMLInputElement>(null)
   const campoTitulo = useRef<HTMLInputElement>(null)
 
@@ -70,12 +76,36 @@ export function FichaLibro({ libro, etiquetasConocidas, onGuardar, onBorrar, onC
   }
 
   const sugerencias = etiquetasConocidas.filter(e => !etiquetas.includes(e)).slice(0, 8)
+  // Lo que estás editando ahora mismo, sin haber guardado todavía. Sirve para
+  // la portada de arriba y, sobre todo, para el encargo: si acabas de marcar
+  // «Cómic» y de poner tres etiquetas, el encargo tiene que llevarlas.
   const vistaPrevia: Libro = {
     ...libro,
     titulo: titulo.trim() || libro.titulo,
+    tipo,
+    etiquetas,
     portada,
     tituloEnPortada: portada ? tituloEnPortada : false,
   }
+
+  /**
+   * Copiar primero y abrir después, y en ese orden.
+   *
+   * El portapapeles exige que la página tenga el foco, y abrir el generador se
+   * lo quita. Al revés, el encargo se perdería justo cuando ya no estás mirando.
+   */
+  const crearPortada = async () => {
+    const texto = promptPortada(vistaPrevia)
+    const copiado = await copiar(texto)
+    // Con 'noopener' en las opciones, window.open **siempre devuelve null**, y
+    // entonces no hay forma de distinguir «se abrió» de «lo bloquearon». Se
+    // abre sin esa opción y se corta el enlace de vuelta a mano, que consigue
+    // lo mismo sin quedarse ciego.
+    const ventana = window.open(GENERADOR, '_blank')
+    if (ventana) ventana.opener = null
+    setEncargo({ texto, copiado, abrio: ventana !== null })
+  }
+
 
   return (
     <div className="telon" onPointerDown={e => { if (e.target === e.currentTarget) onCerrar() }}>
@@ -93,6 +123,9 @@ export function FichaLibro({ libro, etiquetasConocidas, onGuardar, onBorrar, onC
                 Quitar portada
               </button>
             )}
+            <button className="btn fantasma peq" onClick={() => void crearPortada()}>
+              Crear portada
+            </button>
             {portada ? (
               <label className="casilla">
                 <input
@@ -113,6 +146,37 @@ export function FichaLibro({ libro, etiquetasConocidas, onGuardar, onBorrar, onC
             )}
           </div>
         </div>
+
+        {encargo && (
+          <div className="encargo">
+            <div className="encargo-top">
+              <span className="encargo-tit">
+                {encargo.copiado ? 'Encargo copiado' : 'Cópialo tú'}
+              </span>
+              <button
+                className="btn fantasma peq"
+                onClick={() => void copiar(encargo.texto).then(ok =>
+                  setEncargo(e => (e ? { ...e, copiado: ok } : e)))}
+              >
+                Copiar otra vez
+              </button>
+              <button className="icono" onClick={() => setEncargo(null)} aria-label="Cerrar el encargo">
+                ✕
+              </button>
+            </div>
+            <pre className="encargo-txt">{encargo.texto}</pre>
+            <p className="encargo-pista">
+              {encargo.abrio
+                ? 'Pégalo en Gemini, genera la portada y guárdala. Luego vuelve aquí y pulsa «Poner portada».'
+                : 'El navegador no dejó abrir Gemini. Ábrelo tú, pega el encargo y vuelve con la imagen.'}
+            </p>
+            {!encargo.abrio && (
+              <a className="btn peq" href={GENERADOR} target="_blank" rel="noopener">
+                Abrir Gemini
+              </a>
+            )}
+          </div>
+        )}
 
         <input
           ref={imagen}

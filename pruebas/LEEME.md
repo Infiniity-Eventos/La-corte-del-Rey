@@ -18,6 +18,7 @@ node pruebas/capturas.mjs     # capturas de cada estado
 # Sin navegador: se ejecutan solas
 node pruebas/fusion.mjs       # 14 comprobaciones · la fusión entre aparatos
 node pruebas/apagon.mjs       # 14 comprobaciones · el corte de facturación
+node pruebas/portadas.mjs     # 20 comprobaciones · el encargo de las portadas
 
 # Contra la app publicada
 node pruebas/en-vivo.mjs      # 15 comprobaciones sobre la app en su dirección real
@@ -171,6 +172,18 @@ mensaje vacío no corta, un importe que no es número no corta, justo en el tope
 no corta, un céntimo por encima sí. **No comprueba que Google acepte el corte**
 — eso solo se sabe el día que pase, y por eso el tope está en un dólar.
 
+## Qué comprueba `portadas.mjs`
+
+El encargo que el botón *Crear portada* deja en el portapapeles. Lo que se
+vigila no es que el texto salga: es que **salga idéntico entre dos obras
+distintas salvo el encabezado**. La promesa de D-13 es que cincuenta portadas
+hechas en cincuenta momentos parezcan una colección, y eso se rompe el día que
+alguien meta una variable dentro del bloque de estilo. Un cambio así no da
+ningún error — simplemente, a los seis meses la biblioteca deja de verse entera.
+
+Las comprobaciones del botón en sí —que copia de verdad, que abre el generador,
+que se lleva lo que estás editando sin haber guardado— están en `biblioteca.mjs`.
+
 ## Qué comprueba `en-vivo.mjs`
 
 Es la única que puede fallar por motivos que no están en el código: una ruta
@@ -219,6 +232,8 @@ Se dice aquí para que nadie las lea como una garantía que no son:
   ventana que no se puede automatizar, así que lo que se prueba es que sin
   cuenta todo funciona y que Firebase no se descarga. Que dos aparatos acaben
   con lo mismo hay que verlo con dos aparatos.
+- **Si la portada generada queda bonita.** Se comprueba que el encargo sea el
+  correcto y siempre el mismo; lo que Gemini dibuje con él es cosa de mirarlo.
 - **Que el apagón corte de verdad.** Se prueba la decisión, no el corte. Google
   tendría que aceptar desenganchar la facturación el día que toque, y eso solo
   se comprueba cuando pasa.

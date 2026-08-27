@@ -388,6 +388,26 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .ficha-acciones { display: flex; flex-direction: column; gap: var(--e1); align-items: flex-start; }
 .ficha-pista { font-size: .78rem; color: var(--tinta-3); margin: .2rem 0 0; }
 
+/* --- El encargo de la portada (D-13) ---
+   Se enseña entero a propósito: es lo que se acaba de copiar, y si el
+   portapapeles falló —pasa— tiene que estar a la vista para copiarlo a mano. */
+.encargo {
+  border: 1px solid var(--linea); border-radius: var(--r); background: var(--vitela-alta);
+  padding: var(--e2); display: flex; flex-direction: column; gap: var(--e2);
+  margin-bottom: var(--e3);
+}
+.encargo-top { display: flex; align-items: center; gap: var(--e2); }
+.encargo-tit { font-weight: 700; font-size: .84rem; flex: 1; min-width: 0; }
+.encargo-txt {
+  margin: 0; max-height: 9.5rem; overflow: auto;
+  font-family: ui-monospace, Menlo, monospace; font-size: .68rem; line-height: 1.5;
+  white-space: pre-wrap; word-break: break-word;
+  color: var(--tinta-2); background: var(--vitela); border: 1px solid var(--linea-tenue);
+  border-radius: 6px; padding: .55rem .6rem;
+  -webkit-user-select: text; user-select: text;
+}
+.encargo-pista { margin: 0; font-size: .78rem; color: var(--tinta-3); }
+
 .campo { display: flex; flex-direction: column; gap: .35rem; }
 .campo-eti {
   font-family: ui-monospace, Menlo, monospace; font-size: .65rem; letter-spacing: .13em;

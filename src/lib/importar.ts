@@ -58,6 +58,7 @@ export async function importarPdf(archivo: File): Promise<Resultado> {
       paginas,
       bytes: archivo.size,
       archivo: `${id}.pdf`,
+      nombreOriginal: archivo.name,
       anadidoEn: ahora,
       pagina: 1,
       abiertoEn: ahora,
