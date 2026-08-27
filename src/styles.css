@@ -738,10 +738,27 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; justif
 .campo-fila .icono { border: 1px solid var(--linea); flex: none; }
 .fila-botones { display: flex; gap: var(--e2); align-items: center; flex-wrap: wrap; }
 
-.comoseSaca { font-size: .9rem; color: var(--tinta-2); }
-.comoseSaca summary { cursor: pointer; color: var(--ocre); font-weight: 700; font-size: .88rem; }
+.comoseSaca { width: 100%; margin-top: var(--e2); }
 .lista-pasos { margin: var(--e2) 0 0; padding-left: 1.2rem; display: flex; flex-direction: column; gap: .35rem; }
 .lista-pasos strong { color: var(--tinta); }
+
+/* --- El tutorial de la clave, dentro de la app --- */
+.lista-pasos.numerada { gap: var(--e3); font-size: .94rem; color: var(--tinta-2); }
+.lista-pasos.numerada::marker, .lista-pasos.numerada li::marker { color: var(--ocre); font-weight: 700; }
+.cifras { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; margin-top: var(--e3); }
+.cifra {
+  background: var(--vitela-alta); border: 1px solid var(--linea); border-radius: 6px;
+  padding: .6rem .4rem; text-align: center;
+}
+.cifra b {
+  display: block; font-family: 'Fraunces', ui-serif, Georgia, serif;
+  font-size: clamp(1.1rem, 5vw, 1.4rem); line-height: 1.1; color: var(--ocre);
+}
+.cifra span { display: block; font-size: .7rem; color: var(--tinta-2); margin-top: .15rem; }
+.dudas { margin: var(--e2) 0 0; }
+.dudas dt { font-weight: 700; font-size: .92rem; margin-top: var(--e3); }
+.dudas div:first-child dt { margin-top: 0; }
+.dudas dd { margin: .2rem 0 0; font-size: .88rem; color: var(--tinta-2); }
 
 .alerta { background: #F3E4D4; border: 1px solid #DCC0A0; border-radius: 6px; padding: .85rem .95rem; }
 .alerta p { font-size: .88rem; color: var(--tinta-2); margin: 0 0 .5rem; }

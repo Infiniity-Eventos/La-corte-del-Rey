@@ -10,7 +10,7 @@ npm run build
 npx vite preview --port 4173 --host 127.0.0.1 &
 node pruebas/lectura.mjs      # 43 comprobaciones · leer, las flechas y los dos modos de pasar página
 node pruebas/biblioteca.mjs   # 47 comprobaciones · la estantería y crear portada
-node pruebas/traductor.mjs    # 72 comprobaciones · el traductor, las notas y el japonés
+node pruebas/traductor.mjs    # 79 comprobaciones · el traductor, las notas, el japonés y el tutorial
 node pruebas/comic.mjs        # 29 comprobaciones · tamaños mezclados, zoom, pellizco y teclado
 node pruebas/nube.mjs         # 14 comprobaciones · hito 4, la nube sin cuenta
 node pruebas/atras.mjs        # 18 comprobaciones · el botón de atrás del teléfono
@@ -128,6 +128,8 @@ resto.
 | Con un modismo, la pestaña de aviso va primero y se abre sola | R20 · P28 |
 | Con una palabra suelta, su ficha va primero, con pronunciación y ejemplo | R20 · P28 |
 | Las pestañas de literal y contexto | R30 · P54 |
+| **El tutorial de la clave está dentro de la app**, con enlace a AI Studio | D-34 |
+| Y avisa de lo único que puede costar dinero | D-34 |
 | Al mandar, el campo se vacía y lo mandado queda a la vista | D-28 |
 | Si falla, lo escrito vuelve al campo | D-28 |
 | **La traducción se guarda sola, sin botón** | D-24 |

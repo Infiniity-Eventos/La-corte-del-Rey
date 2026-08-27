@@ -314,6 +314,23 @@ técnicas que descartan opciones desde el primer día. Implican, como mínimo:
   Google: `apagon/LEEME.md` y `guia/paginas/apagon.html`.
 - **Origen:** P69, y T13.
 
+### D-34 · El tutorial de la clave vive dentro de la app
+- **Decisión:** «Cómo sacar la clave, paso a paso» es una pantalla de Vellum, a
+  un toque desde Ajustes. La página publicada sigue existiendo para quien la
+  quiera, pero **la app ya no depende de ella**.
+- **Por qué:** una página aparte es un enlace que alguien tiene que mandar,
+  guardar y volver a encontrar. Quien instala Vellum y se topa con «Falta la
+  clave» está dentro de la app: es ahí donde tiene que estar la explicación, sin
+  cuenta de nadie de por medio.
+- **Y por qué no un desplegable, que ya había:** metido dentro de un
+  `<details>`, quien más lo necesita —el que acaba de instalar la app y no sabe
+  qué es una clave de API— no lo abría. Ahora es una pantalla entera, con su
+  título y su botón de volver.
+- **Los prefijos van en monoespaciada.** Con la letra de la casa, la I mayúscula
+  y la ele minúscula son el mismo trazo y `AIza` se lee «Alza». Es el único sitio
+  de la app donde alguien podría transcribir en vez de pegar.
+- **Origen:** pedido en el uso, 2026-08-27.
+
 ### D-33 · El idioma se elige, y en japonés hay teclado de kana
 - **Decisión:** en Ajustes se elige **de qué idioma traduce** la burbuja —siempre
   al español—, y al poner japonés aparece en la burbuja un botón **あ** que abre
@@ -861,6 +878,11 @@ construir lo que viene:
   los llevaba. Cuando pasó a componer también el encargo, marcar «Cómic» y
   añadir etiquetas antes de guardar no llegaba al prompt. Una estructura que
   sirve para dos cosas tiene que estar completa para las dos.
+- **La documentación que vive fuera de la app no la lee quien la necesita.** El
+  paso a paso de la clave estaba en una página publicada y en un desplegable de
+  los ajustes. La página hay que mandarla; el desplegable no lo abre quien no
+  sabe que le hace falta. Dentro, como pantalla propia y a un toque, es lo único
+  que llega a quien acaba de instalar la app.
 - **Hay peticiones que no se pueden cumplir enteras, y decirlo es parte del
   trabajo.** «Un teclado japonés muy completo» tiene dos mitades: los kana, que
   caben en un componente, y los kanji, que necesitan un diccionario de conversión
@@ -1122,3 +1144,8 @@ construir lo que viene:
   lo dice y enseña dónde activarlo. 19 comprobaciones de las tablas y las
   transformaciones, sin navegador, y 9 del teclado en pantalla. 299
   comprobaciones.
+- **2026-08-27** — **El tutorial de la clave entra en la app** (D-34): pantalla
+  propia desde Ajustes, con el porqué, los seis pasos con enlace a AI Studio, qué
+  hacer si algo falla y dónde vive la clave. Se quita el desplegable, que no
+  abría quien más lo necesitaba. Los prefijos van en monoespaciada, porque con la
+  letra de la casa `AIza` se lee «Alza». 306 comprobaciones.

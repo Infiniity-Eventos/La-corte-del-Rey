@@ -199,8 +199,8 @@ paso('la pestaña literal funciona', (await page.textContent('.hoja-solapa .lite
 await page.click('.solapa:has-text("En contexto")')
 paso('la pestaña de contexto funciona', (await page.textContent('.hoja-solapa p')) === RESPUESTA.contexto)
 
-/* --- El idioma y el teclado japonés --- */
-// Se cierra el panel y se sale del libro para tocar los ajustes.
+/* --- El tutorial de la clave, dentro de la app --- */
+// Se cierra el panel y se sale del libro para llegar a los ajustes.
 await page.click('.panel-top .icono')
 await page.evaluate(() => document.querySelector('.barra-burbuja textarea').blur())
 await page.waitForTimeout(400)
@@ -210,7 +210,30 @@ await page.waitForTimeout(250)
 await page.click('.chrome.arriba .icono:first-child')
 await page.waitForSelector('.rejilla .libro', { timeout: 10000 })
 await page.click('.biblio-top .icono:has-text("Ajustes")')
-await page.waitForSelector('.selector')
+await page.waitForSelector('.comoseSaca')
+
+// Antes vivía en una página aparte, y una página aparte es un enlace que
+// alguien tiene que mandar. Quien más lo necesita está dentro de la app.
+await page.click('.comoseSaca')
+await page.waitForSelector('.titulo-pantalla', { timeout: 5000 })
+paso('desde los ajustes se llega al tutorial',
+  (await page.textContent('.titulo-pantalla')) === 'Tu clave de Gemini')
+const tuto = await page.textContent('.biblio')
+paso('explica por qué hace falta una clave por persona',
+  /van con la clave, no con la app/.test(tuto))
+paso('lleva a AI Studio, con enlace',
+  (await page.getAttribute('a[href*="aistudio.google.com"]', 'href')) === 'https://aistudio.google.com/apikey')
+paso('avisa de lo único que puede costar dinero',
+  /no tenga la facturación activada/.test(tuto))
+paso('dice qué hacer cuando algo falla', (await page.locator('.dudas dt').count()) >= 5,
+  `${await page.locator('.dudas dt').count()} dudas`)
+paso('y dónde vive la clave', /No viaja a la nube/.test(tuto))
+await page.click('.icono.volver')
+await page.waitForSelector('.campo-fila input', { timeout: 5000 })
+paso('y se vuelve a los ajustes, no a la estantería',
+  (await page.textContent('.titulo-pantalla')) === 'Ajustes')
+
+/* --- El idioma y el teclado japonés --- */
 await page.selectOption('.selector', 'japones')
 await page.waitForTimeout(300)
 paso('los ajustes dejan elegir el idioma',

@@ -18,6 +18,7 @@ interface Props {
   onCambiarAjustes: (a: LosAjustes) => void
   clave: string
   onGuardar: (clave: string) => void
+  onTutorial: () => void
   onCerrar: () => void
   quien: Quien | null
   estadoNube: string
@@ -33,8 +34,8 @@ const PASOS: { id: Paso; nombre: string; como: string }[] = [
 ]
 
 export function Ajustes({
-  ajustes, onCambiarAjustes, clave, onGuardar, onCerrar, quien, estadoNube, ocupada,
-  onEntrar, onSalir, onSincronizar,
+  ajustes, onCambiarAjustes, clave, onGuardar, onTutorial, onCerrar, quien, estadoNube,
+  ocupada, onEntrar, onSalir, onSincronizar,
 }: Props) {
   const [valor, setValor] = useState(clave)
   const [visible, setVisible] = useState(false)
@@ -213,43 +214,12 @@ export function Ajustes({
           </p>
         )}
 
-        <details className="comoseSaca">
-          <summary>Cómo se saca, paso a paso</summary>
-          <p className="tarjeta-nota">
-            Son cinco minutos y una sola vez. Es gratis, no pide tarjeta y da 1.000
-            traducciones al día. <strong>La clave es tuya:</strong> cada persona necesita la
-            suya, porque esas mil traducciones van con la clave, no con la app.
-          </p>
-          <ol className="lista-pasos">
-            <li>
-              Abre <strong>Google AI Studio</strong> e inicia sesión con tu cuenta de Google.
-              Si te pide aceptar las condiciones, acéptalas.
-              <a className="btn fantasma peq enlace-paso" href="https://aistudio.google.com/apikey"
-                 target="_blank" rel="noopener">Abrir AI Studio</a>
-            </li>
-            <li>
-              Pulsa <strong>Create API key</strong> (en español, <strong>Crear clave de API</strong>).
-            </li>
-            <li>
-              Te pregunta en qué proyecto crearla. Elige
-              <strong> «Create API key in a new project»</strong> — en un proyecto nuevo.
-              <span className="paso-ojo">
-                Aquí se decide todo. No la crees en un proyecto que ya tengas, y menos
-                en uno con facturación: el nivel gratuito de Gemini solo existe
-                mientras ese proyecto no tenga la facturación activada.
-              </span>
-            </li>
-            <li>
-              Copia el código largo que sale y pégalo aquí arriba. Las claves nuevas
-              empiezan por <strong>AQ.Ab</strong>; las de antes, por <strong>AIza</strong>.
-              Las dos sirven.
-            </li>
-            <li>
-              Pulsa <strong>Probar la clave</strong>. Si dice «Funciona», ya está: cierra
-              esto y a leer.
-            </li>
-          </ol>
-        </details>
+        {/* El paso a paso entero está en su propia pantalla. Metido aquí en un
+            desplegable, quien más lo necesita —el que acaba de instalar la app y
+            no sabe qué es una clave— ni lo abría. */}
+        <button className="btn fantasma comoseSaca" onClick={onTutorial}>
+          Cómo sacar la clave, paso a paso
+        </button>
 
         <div className="alerta">
           <p className="alerta-tit">Una cosa que no se puede olvidar</p>

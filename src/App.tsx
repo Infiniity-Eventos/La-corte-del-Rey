@@ -19,6 +19,7 @@ import { Biblioteca } from './components/Biblioteca'
 import { FichaLibro } from './components/FichaLibro'
 import { Ajustes as PantallaAjustes } from './components/Ajustes'
 import { Vocabulario } from './components/Vocabulario'
+import { Tutorial } from './components/Tutorial'
 import { buscarAhora, entrarEnLaNueva, vigilarActualizaciones } from './lib/actualizacion'
 import type { Quien } from './lib/nube'
 import type { Traida } from './lib/sincronizacion'
@@ -39,7 +40,7 @@ export default function App() {
   const [enFicha, setEnFicha] = useState<Libro | null>(null)
   const [clave, setClave] = useState('')
   const [vocabulario, setVocabulario] = useState<Palabra[]>([])
-  const [pantalla, setPantalla] = useState<'biblioteca' | 'ajustes' | 'vocabulario'>('biblioteca')
+  const [pantalla, setPantalla] = useState<'biblioteca' | 'ajustes' | 'vocabulario' | 'tutorial'>('biblioteca')
   const [hayVersionNueva, setHayVersionNueva] = useState(false)
   const [comprobando, setComprobando] = useState(false)
   const [quien, setQuien] = useState<Quien | null>(null)
@@ -372,6 +373,7 @@ export default function App() {
           quien={quien}
           estadoNube={estadoNube}
           ocupada={nubeOcupada}
+          onTutorial={() => setPantalla('tutorial')}
           onEntrar={() => void entrarEnLaCuenta()}
           onSalir={() => void salirDeLaCuenta()}
           onSincronizar={() => quien && void sincronizar(quien)}
@@ -379,6 +381,11 @@ export default function App() {
         {nota && <div className="aviso" style={{ bottom: '1.4rem' }}><span>{nota}</span></div>}
       </>
     )
+  }
+
+  // El tutorial cuelga de los ajustes: se vuelve ahí, no a la estantería.
+  if (pantalla === 'tutorial') {
+    return <Tutorial onCerrar={() => setPantalla('ajustes')} />
   }
 
   if (pantalla === 'vocabulario') {
