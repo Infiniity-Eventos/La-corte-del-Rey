@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { explicar, probarClave } from '../lib/traductor'
 
 /**
  * Los ajustes: por ahora, solo la clave de Gemini.
@@ -18,6 +19,20 @@ interface Props {
 export function Ajustes({ clave, onGuardar, onCerrar }: Props) {
   const [valor, setValor] = useState(clave)
   const [visible, setVisible] = useState(false)
+  const [probando, setProbando] = useState(false)
+  const [prueba, setPrueba] = useState<{ ok: boolean; texto: string } | null>(null)
+
+  const probar = async () => {
+    setProbando(true)
+    setPrueba(null)
+    const r = await probarClave(valor.trim())
+    setPrueba(
+      r.ok
+        ? { ok: true, texto: `«good morning» → «${r.muestra}»` }
+        : { ok: false, texto: `${explicar(r.fallo).titulo}. ${explicar(r.fallo).detalle}` },
+    )
+    setProbando(false)
+  }
 
   const recortada = clave ? `${clave.slice(0, 6)}…${clave.slice(-4)}` : ''
 
@@ -43,7 +58,7 @@ export function Ajustes({ clave, onGuardar, onCerrar }: Props) {
               type={visible ? 'text' : 'password'}
               value={valor}
               onChange={e => setValor(e.target.value)}
-              placeholder={recortada || 'AIza…'}
+              placeholder={recortada || 'AQ.Ab… o AIza…'}
               autoComplete="off"
               spellCheck={false}
               aria-label="Clave de Gemini"
@@ -58,6 +73,9 @@ export function Ajustes({ clave, onGuardar, onCerrar }: Props) {
           <button className="btn" onClick={() => onGuardar(valor)} disabled={valor.trim() === clave}>
             Guardar
           </button>
+          <button className="btn fantasma peq" onClick={() => void probar()} disabled={!valor.trim() || probando}>
+            {probando ? 'Probando…' : 'Probar la clave'}
+          </button>
           {clave && (
             <button className="btn fantasma peq" onClick={() => { setValor(''); onGuardar('') }}>
               Borrar la clave
@@ -66,12 +84,21 @@ export function Ajustes({ clave, onGuardar, onCerrar }: Props) {
           {clave && !valor.trim() && <span className="tarjeta-nota">Sin clave no se puede traducir.</span>}
         </div>
 
+        {prueba && (
+          <p className={prueba.ok ? 'prueba bien' : 'prueba mal'}>
+            {prueba.ok ? '✓ Funciona. ' : ''}{prueba.texto}
+          </p>
+        )}
+
         <details className="comoseSaca">
           <summary>Cómo se saca, paso a paso</summary>
           <ol className="lista-pasos">
             <li>Entra en <strong>aistudio.google.com</strong> con tu cuenta de Google.</li>
             <li>Busca <strong>Get API key</strong> y pulsa <strong>Create API key</strong>.</li>
-            <li>Copia el código largo que empieza por <strong>AIza</strong> y pégalo aquí.</li>
+            <li>
+              Copia el código largo y pégalo aquí. Las claves nuevas empiezan por
+              <strong> AQ.Ab</strong>; las de antes empezaban por <strong>AIza</strong>. Las dos sirven.
+            </li>
           </ol>
         </details>
 

@@ -312,6 +312,7 @@ R11 (cero costo) es estricto.
 | Motor | Cuota gratis | ¿Clave? | ¿Tarjeta? | Calidad | Riesgo |
 |---|---|---|---|---|---|
 | **Gemini API** (2.5 Flash-Lite) | 1.000 peticiones/día **por persona** | sí, gratuita | **no** | muy alta; además explica en contexto | Google recortó cuotas sin avisar en diciembre de 2025 |
+
 | **MyMemory** | 5.000 caracteres/día sin registro; 50.000 con email | no | no | media e irregular | tope de 500 bytes por petición: hay que trocear el texto |
 | **Traductor de Chrome** (en el aparato) | ilimitado, sin internet | no | no | alta | **solo PC. No existe en Chrome de Android.** Además exige 22 GB libres y 16 GB de RAM |
 | **Google Cloud Translation** | 500.000 car./mes vía crédito de $10 | sí | **sí** | alta | exige tarjeta: incompatible con R11 |
@@ -470,6 +471,15 @@ construir lo que viene:
 - **La capa de texto no puede vivir dentro de la hoja.** Al redibujar la página
   se reemplazan los hijos de la hoja, y ahí dentro la capa desaparecía en
   silencio. Va como hermana, encima.
+- **Las claves de Gemini cambiaron de formato.** Las nuevas empiezan por `AQ.Ab`
+  en vez de `AIza`, y las viejas dejan de funcionar en septiembre de 2026. Por eso
+  la app no valida el formato: cualquier comprobación que mire las primeras letras
+  se queda vieja sola. En su lugar hay un botón que **prueba la clave de verdad**,
+  con una traducción mínima.
+- **Google sí permite llamar a Gemini desde el navegador.** Comprobado contra la
+  API: responde al preflight autorizando el dominio de la app y la cabecera
+  `x-goog-api-key`. Sin eso, todo el hito 3 habría necesitado un servidor de por
+  medio, y con él se habría ido el «cero costo».
 - **Un error de cuota no es un número.** Cuando se agotan las 1.000 traducciones
   del día, la app dice a qué hora vuelven, calculado desde la medianoche del
   Pacífico que es cuando Google las repone (P31).

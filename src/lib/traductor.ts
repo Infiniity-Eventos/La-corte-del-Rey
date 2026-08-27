@@ -207,6 +207,21 @@ export async function traducir({ clave, texto, alAsomar, senal }: Opciones): Pro
   }
 }
 
+/**
+ * Una traducción mínima para comprobar que la clave sirve, sin salir de los
+ * ajustes. Vale más que cualquier validación de formato: Google ya cambió el
+ * prefijo una vez —de `AIza` a `AQ.`— y cualquier comprobación que mire las
+ * primeras letras se queda vieja sola.
+ */
+export async function probarClave(clave: string): Promise<{ ok: true; muestra: string } | { ok: false; fallo: Fallo }> {
+  try {
+    const r = await traducir({ clave, texto: 'good morning' })
+    return { ok: true, muestra: r.natural }
+  } catch (e) {
+    return { ok: false, fallo: e instanceof ErrorTraductor ? e.fallo : { tipo: 'raro', detalle: 'inesperado' } }
+  }
+}
+
 export function explicar(f: Fallo): { titulo: string; detalle: string } {
   switch (f.tipo) {
     case 'sin-clave':
@@ -217,7 +232,9 @@ export function explicar(f: Fallo): { titulo: string; detalle: string } {
     case 'clave-mala':
       return {
         titulo: 'Esa clave no vale',
-        detalle: 'Puede estar mal copiada, o ser de un proyecto donde la API no está activada.',
+        detalle:
+          'Suele ser una de tres: se copió a medias, es de un proyecto donde la API de Gemini ' +
+          'no está activada, o tiene una restricción por dominio que no incluye esta dirección.',
       }
     case 'cuota':
       return {
