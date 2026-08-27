@@ -20,20 +20,27 @@ const page = await ctx.newPage()
 page.on('pageerror', e => errores.push(`pageerror: ${e.message}`))
 page.on('console', m => { if (m.type() === 'error') errores.push(`console: ${m.text()}`) })
 
-// Proporción real del dibujo contra la caja que lo contiene. Si no coinciden,
-// el navegador lo está estirando.
+/**
+ * La página dibujada contra el hueco que la contiene. Si no coinciden, el
+ * navegador la está estirando.
+ *
+ * Se mide `.pagina` y no `.hoja`: la hoja es la tarjeta de papel, siempre del
+ * mismo tamaño, y la página va centrada encima.
+ */
 const proporciones = () =>
   page.evaluate(() =>
     [...document.querySelectorAll('.hoja')]
       .filter(h => h.offsetParent !== null && h.querySelector('canvas'))
       .map(h => {
         const c = h.querySelector('canvas')
+        const p = h.querySelector('.pagina')
         // offsetWidth y no getBoundingClientRect: una hoja girando aparece
         // escorzada y su rectángulo proyectado no dice nada de su forma real.
         return {
-          hoja: h.offsetWidth / h.offsetHeight,
+          hoja: p.offsetWidth / p.offsetHeight,
           lienzo: c.width / c.height,
-          ancho: h.offsetWidth,
+          ancho: p.offsetWidth,
+          papel: h.offsetWidth + 'x' + h.offsetHeight,
         }
       }))
 
@@ -68,6 +75,17 @@ paso('ninguna de las dos se deforma', !deformada,
 paso('tienen formas distintas, como en el cómic',
   Math.abs(durante[0].hoja - durante[1].hoja) > 0.5,
   durante.map(h => h.hoja.toFixed(2)).join(' y '))
+
+// Lo que impide que se vea la página de detrás asomando por los lados.
+paso('las dos hojas de papel miden lo mismo',
+  durante[0].papel === durante[1].papel, durante.map(h => h.papel).join(' y '))
+
+const relleno = await page.evaluate(() => {
+  const papel = document.querySelector('.hoja.movil .papel')
+  return papel ? getComputedStyle(papel).backgroundColor : null
+})
+paso('el papel sobrante va relleno, no transparente',
+  relleno === 'rgb(255, 255, 255)', relleno)
 
 // Se completa el volteo: por debajo del umbral la página vuelve y seguiríamos
 // mirando la misma.

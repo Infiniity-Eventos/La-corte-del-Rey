@@ -6,10 +6,10 @@ usan la app como la usarías tú y dicen si algo se rompió.
 ```bash
 npm run build
 npx vite preview --port 4173 --host 127.0.0.1 &
-node pruebas/lectura.mjs      # 26 comprobaciones · hito 1, leer
+node pruebas/lectura.mjs      # 28 comprobaciones · hito 1, leer
 node pruebas/biblioteca.mjs   # 35 comprobaciones · hito 2, la estantería
 node pruebas/traductor.mjs    # 40 comprobaciones · hito 3, el traductor
-node pruebas/comic.mjs        # 8 comprobaciones · páginas de tamaños mezclados
+node pruebas/comic.mjs        # 10 comprobaciones · páginas de tamaños mezclados
 node pruebas/capturas.mjs     # capturas de cada estado
 
 # Contra la app publicada
@@ -43,6 +43,7 @@ vea de dónde sale y no parezca una prueba puesta por costumbre.
 | Arrastrar pasa de página | R28 · R13 · P51 |
 | Un arrastre corto no pasa de página | P51 |
 | Arrastrar al revés vuelve atrás | P51 |
+| La hoja que gira no se sale de la pantalla, ni avanzando ni volviendo | P51 |
 | Un toque muestra la interfaz | R37 · P62 |
 | Saltar escribiendo el número | R13 · P52 |
 | Cambiar de tema | R14 |
@@ -117,6 +118,8 @@ app en el uso real y que ningún PDF de prueba uniforme habría destapado.
 | Durante el volteo conviven dos hojas, cada una con su forma |
 | Ninguna de las dos se estira dentro del marco de la otra |
 | Una doble página se dibuja sin deformar y aprovecha el ancho |
+| Las dos hojas de papel miden lo mismo, para que ninguna deje ver la de detrás |
+| El papel sobrante va relleno, no transparente |
 
 El PDF de prueba se genera con `gen_mixto.py`: páginas impares verticales,
 pares horizontales.

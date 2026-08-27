@@ -97,6 +97,10 @@ export class Cuaderno {
     const lienzo = document.createElement('canvas')
     lienzo.width = Math.floor(vista.width * dpr)
     lienzo.height = Math.floor(vista.height * dpr)
+    // Su tamaño real en pantalla, para poder centrarlo sobre la hoja en vez de
+    // estirarlo hasta los bordes.
+    lienzo.style.width = `${vista.width}px`
+    lienzo.style.height = `${vista.height}px`
 
     const ctx = lienzo.getContext('2d', { alpha: false })
     if (!ctx) throw new Error('sin contexto 2d')

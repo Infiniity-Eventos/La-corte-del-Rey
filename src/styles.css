@@ -216,7 +216,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 /* Los tres temas de lectura (R14). Por defecto, papel (P59). */
 .lector[data-tema='papel'] { --fondo-lectura: #E6E2D8; --filtro: none; --tinta-lectura: #2E2822; --chrome: rgba(246, 241, 229, .94); }
 .lector[data-tema='sepia'] { --fondo-lectura: #DCCBA8; --filtro: sepia(.32) contrast(.94) brightness(.99); --tinta-lectura: #4A3F2E; --chrome: rgba(239, 227, 204, .94); }
-.lector[data-tema='oscuro'] { --canto-hoja: rgba(201, 203, 209, .12); --fondo-lectura: #0E0F12; --filtro: invert(1) hue-rotate(180deg) contrast(.86) brightness(.92); --tinta-lectura: #C9CBD1; --chrome: rgba(22, 24, 28, .94); }
+.lector[data-tema='oscuro'] { --canto-hoja: rgba(201, 203, 209, .14); --fondo-lectura: #0E0F12; --filtro: invert(1) hue-rotate(180deg) contrast(.86) brightness(.92); --tinta-lectura: #C9CBD1; --chrome: rgba(22, 24, 28, .94); }
 
 .escena {
   flex: 1; position: relative; overflow: hidden;
@@ -228,17 +228,21 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 
 .hoja {
-  /* El anillo define el borde de la hoja en tema oscuro, donde la página
-     invertida y el fondo casi se tocan. */
-  position: absolute; background: #fff;
-  box-shadow: 0 2px 14px rgba(0, 0, 0, .18), 0 0 0 1px var(--canto-hoja, transparent);
-  transform-origin: left center; backface-visibility: hidden; -webkit-backface-visibility: hidden;
-  will-change: transform;
+  position: absolute; transform-origin: left center; transform-style: preserve-3d;
+  will-change: transform; opacity: var(--visible, 1);
 }
-.hoja canvas { display: block; width: 100%; height: 100%; filter: var(--filtro); }
-.hoja.movil { opacity: var(--visible, 1); }
 .hoja.debajo { z-index: 1; }
 .hoja.movil  { z-index: 2; }
+
+/* La cara de la hoja. Solo hace falta una: la hoja gira un cuarto de vuelta y
+   nunca llega a enseñar el reverso. */
+.cara {
+  position: absolute; inset: 0;
+  backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, .2), 0 0 0 1px var(--canto-hoja, transparent);
+  border-radius: 3px; overflow: hidden;
+}
+
 /* El aviso apilado dentro de la zona de abajo: deja de flotar y de aterrizar
    encima de otras cosas. */
 .aviso.enPila {
@@ -247,12 +251,24 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 @keyframes sube-plano { from { opacity: 0; transform: translateY(8px); } }
 
-/* La sombra del pliegue: lo que hace que el giro parezca papel y no una diapositiva */
-.hoja.movil::after {
-  content: ''; position: absolute; inset: 0; pointer-events: none;
-  background: linear-gradient(to right, rgba(0,0,0,.20), rgba(0,0,0,0) 22%);
+/* El papel: una hoja del tamaño del área de lectura, con la página centrada.
+   Lo que sobra queda en blanco en vez de dejar ver la página de detrás. */
+.papel {
+  position: absolute; inset: 0; background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  filter: var(--filtro);
+}
+.pagina { position: relative; flex: none; }
+.pagina canvas { display: block; }
+
+/* La sombra del pliegue: lo que hace que el giro parezca papel y no una
+   diapositiva. Va fuera del papel para que el tema no la invierta. */
+.pliegue {
+  position: absolute; inset: 0; pointer-events: none; border-radius: 3px;
+  background: linear-gradient(to right, rgba(0, 0, 0, .22), rgba(0, 0, 0, 0) 26%);
   opacity: var(--pliegue, 0);
 }
+
 
 .cargando { color: var(--tinta-lectura); font-size: .84rem; letter-spacing: .1em; text-transform: uppercase; opacity: .5; }
 
@@ -495,9 +511,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 /* La capa de texto seleccionable, encima del dibujo de la página (R31). */
 .capaTexto {
-  position: absolute; inset: 0; overflow: clip; line-height: 1;
+  position: absolute; inset: 0; overflow: clip; line-height: 1; z-index: 2;
   text-align: initial; transform-origin: 0 0; text-size-adjust: none;
-  forced-color-adjust: none; z-index: 4; opacity: 1;
+  forced-color-adjust: none; opacity: 1;
 }
 .escena:not(.seleccionando) .capaTexto { pointer-events: none; }
 /* La escena tiene «user-select: none» para que arrastrar pase página sin

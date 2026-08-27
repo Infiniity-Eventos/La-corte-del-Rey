@@ -511,6 +511,17 @@ construir lo que viene:
   cambio: nadie tiene que acordarse de subirlo. Y se toca para preguntar si hay
   algo más nuevo, porque la duda real no es «qué versión tengo» sino «¿estoy
   viendo lo último?».
+- **Media vuelta no cabe en una pantalla.** El volteo giraba 180°, y al volver
+  atrás la página pasaba **la primera mitad del gesto fuera de la pantalla**, a la
+  izquierda del lomo: arrastrabas y no se movía nada. Con un cuarto de vuelta la
+  hoja gira hasta quedar de canto —donde deja de verse igualmente— y las dos
+  direcciones ocurren enteras dentro de la pantalla, con el mismo recorrido. Un
+  libro de verdad tiene el lomo en el centro; aquí está en el borde, y esa
+  diferencia no se puede ignorar.
+- **La hoja es una tarjeta de papel, no la página.** Cada página va centrada
+  sobre una hoja del tamaño del área de lectura, y lo que sobra queda en blanco.
+  Antes cada hoja medía lo que su página, así que en un cómic con dobles páginas
+  la de detrás asomaba alrededor de la de delante durante el volteo.
 - **Cada hoja necesita su propia medida.** Un cómic mezcla páginas verticales con
   dobles páginas horizontales, y durante el volteo hay dos en pantalla a la vez.
   Con una sola medida compartida, la que no encajaba se estiraba dentro del marco
@@ -611,3 +622,8 @@ construir lo que viene:
   quién toma el mando (el service worker, siempre) de quién decide recargar (la
   app, avisando). Se añaden dos comprobaciones en `en-vivo.mjs` para que no
   vuelva a colarse. 111 comprobaciones.
+- **2026-08-27** — Dos mejoras del volteo pedidas tras leer un cómic de verdad:
+  lo que sobra alrededor de la página se rellena de blanco, para que no se vea la
+  hoja de detrás; y el giro pasa de media vuelta a un cuarto, porque al volver
+  atrás la página pasaba media pantalla fuera del encuadre y arrastrar se sentía
+  muerto. 113 comprobaciones.

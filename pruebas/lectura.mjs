@@ -63,6 +63,37 @@ await page.waitForTimeout(900)
 const folio2 = (await page.textContent('.folio')).trim()
 paso('arrastrar pasa a la página siguiente', folio2 === '2 / 6', `dice "${folio2}"`)
 
+// La hoja que gira tiene que quedarse dentro de la pantalla en las dos
+// direcciones. Con media vuelta entera, volver atrás pasaba la primera mitad
+// del gesto fuera, a la izquierda del lomo, y arrastrar se sentía muerto.
+const dentroDeLaPantalla = async (desde, hasta) => {
+  await page.mouse.move(caja.x + caja.width * desde, y)
+  await page.mouse.down()
+  let fuera = null
+  for (let i = 1; i <= 8; i++) {
+    await page.mouse.move(caja.x + caja.width * (desde + (hasta - desde) * (i / 8)), y)
+    await page.waitForTimeout(14)
+    const d = await page.evaluate(() => {
+      const m = document.querySelector('.hoja.movil')
+      const cs = m && getComputedStyle(m)
+      if (!m || cs.display === 'none') return null
+      // De canto la hoja se desvanece: sigue existiendo pero no se ve, y lo que
+      // importa es que no se salga nada visible.
+      if (Number(cs.opacity) < 0.06) return null
+      const b = m.getBoundingClientRect()
+      return b.left < -6 || b.right > innerWidth + 6 ? Math.round(b.left) + '..' + Math.round(b.right) : null
+    })
+    if (d && !fuera) fuera = d
+  }
+  await page.mouse.up()
+  await page.waitForTimeout(900)
+  return fuera
+}
+paso('avanzar mantiene la hoja dentro de la pantalla',
+  (await dentroDeLaPantalla(0.88, 0.06)) === null)
+paso('volver también, con el mismo recorrido',
+  (await dentroDeLaPantalla(0.1, 0.92)) === null)
+
 // 6. Arrastre corto: la página debe volver
 await page.mouse.move(caja.x + caja.width * 0.8, y)
 await page.mouse.down()

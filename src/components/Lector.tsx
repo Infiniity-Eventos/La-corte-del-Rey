@@ -27,15 +27,21 @@ interface Props {
   onIrAAjustes: () => void
 }
 
-/** Cada hoja se centra en la escena con su propio tamaño. */
-function sitio(m: Medida, caja: { w: number; h: number }): React.CSSProperties {
-  return {
-    position: 'absolute',
-    width: m.w,
-    height: m.h,
-    left: Math.round((caja.w - m.w) / 2),
-    top: Math.round((caja.h - m.h) / 2),
-  }
+/**
+ * Todas las hojas miden lo mismo: el área de lectura.
+ *
+ * Antes cada una tomaba el tamaño de su página, y en un cómic con dobles
+ * páginas eso dejaba a la de atrás asomando alrededor de la de delante. Ahora
+ * cada página va centrada sobre una hoja de papel del mismo tamaño, así que una
+ * tapa a la otra por completo.
+ */
+function sitio(a: Medida & { x: number; y: number }): React.CSSProperties {
+  return { position: 'absolute', width: a.w, height: a.h, left: a.x, top: a.y }
+}
+
+/** El hueco exacto de la página dentro de la hoja. */
+function medida(m: Medida): React.CSSProperties {
+  return { width: m.w, height: m.h }
 }
 
 function mismas(
@@ -50,6 +56,7 @@ function mismas(
 export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, onIrAAjustes }: Props) {
   const escenaRef = useRef<HTMLDivElement>(null)
   const movilRef = useRef<HTMLDivElement>(null)
+  const caraRef = useRef<HTMLDivElement>(null)
   const debajoRef = useRef<HTMLDivElement>(null)
   const cuadernoRef = useRef<Cuaderno | null>(null)
 
@@ -195,7 +202,7 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
   useLayoutEffect(() => {
     const { abajo, arriba } = cuales()
     montar(debajoRef.current, abajo)
-    montar(movilRef.current, arriba)
+    montar(caraRef.current, arriba)
   }, [cuales, hojas, sello, montar])
 
   /**
@@ -254,10 +261,19 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
 
   /* ---------------------------- el volteo ---------------------------- */
 
+  /**
+   * La hoja gira 90°, no 180.
+   *
+   * Con media vuelta entera, al volver atrás la página pasaba la primera mitad
+   * del gesto **fuera de la pantalla**, a la izquierda del lomo: arrastrabas y
+   * no se movía nada hasta pasada la mitad. Con un cuarto de vuelta, la hoja
+   * gira hasta quedar de canto —donde deja de verse igualmente— y las dos
+   * direcciones ocurren enteras dentro de la pantalla, con el mismo recorrido.
+   */
   const aplicar = useCallback((p: number, d: Direccion) => {
     const el = movilRef.current
     if (!el) return
-    const angulo = d === 'siguiente' ? -p * 180 : -180 + p * 180
+    const angulo = d === 'siguiente' ? -p * 90 : -90 + p * 90
     el.style.transform = `rotateY(${angulo}deg)`
     // El pliegue se marca al principio del giro y se va al final: es la
     // diferencia entre parecer papel y parecer una diapositiva.
@@ -384,6 +400,16 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
 
   const avance = libro.paginas > 1 ? ((pagina - 1) / (libro.paginas - 1)) * 100 : 100
 
+  // El mismo margen con el que se dibujan las páginas en lib/pdf.ts.
+  const anchoArea = Math.round(caja.w * 0.94)
+  const altoArea = Math.round(caja.h * 0.96)
+  const area = {
+    w: anchoArea,
+    h: altoArea,
+    x: Math.round((caja.w - anchoArea) / 2),
+    y: Math.round((caja.h - altoArea) / 2),
+  }
+
   return (
     <div className="lector" ref={lectorRef} data-tema={ajustes.tema} data-chrome={chrome}>
       <div className="chrome arriba" data-visible={chrome && !traduciendo}>
@@ -405,26 +431,43 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
         {!lista && <span className="cargando">Abriendo</span>}
         {hojas.abajo && (
           <div className="marco">
-            <div
-              className="hoja debajo"
-              ref={debajoRef}
-              style={sitio(hojas.abajo, caja)}
-            />
+            <div className="hoja debajo" style={sitio(area)}>
+              <div className="cara">
+                <div className="papel">
+                  <div className="pagina" style={medida(hojas.abajo)}>
+                    <div className="lienzo" ref={debajoRef} />
+                    {/* Hermana del lienzo, no hija: al redibujar se reemplazan
+                        los hijos y la capa de texto desaparecía en silencio. */}
+                    <div className="capaTexto" ref={textoRef} />
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {hojas.arriba && (
               <div
                 className="hoja movil"
                 ref={movilRef}
                 style={{
-                  ...sitio(hojas.arriba, caja),
+                  ...sitio(area),
                   display: dir ? 'block' : 'none',
-                  transform: dir === 'anterior' ? 'rotateY(-180deg)' : 'rotateY(0deg)',
+                  transform: dir === 'anterior' ? 'rotateY(-90deg)' : 'rotateY(0deg)',
+                  // Al empezar a volver, la hoja arranca de canto: invisible.
+                  // Sin esto asomaba un instante opaca antes del primer
+                  // movimiento del dedo.
+                  ['--visible' as string]: dir === 'anterior' ? 0 : 1,
                 }}
-              />
+              >
+                <div className="cara frente">
+                  <div className="papel">
+                    <div className="pagina" style={medida(hojas.arriba)}>
+                      <div className="lienzo" ref={caraRef} />
+                    </div>
+                  </div>
+                  <span className="pliegue" aria-hidden="true" />
+                </div>
+              </div>
             )}
-            {/* Hermana de las hojas, no hija: al redibujar la página se
-                reemplazan los hijos de la hoja, y ahí dentro la capa de texto
-                desaparecía en silencio. */}
-            <div className="capaTexto" ref={textoRef} style={sitio(hojas.abajo, caja)} />
           </div>
         )}
       </div>
