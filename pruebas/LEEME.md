@@ -1,15 +1,15 @@
 # Pruebas
 
 No hay marco de pruebas ni configuración: son guiones sueltos. Casi todos abren
-Chromium y usan la app como la usarías tú; dos —la fusión entre aparatos y el
-corte de facturación— corren solas en Node, porque lo que prueban es una
-decisión y no necesita navegador.
+Chromium y usan la app como la usarías tú; tres —la fusión entre aparatos, el
+corte de facturación y el encargo de las portadas— corren solas en Node, porque
+lo que prueban es una decisión y no necesita navegador.
 
 ```bash
 npm run build
 npx vite preview --port 4173 --host 127.0.0.1 &
 node pruebas/lectura.mjs      # 30 comprobaciones · hito 1, leer
-node pruebas/biblioteca.mjs   # 35 comprobaciones · hito 2, la estantería
+node pruebas/biblioteca.mjs   # 47 comprobaciones · la estantería y crear portada
 node pruebas/traductor.mjs    # 53 comprobaciones · el traductor y las notas de página
 node pruebas/comic.mjs        # 16 comprobaciones · tamaños mezclados y zoom
 node pruebas/nube.mjs         # 14 comprobaciones · hito 4, la nube sin cuenta
@@ -86,6 +86,9 @@ vea de dónde sale y no parezca una prueba puesta por costumbre.
 | Preguntar antes de borrar, y borrar de verdad | — |
 | Que todo sobreviva a recargar | D-03 |
 | La versión se ve al pie del inicio, y tocarla busca actualizaciones | — |
+| «Crear portada» copia el encargo y abre el generador | D-13 |
+| El encargo se lleva lo que estás editando, sin haber guardado | D-13 |
+| Lo que se ve en pantalla es exactamente lo que se copió | D-13 |
 
 ## Qué comprueba `traductor.mjs`
 
