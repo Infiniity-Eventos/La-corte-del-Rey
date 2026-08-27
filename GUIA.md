@@ -471,6 +471,14 @@ construir lo que viene:
 - **La capa de texto no puede vivir dentro de la hoja.** Al redibujar la página
   se reemplazan los hijos de la hoja, y ahí dentro la capa desaparecía en
   silencio. Va como hermana, encima.
+- **El nombre del modelo tampoco se escribe en el código.** Fijar
+  `gemini-2.5-flash-lite` devolvió un 404 en el primer uso real: los modelos se
+  retiran, cambian de nombre y no son los mismos para todas las claves. Ahora la
+  app **le pregunta a Google qué modelos tiene tu clave** y elige el mejor —
+  prefiriendo Flash-Lite, que es el que más cuota gratuita da y para traducir una
+  frase sobra. Si el modelo elegido desaparece, vuelve a preguntar y reintenta
+  sola. Es el mismo error que el del prefijo de la clave, cometido dos veces:
+  **cualquier identificador de un servicio ajeno escrito en el código caduca.**
 - **Las claves de Gemini cambiaron de formato.** Las nuevas empiezan por `AQ.Ab`
   en vez de `AIza`, y las viejas dejan de funcionar en septiembre de 2026. Por eso
   la app no valida el formato: cualquier comprobación que mire las primeras letras
@@ -480,6 +488,11 @@ construir lo que viene:
   API: responde al preflight autorizando el dominio de la app y la cabecera
   `x-goog-api-key`. Sin eso, todo el hito 3 habría necesitado un servidor de por
   medio, y con él se habría ido el «cero costo».
+- **Con el teclado abierto no cabe todo.** La barra del traductor, los controles
+  del lector y el aviso de «vas por la página X» se amontonaban al escribir. Se
+  resolvió por tres lados: la ventana se encoge con el teclado en vez de quedar
+  tapada, los controles del lector se apartan mientras la burbuja está en uso, y
+  el aviso se va solo a los siete segundos.
 - **Un error de cuota no es un número.** Cuando se agotan las 1.000 traducciones
   del día, la app dice a qué hora vuelven, calculado desde la medianoche del
   Pacífico que es cuando Google las repone (P31).
@@ -542,3 +555,8 @@ construir lo que viene:
   las reglas de Firestore y Storage. Se comprueba que los 17 archivos que sirve
   GitHub son idénticos a los que se compilan aquí, y se pasa contra ellos una
   prueba nueva de 13 comprobaciones.
+- **2026-08-27** — Primer uso real, y dos fallos que solo aparecen ahí: el
+  traductor devolvía 404 porque el modelo estaba fijado en el código, y con el
+  teclado abierto se amontonaban tres cosas en el mismo sitio. El modelo pasa a
+  descubrirse preguntándole a Google, con reintento si se retira; y la interfaz
+  del lector se aparta mientras escribes. 94 comprobaciones en total.

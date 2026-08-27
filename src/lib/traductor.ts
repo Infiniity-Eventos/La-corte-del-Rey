@@ -12,8 +12,17 @@
  *    cuándo vuelve, no un número (P31).
  */
 
-const MODELO = 'gemini-2.5-flash-lite'
 const RAIZ = 'https://generativelanguage.googleapis.com/v1beta/models'
+
+/**
+ * El modelo no se fija en el código: se le pregunta a Google cuáles tiene tu
+ * clave y se elige el mejor.
+ *
+ * Se hizo así después de fijar `gemini-2.5-flash-lite` y recibir un 404: los
+ * nombres de modelo cambian, se retiran y no son iguales para todas las claves.
+ * Cualquier nombre escrito aquí caduca, igual que caducó el prefijo `AIza` de
+ * las claves. Preguntar no caduca.
+ */
 
 export interface Traduccion {
   natural: string
@@ -28,6 +37,44 @@ export interface Traduccion {
     ejemplo: string
     ejemploTraducido: string
   }
+}
+
+/** Lo que no sirve para traducir texto, por muy Gemini que sea. */
+const INSERVIBLES = /embedding|aqa|imagen|image|tts|audio|veo|vision|live|robotics/
+
+function puntuar(id: string): number {
+  const s = id.toLowerCase()
+  if (INSERVIBLES.test(s)) return -1
+  let p = 0
+  // Flash-Lite primero: es el que más cuota gratuita da, y para traducir una
+  // frase sobra. Pro gasta la cuota diez veces más rápido sin traducir mejor.
+  if (s.includes('flash-lite')) p += 100
+  else if (s.includes('flash')) p += 80
+  else if (s.includes('pro')) p += 50
+  else p += 20
+  if (/preview|exp|thinking/.test(s)) p -= 30
+  const version = /(\d+(?:\.\d+)?)/.exec(s.replace('gemini-', ''))
+  if (version) p += Math.min(Number(version[1]), 20) * 2
+  if (s.endsWith('-latest')) p += 3
+  return p
+}
+
+/** Los modelos que la clave puede usar para generar texto, de mejor a peor. */
+export async function descubrirModelos(clave: string): Promise<string[]> {
+  let r: Response
+  try {
+    r = await fetch(`${RAIZ}?pageSize=200`, { headers: { 'x-goog-api-key': clave } })
+  } catch {
+    throw new ErrorTraductor({ tipo: 'sin-red' })
+  }
+  if (!r.ok) throw new ErrorTraductor(interpretar(r.status, await r.text().catch(() => '')))
+
+  const datos = (await r.json()) as { models?: { name?: string; supportedGenerationMethods?: string[] }[] }
+  return (datos.models ?? [])
+    .filter(m => (m.supportedGenerationMethods ?? []).some(g => g.toLowerCase().includes('generatecontent')))
+    .map(m => String(m.name ?? '').replace(/^models\//, ''))
+    .filter(id => puntuar(id) > 0)
+    .sort((a, b) => puntuar(b) - puntuar(a))
 }
 
 export type Fallo =
@@ -99,6 +146,7 @@ function interpretar(estado: number, cuerpo: string): Fallo {
   if (estado === 401 || estado === 403) return { tipo: 'clave-mala' }
   if (estado === 429) return { tipo: 'cuota', vuelve: cuandoVuelveLaCuota() }
   if (estado === 503 || estado === 500) return { tipo: 'ocupado' }
+  if (estado === 404) return { tipo: 'raro', detalle: '404' }
   return { tipo: 'raro', detalle: `${estado}` }
 }
 
@@ -132,8 +180,48 @@ export interface Opciones {
   senal?: AbortSignal
 }
 
-export async function traducir({ clave, texto, alAsomar, senal }: Opciones): Promise<Traduccion> {
-  if (!clave) throw new ErrorTraductor({ tipo: 'sin-clave' })
+let elegido: string | null = null
+
+/** Qué modelo se está usando. Se enseña en los ajustes para poder diagnosticar. */
+export function modeloEnUso(): string | null {
+  return elegido
+}
+
+export function olvidarModelo(): void {
+  elegido = null
+  try { localStorage.removeItem('vellum-modelo') } catch { /* modo privado */ }
+}
+
+async function modeloPara(clave: string): Promise<string> {
+  if (elegido) return elegido
+  try {
+    const guardado = localStorage.getItem('vellum-modelo')
+    if (guardado) { elegido = guardado; return guardado }
+  } catch { /* modo privado: se descubre cada vez, que tampoco es caro */ }
+
+  const lista = await descubrirModelos(clave)
+  if (lista.length === 0) throw new ErrorTraductor({ tipo: 'raro', detalle: 'tu clave no tiene ningún modelo de texto' })
+  elegido = lista[0]
+  try { localStorage.setItem('vellum-modelo', elegido) } catch { /* ídem */ }
+  return elegido
+}
+
+export async function traducir(opciones: Opciones): Promise<Traduccion> {
+  if (!opciones.clave) throw new ErrorTraductor({ tipo: 'sin-clave' })
+  try {
+    return await pedirTraduccion(await modeloPara(opciones.clave), opciones)
+  } catch (e) {
+    // Un 404 significa que ese modelo ya no existe: se vuelve a preguntar y se
+    // reintenta una vez. Sin esto, el día que Google retire un modelo la app se
+    // queda muerta hasta que alguien la toque.
+    const esNoExiste = e instanceof ErrorTraductor && e.fallo.tipo === 'raro' && e.fallo.detalle === '404'
+    if (!esNoExiste) throw e
+    olvidarModelo()
+    return pedirTraduccion(await modeloPara(opciones.clave), opciones)
+  }
+}
+
+async function pedirTraduccion(MODELO: string, { clave, texto, alAsomar, senal }: Opciones): Promise<Traduccion> {
 
   let respuesta: Response
   try {
@@ -213,10 +301,13 @@ export async function traducir({ clave, texto, alAsomar, senal }: Opciones): Pro
  * prefijo una vez —de `AIza` a `AQ.`— y cualquier comprobación que mire las
  * primeras letras se queda vieja sola.
  */
-export async function probarClave(clave: string): Promise<{ ok: true; muestra: string } | { ok: false; fallo: Fallo }> {
+export async function probarClave(
+  clave: string,
+): Promise<{ ok: true; muestra: string; modelo: string } | { ok: false; fallo: Fallo }> {
   try {
+    olvidarModelo()
     const r = await traducir({ clave, texto: 'good morning' })
-    return { ok: true, muestra: r.natural }
+    return { ok: true, muestra: r.natural, modelo: modeloEnUso() ?? '?' }
   } catch (e) {
     return { ok: false, fallo: e instanceof ErrorTraductor ? e.fallo : { tipo: 'raro', detalle: 'inesperado' } }
   }
@@ -246,6 +337,11 @@ export function explicar(f: Fallo): { titulo: string; detalle: string } {
     case 'ocupado':
       return { titulo: 'Gemini está saturado', detalle: 'No es cosa tuya. Inténtalo en un momento.' }
     default:
-      return { titulo: 'Algo salió mal', detalle: `El servidor respondió ${f.detalle}.` }
+      return f.detalle === '404'
+        ? {
+            titulo: 'Ese modelo ya no existe',
+            detalle: 'Vellum va a preguntarle a Google cuáles tiene tu clave y elegir otro.',
+          }
+        : { titulo: 'Algo salió mal', detalle: `El servidor respondió: ${f.detalle}.` }
   }
 }

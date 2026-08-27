@@ -23,9 +23,11 @@ interface Props {
   seleccion: string
   onUsarSeleccion: () => void
   onIrAAjustes: () => void
+  /** El lector necesita saberlo para apartar lo que estorba mientras escribes. */
+  onEnUso: (enUso: boolean) => void
 }
 
-export function Burbuja({ clave, libro, pagina, seleccion, onUsarSeleccion, onIrAAjustes }: Props) {
+export function Burbuja({ clave, libro, pagina, seleccion, onUsarSeleccion, onIrAAjustes, onEnUso }: Props) {
   const [texto, setTexto] = useState('')
   const [abierta, setAbierta] = useState(false)
   const [pidiendo, setPidiendo] = useState(false)
@@ -48,6 +50,22 @@ export function Burbuja({ clave, libro, pagina, seleccion, onUsarSeleccion, onIr
   }, [seleccion, onUsarSeleccion])
 
   useEffect(() => () => corte.current?.abort(), [])
+
+  /**
+   * Un textarea de una línea corta el texto en cuanto se pasa. Se estira con lo
+   * escrito, hasta el tope que pone el CSS.
+   */
+  useEffect(() => {
+    const el = campo.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${el.scrollHeight}px`
+  }, [texto])
+
+  const hayPanelAbierto = pidiendo || !!natural || !!resultado || !!fallo
+  useEffect(() => {
+    onEnUso(abierta || hayPanelAbierto)
+  }, [abierta, hayPanelAbierto, onEnUso])
 
   const pedir = async () => {
     const t = texto.trim()
@@ -103,6 +121,7 @@ export function Burbuja({ clave, libro, pagina, seleccion, onUsarSeleccion, onIr
   const limpiar = () => {
     corte.current?.abort()
     setTexto('')
+    setAbierta(false)
     setResultado(null)
     setNatural('')
     setFallo(null)
@@ -110,7 +129,6 @@ export function Burbuja({ clave, libro, pagina, seleccion, onUsarSeleccion, onIr
     setConsultado('')
   }
 
-  const hayPanel = pidiendo || natural || resultado || fallo
   const solapas: { id: Solapa; nombre: string }[] = [
     ...(resultado?.palabra ? [{ id: 'palabra' as const, nombre: 'La palabra' }] : []),
     ...(resultado?.aviso ? [{ id: 'aviso' as const, nombre: 'Ojo' }] : []),
@@ -120,7 +138,7 @@ export function Burbuja({ clave, libro, pagina, seleccion, onUsarSeleccion, onIr
 
   return (
     <div className={`burbuja${abierta ? ' abierta' : ''}`}>
-      {hayPanel && (
+      {hayPanelAbierto && (
         <div className="panel">
           <div className="panel-top">
             <span className="panel-src mono">{consultado}</span>
@@ -194,6 +212,10 @@ export function Burbuja({ clave, libro, pagina, seleccion, onUsarSeleccion, onIr
           rows={1}
           placeholder="¿Qué no entiendes?"
           onFocus={() => setAbierta(true)}
+          // Al salir del campo, los controles del lector vuelven, haya o no
+          // texto escrito. Condicionarlo al contenido dejaba la interfaz
+          // escondida para siempre en cuanto escribías algo y no lo borrabas.
+          onBlur={() => setAbierta(false)}
           onChange={e => setTexto(e.target.value)}
           onKeyDown={e => {
             if (e.key === 'Enter' && !e.shiftKey) {

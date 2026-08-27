@@ -28,7 +28,9 @@ export function Ajustes({ clave, onGuardar, onCerrar }: Props) {
     const r = await probarClave(valor.trim())
     setPrueba(
       r.ok
-        ? { ok: true, texto: `«good morning» → «${r.muestra}»` }
+        // Se enseña el modelo elegido a propósito: si algún día algo va raro,
+        // es el primer dato que hace falta y no hay dónde más mirarlo.
+        ? { ok: true, texto: `«good morning» → «${r.muestra}». Traduciendo con ${r.modelo}.` }
         : { ok: false, texto: `${explicar(r.fallo).titulo}. ${explicar(r.fallo).detalle}` },
     )
     setProbando(false)

@@ -42,6 +42,7 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
   // efecto que cuelga los lienzos, sin meter los lienzos en el estado.
   const [sello, setSello] = useState(0)
   const [volverAlInicio, setVolverAlInicio] = useState(libro.pagina > 1)
+  const [traduciendo, setTraduciendo] = useState(false)
   // Modo de selección. Va aparte del leer normal a propósito: arrastrar para
   // pasar página y arrastrar para seleccionar son el mismo gesto, y si compiten
   // gana el que no querías. Se elige uno.
@@ -144,6 +145,17 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
     montar(debajoRef.current, abajo)
     montar(movilRef.current, arriba)
   }, [cuales, hoja, sello, montar])
+
+  /**
+   * El aviso de «vas por la página X» se va solo. Es útil el primer segundo y
+   * estorba a partir del quinto, sobre todo si abres el teclado y se junta con
+   * la barra del traductor.
+   */
+  useEffect(() => {
+    if (!volverAlInicio) return
+    const t = window.setTimeout(() => setVolverAlInicio(false), 7000)
+    return () => window.clearTimeout(t)
+  }, [volverAlInicio])
 
   /**
    * La burbuja y los controles del lector quieren los dos el borde de abajo.
@@ -322,7 +334,7 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
 
   return (
     <div className="lector" ref={lectorRef} data-tema={ajustes.tema} data-chrome={chrome}>
-      <div className="chrome arriba" data-visible={chrome}>
+      <div className="chrome arriba" data-visible={chrome && !traduciendo}>
         <div className="fila entre">
           <button className="icono" onClick={onCerrar}>← Biblioteca</button>
           <span className="titulo-lector">{libro.titulo}</span>
@@ -371,7 +383,7 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
       <div className="folio">{pagina} / {libro.paginas}</div>
       <div className="progreso"><i style={{ width: `${avance}%` }} /></div>
 
-      {seleccionando && (
+      {seleccionando && !traduciendo && (
         <div className="aviso modo">
           <span>
             {hayTexto === false
@@ -382,7 +394,7 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
         </div>
       )}
 
-      {volverAlInicio && (
+      {volverAlInicio && !traduciendo && (
         <div className="aviso">
           <span>Vas por la página {libro.pagina}</span>
           <button onClick={() => { irA(1); setVolverAlInicio(false) }}>Al principio</button>
@@ -397,10 +409,13 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
           seleccion={seleccion}
           onUsarSeleccion={() => setSeleccion('')}
           onIrAAjustes={onIrAAjustes}
+          onEnUso={setTraduciendo}
         />
       </div>
 
-      <div className="chrome abajo" data-visible={chrome}>
+      {/* Mientras escribes en la burbuja, los controles del lector se apartan.
+          Con el teclado abierto no cabe todo, y lo que sobra es esto. */}
+      <div className="chrome abajo" data-visible={chrome && !traduciendo}>
         <div className="fila entre">
           <form className="salto" onSubmit={enviarSalto}>
             <input

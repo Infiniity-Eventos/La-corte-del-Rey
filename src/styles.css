@@ -410,7 +410,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
    comentario del ResizeObserver en Lector.tsx. */
 .zona-burbuja {
   position: absolute; left: 0; right: 0; bottom: 0; z-index: 8;
-  max-height: 78%; display: flex;
+  max-height: 82%; display: flex;
 }
 .burbuja {
   flex: 1; min-width: 0; display: flex; flex-direction: column;
@@ -423,12 +423,13 @@ button { font: inherit; color: inherit; cursor: pointer; }
   display: flex; gap: var(--e2); align-items: flex-end;
   padding: .5rem var(--e3) calc(var(--safe-b) + .5rem);
 }
+.barra-burbuja .btn { flex: none; align-self: flex-end; margin-bottom: .1rem; }
 .barra-burbuja textarea {
   flex: 1; min-width: 0; resize: none; font: inherit; font-size: .92rem; line-height: 1.4;
-  max-height: 5.5rem; color: var(--tinta-lectura);
+  min-height: 2.5rem; max-height: 7rem; overflow-y: auto; color: var(--tinta-lectura);
   background: color-mix(in srgb, var(--tinta-lectura) 7%, transparent);
   border: 1px solid rgba(138, 90, 43, .22); border-radius: 18px;
-  padding: .5rem .85rem; transition: border-color var(--paso) var(--curva);
+  padding: .55rem .85rem; transition: border-color var(--paso) var(--curva);
 }
 .barra-burbuja textarea::placeholder { color: currentColor; opacity: .45; }
 .barra-burbuja textarea:focus { outline: none; border-color: var(--ocre); }

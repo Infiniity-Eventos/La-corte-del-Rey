@@ -46,6 +46,34 @@ await ctx.addInitScript(({ RESPUESTA, PALABRA }) => {
     if (!url.includes('generativelanguage.googleapis.com')) return real(entrada, opciones)
 
     const guion = localStorage.getItem('__guion') || 'normal'
+
+    // La app pregunta primero qué modelos tiene la clave. Se devuelve una
+    // lista revuelta a propósito, con basura dentro, para comprobar que elige
+    // bien y no simplemente el primero.
+    if (url.includes('/models?')) {
+      if (guion === 'clave-mala') return new Response('{"error":{"message":"API key not valid"}}', { status: 400 })
+      if (guion === 'sin-modelos') return new Response(JSON.stringify({ models: [] }), { status: 200 })
+      return new Response(JSON.stringify({
+        models: [
+          { name: 'models/text-embedding-004', supportedGenerationMethods: ['embedContent'] },
+          { name: 'models/gemini-3.7-pro', supportedGenerationMethods: ['generateContent'] },
+          { name: 'models/gemini-2.5-flash-lite', supportedGenerationMethods: ['generateContent'] },
+          { name: 'models/gemini-3.7-flash-lite-preview', supportedGenerationMethods: ['generateContent'] },
+          { name: 'models/gemini-3.7-flash-lite', supportedGenerationMethods: ['generateContent'] },
+          { name: 'models/imagen-4.0-generate', supportedGenerationMethods: ['predict'] },
+          { name: 'models/gemini-3.7-flash', supportedGenerationMethods: ['generateContent'] },
+        ],
+      }), { status: 200 })
+    }
+
+    if (guion === 'modelo-retirado') {
+      // Falla una vez con 404 y a la siguiente funciona: así se comprueba que
+      // vuelve a preguntar y reintenta sola.
+      if (!localStorage.getItem('__ya404')) {
+        localStorage.setItem('__ya404', '1')
+        return new Response('{"error":{"message":"not found"}}', { status: 404 })
+      }
+    }
     const jsonError = m => new Response(JSON.stringify({ error: { message: m } }), {
       status: { cuota: 429, 'clave-mala': 400, ocupado: 503 }[guion],
       headers: { 'Content-Type': 'application/json' },
@@ -117,6 +145,11 @@ paso('el botón de probar la clave la prueba de verdad',
   (await page.locator('.prueba.bien').count()) === 1,
   (await page.textContent('.prueba')).trim())
 
+const elegido = await page.textContent('.prueba.bien')
+paso('elige el mejor modelo de los que ofrece la clave',
+  elegido.includes('gemini-3.7-flash-lite') && !elegido.includes('preview'),
+  elegido.replace(/\s+/g, ' ').trim())
+
 await guionar('clave-mala')
 await page.click('.fila-botones .btn.fantasma')
 await page.waitForSelector('.prueba.mal', { timeout: 10000 })
@@ -177,6 +210,16 @@ paso('trae la pronunciación', (await page.textContent('.palabra .pron')) === PA
 paso('trae un ejemplo traducido', (await page.textContent('.ejemplo-es')) === PALABRA.palabra.ejemploTraducido)
 await guionar('normal')
 
+/* --- Si el modelo se retira, vuelve a preguntar y reintenta --- */
+await page.click('.panel-top .icono')
+await page.evaluate(() => localStorage.removeItem('__ya404'))
+await guionar('modelo-retirado')
+await pedir('a retired model')
+await page.waitForSelector('.solapas', { timeout: 12000 })
+paso('si el modelo se retira, busca otro y reintenta sola',
+  (await page.textContent('.panel-natural')) === RESPUESTA.natural)
+await guionar('normal')
+
 /* --- La cuota (P31) --- */
 await guionar('cuota')
 await page.click('.panel-top .icono')
@@ -211,10 +254,32 @@ paso('sin red lo dice y recuerda que leer sigue',
   (await page.textContent('.fallo-det')).includes('Leer sigue funcionando'))
 await guionar('normal')
 
-/* --- Modo seleccionar (R31 / P56) --- */
+/* --- Nada se amontona mientras escribes --- */
 await page.click('.panel-top .icono')
-await page.click('.escena', { position: { x: 200, y: 300 } })
-await page.waitForTimeout(300)
+await page.click('.escena', { position: { x: 200, y: 240 } })
+await page.waitForTimeout(320)
+paso('con la interfaz abierta se ven los controles',
+  (await page.getAttribute('.chrome.abajo', 'data-visible')) === 'true')
+await page.click('.barra-burbuja textarea')
+await page.fill('.barra-burbuja textarea', 'something long enough to matter here')
+await page.waitForTimeout(320)
+paso('al escribir, los controles del lector se apartan',
+  (await page.getAttribute('.chrome.abajo', 'data-visible')) === 'false')
+paso('y la barra de arriba también',
+  (await page.getAttribute('.chrome.arriba', 'data-visible')) === 'false')
+const alto = await page.evaluate(() => {
+  const t = document.querySelector('.barra-burbuja textarea')
+  return { alto: t.clientHeight, desborde: t.scrollHeight - t.clientHeight }
+})
+paso('el campo crece con el texto en vez de cortarlo', alto.desborde <= 2, `${alto.alto}px de alto`)
+await page.fill('.barra-burbuja textarea', '')
+await page.evaluate(() => document.querySelector('.barra-burbuja textarea').blur())
+await page.waitForTimeout(320)
+paso('al salir del campo, los controles vuelven',
+  (await page.getAttribute('.chrome.abajo', 'data-visible')) === 'true')
+
+/* --- Modo seleccionar (R31 / P56) --- */
+// La interfaz ya está abierta del bloque anterior: tocar la página la cerraría.
 await page.click('.chrome.abajo .icono:has-text("Seleccionar")')
 await page.waitForTimeout(900)
 paso('el modo selección avisa de cómo funciona', (await page.locator('.aviso.modo').count()) === 1)
@@ -236,6 +301,10 @@ paso('seleccionar rellena la burbuja',
   (await page.inputValue('.barra-burbuja textarea')).trim() === hayTexto.trim(), `«${hayTexto}»`)
 
 /* --- El vocabulario, con libro y página (P57) --- */
+// La selección deja el foco en la burbuja, y con la burbuja en uso la barra de
+// arriba se aparta. Se sale del campo primero, como haría cualquiera.
+await page.evaluate(() => document.querySelector('.barra-burbuja textarea').blur())
+await page.waitForTimeout(320)
 await page.click('.chrome.arriba .icono:first-child')
 await page.waitForSelector('.biblio-top', { timeout: 10000 })
 await page.click('.biblio-top .icono:has-text("Vocabulario")')
