@@ -30,6 +30,35 @@ const base = process.env.VITE_BASE ?? '/'
 
 export default defineConfig({
   base,
+  build: {
+    rollupOptions: {
+      output: {
+        /**
+         * Firebase se reparte en trozos que el empaquetador llama «index.esm».
+         * Con ese nombre no hay forma de ver en el navegador si se están
+         * descargando, ni de comprobarlo en una prueba. Aquí se les pone
+         * nombre, **manteniéndolos separados por partes**: entrar solo baja lo
+         * de la sesión; lo de los datos y los archivos llega después, cuando
+         * de verdad hace falta.
+         */
+        manualChunks(id) {
+          // El paquete de verdad es el **último** «(@)firebase/loquesea» de la
+          // ruta, no el primero: firebase anida copias suyas dentro de su
+          // propio node_modules, y quedarse con la primera coincidencia metía
+          // auth entero (450 kB) en el trozo común, que se descarga siempre.
+          const cola = id.split(/node_modules[\\/]/).pop() ?? ''
+          const m = /^(?:@firebase|firebase)[\\/]([^\\/]+)/.exec(cola)
+          if (!m) return undefined
+          const parte = m[1]
+          if (parte === 'auth') return 'firebase-sesion'
+          // webchannel-wrapper es el transporte de Firestore, de nadie más.
+          if (parte === 'firestore' || parte === 'webchannel-wrapper') return 'firebase-datos'
+          if (parte === 'storage') return 'firebase-archivos'
+          return 'firebase-comun'
+        },
+      },
+    },
+  },
   define: {
     __VERSION__: JSON.stringify(version()),
     __COMPILADO__: JSON.stringify(cuando()),

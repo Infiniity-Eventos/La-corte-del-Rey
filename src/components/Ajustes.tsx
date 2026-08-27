@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { explicar, probarClave } from '../lib/traductor'
+import type { Quien } from '../lib/nube'
 
 /**
  * Los ajustes: por ahora, solo la clave de Gemini.
@@ -14,9 +15,17 @@ interface Props {
   clave: string
   onGuardar: (clave: string) => void
   onCerrar: () => void
+  quien: Quien | null
+  estadoNube: string
+  ocupada: boolean
+  onEntrar: () => void
+  onSalir: () => void
+  onSincronizar: () => void
 }
 
-export function Ajustes({ clave, onGuardar, onCerrar }: Props) {
+export function Ajustes({
+  clave, onGuardar, onCerrar, quien, estadoNube, ocupada, onEntrar, onSalir, onSincronizar,
+}: Props) {
   const [valor, setValor] = useState(clave)
   const [visible, setVisible] = useState(false)
   const [probando, setProbando] = useState(false)
@@ -45,6 +54,48 @@ export function Ajustes({ clave, onGuardar, onCerrar }: Props) {
       </div>
 
       <h1 className="display titulo-pantalla">Ajustes</h1>
+
+      <section className="tarjeta">
+        <h2 className="display tarjeta-tit">Tu cuenta</h2>
+        {quien ? (
+          <>
+            <div className="quien">
+              {quien.foto && <img src={quien.foto} alt="" className="quien-foto" />}
+              <div>
+                <p className="quien-nombre">{quien.nombre}</p>
+                <p className="quien-correo mono">{quien.correo}</p>
+              </div>
+            </div>
+            <p className="tarjeta-txt">{estadoNube}</p>
+            <div className="fila-botones">
+              <button className="btn fantasma peq" onClick={onSincronizar} disabled={ocupada}>
+                {ocupada ? 'Sincronizando…' : 'Sincronizar ahora'}
+              </button>
+              <button className="btn fantasma peq" onClick={onSalir} disabled={ocupada}>
+                Cerrar sesión
+              </button>
+            </div>
+            <p className="tarjeta-nota">
+              Cerrar sesión no borra nada de este aparato: los libros y el progreso
+              siguen aquí.
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="tarjeta-txt">
+              Sin cuenta, Vellum funciona entero: leer, traducir y organizar. Entrar
+              sirve para que el progreso, las etiquetas, el vocabulario y los PDF
+              viajen entre el celular y la PC.
+            </p>
+            <div className="fila-botones">
+              <button className="btn" onClick={onEntrar} disabled={ocupada}>
+                {ocupada ? 'Abriendo…' : 'Entrar con Google'}
+              </button>
+            </div>
+            {estadoNube && <p className="aviso-sesion">{estadoNube}</p>}
+          </>
+        )}
+      </section>
 
       <section className="tarjeta">
         <h2 className="display tarjeta-tit">El traductor</h2>
@@ -131,9 +182,14 @@ export function Ajustes({ clave, onGuardar, onCerrar }: Props) {
       <section className="tarjeta">
         <h2 className="display tarjeta-tit">Dónde vive todo</h2>
         <p className="tarjeta-txt">
-          Los PDF, el progreso, las etiquetas y esta clave están guardados en este
-          aparato y en ningún otro sitio. La sincronización con la nube llega en el
-          siguiente paso.
+          Todo se guarda primero en este aparato, y por eso la app abre y funciona
+          igual sin internet. {quien
+            ? 'Con la sesión abierta, además viaja a tu cuenta en segundo plano.'
+            : 'Sin sesión, no sale de aquí.'}
+        </p>
+        <p className="tarjeta-txt">
+          La clave de Gemini es la excepción: esa no viaja nunca, ni siquiera con la
+          sesión abierta.
         </p>
       </section>
     </div>

@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
 import type { Libro } from '../lib/tipos'
+import type { Quien } from '../lib/nube'
 import { Portada } from './Portada'
 
 interface Props {
@@ -13,6 +14,10 @@ interface Props {
   onVocabulario: () => void
   onComprobarVersion: () => void
   comprobando: boolean
+  quien: Quien | null
+  estadoNube: string
+  nubeOcupada: boolean
+  onSincronizar: () => void
 }
 
 function porcentaje(l: Libro): number {
@@ -38,7 +43,7 @@ function compilado(): string {
 
 export function Biblioteca({
   libros, importando, onImportar, onAbrir, onEditar, vocabulario, onAjustes, onVocabulario,
-  onComprobarVersion, comprobando,
+  onComprobarVersion, comprobando, quien, estadoNube, nubeOcupada, onSincronizar,
 }: Props) {
   const input = useRef<HTMLInputElement>(null)
   const [busqueda, setBusqueda] = useState('')
@@ -72,6 +77,18 @@ export function Biblioteca({
       <div className="biblio-top">
         <h1 className="marca display">Infiniity <em>Vellum</em></h1>
         <div className="fila">
+          {quien && (
+            <button
+              className="nube"
+              data-estado={nubeOcupada ? 'trabajando' : /no se pudo|faltan/i.test(estadoNube) ? 'error' : 'al-dia'}
+              onClick={onSincronizar}
+              disabled={nubeOcupada}
+              title={estadoNube || 'Sincronizar ahora'}
+            >
+              <i aria-hidden="true" />
+              {nubeOcupada ? 'Nube…' : 'Nube'}
+            </button>
+          )}
           {vocabulario > 0 && (
             <button className="icono" onClick={onVocabulario}>
               Vocabulario <span className="mono">{vocabulario}</span>

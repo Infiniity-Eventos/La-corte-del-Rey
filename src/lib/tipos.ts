@@ -17,6 +17,16 @@ export interface Libro {
   portada?: Blob
   /** Cuando la propia imagen ya trae el título escrito, Vellum no lo compone. */
   tituloEnPortada?: boolean
+
+  /**
+   * Cuándo se tocó por última vez. Es lo que decide quién gana al sincronizar:
+   * entre dos versiones del mismo libro, la más reciente.
+   */
+  actualizadoEn?: number
+  /** Si el PDF ya está en la nube. El archivo pesa; el dato de si subió, no. */
+  archivoEnNube?: boolean
+  /** Marcado para no volver a bajar aquí lo que ya se borró. */
+  borrado?: boolean
 }
 
 export type Tema = 'papel' | 'sepia' | 'oscuro'
@@ -34,6 +44,7 @@ export interface Palabra {
   libroTitulo: string
   pagina: number
   fecha: number
+  actualizadoEn?: number
 }
 
 export interface Ajustes {

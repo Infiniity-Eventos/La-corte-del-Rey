@@ -157,7 +157,9 @@ paso('y dice el motivo cuando no vale',
   (await page.textContent('.prueba.mal')).includes('no vale'))
 await guionar('normal')
 
-await page.click('.tarjeta .btn')
+// Por texto y no por posición: al llegar la tarjeta de la cuenta, «el primer
+// botón de la primera tarjeta» dejó de ser Guardar y la clave nunca se guardaba.
+await page.click('.fila-botones .btn:text-is("Guardar")')
 await page.waitForTimeout(500)
 await page.reload({ waitUntil: 'networkidle' })
 await page.waitForSelector('.rejilla .libro', { timeout: 10000 })

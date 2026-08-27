@@ -118,9 +118,20 @@ export async function pedirPermanencia(): Promise<boolean> {
 
 /* --------------------------------- Libros -------------------------------- */
 
+/** Los libros que se ven. Las lápidas de los borrados quedan fuera. */
 export async function listarLibros(): Promise<Libro[]> {
-  const libros = await tx<Libro[]>(LIBROS, 'readonly', s => s.getAll())
-  return libros.sort((a, b) => b.abiertoEn - a.abiertoEn)
+  const libros = await listarLibrosCrudo()
+  return libros.filter(l => !l.borrado).sort((a, b) => b.abiertoEn - a.abiertoEn)
+}
+
+/** Todo, lápidas incluidas. Lo necesita la sincronización, nadie más. */
+export async function listarLibrosCrudo(): Promise<Libro[]> {
+  return tx<Libro[]>(LIBROS, 'readonly', s => s.getAll())
+}
+
+/** Marca cuándo se tocó algo. Es lo que decide quién gana al sincronizar. */
+function sellar<T extends { actualizadoEn?: number }>(x: T): T {
+  return { ...x, actualizadoEn: Date.now() }
 }
 
 export async function buscarPorHash(hash: string): Promise<Libro | null> {
@@ -134,16 +145,39 @@ export async function buscarPorHash(hash: string): Promise<Libro | null> {
 
 export async function anadirLibro(libro: Libro, datos: Blob): Promise<void> {
   await guardarArchivo(libro.archivo, datos)
-  await tx(LIBROS, 'readwrite', s => s.put(libro))
+  await tx(LIBROS, 'readwrite', s => s.put(sellar(libro)))
 }
 
 export async function actualizarLibro(libro: Libro): Promise<void> {
+  await tx(LIBROS, 'readwrite', s => s.put(sellar(libro)))
+}
+
+/** Guarda tal cual, sin tocar la fecha. Lo usa la sincronización al traer. */
+export async function guardarLibroTalCual(libro: Libro): Promise<void> {
   await tx(LIBROS, 'readwrite', s => s.put(libro))
 }
 
+/**
+ * Borrar deja una lápida en vez de olvidar sin más.
+ *
+ * Sin ella, el otro aparato ve un libro que él tiene y que aquí «falta», lo da
+ * por nuevo y lo vuelve a mandar: borrar sería imposible.
+ */
 export async function borrarLibro(libro: Libro): Promise<void> {
   await borrarArchivo(libro.archivo)
-  await tx(LIBROS, 'readwrite', s => s.delete(libro.id))
+  await tx(LIBROS, 'readwrite', s =>
+    s.put(sellar({
+      ...libro,
+      borrado: true,
+      portada: undefined,
+      archivoEnNube: false,
+    })),
+  )
+}
+
+/** Para cuando la lápida ya viajó a todas partes y no hace falta guardarla. */
+export async function olvidarLibro(id: string): Promise<void> {
+  await tx(LIBROS, 'readwrite', s => s.delete(id))
 }
 
 /* -------------------------------- Ajustes -------------------------------- */
@@ -159,6 +193,16 @@ export async function guardarAjustes(a: Ajustes): Promise<void> {
 
 /* --------------------------------- Clave --------------------------------- */
 
+/** Guarda el archivo de un libro que llega de la nube. */
+export async function guardarArchivoDeLibro(nombre: string, datos: Blob): Promise<void> {
+  await guardarArchivo(nombre, datos)
+}
+
+/** Si el PDF está en este aparato. Un libro puede estar solo en la nube. */
+export async function hayArchivo(nombre: string): Promise<boolean> {
+  return (await leerArchivo(nombre)) !== null
+}
+
 /** Va en su propio cajón, no en los ajustes: ver el comentario en tipos.ts. */
 export async function leerClave(): Promise<string> {
   return (await tx<string | undefined>(AJUSTES, 'readonly', s => s.get('claveGemini'))) ?? ''
@@ -171,11 +215,19 @@ export async function guardarClave(clave: string): Promise<void> {
 /* ------------------------------ Vocabulario ------------------------------ */
 
 export async function listarVocabulario(): Promise<Palabra[]> {
-  const todas = await tx<Palabra[]>(VOCABULARIO, 'readonly', s => s.getAll())
-  return todas.sort((a, b) => b.fecha - a.fecha)
+  const todas = await listarVocabularioCrudo()
+  return todas.filter(p => !(p as { borrado?: boolean }).borrado).sort((a, b) => b.fecha - a.fecha)
+}
+
+export async function listarVocabularioCrudo(): Promise<Palabra[]> {
+  return tx<Palabra[]>(VOCABULARIO, 'readonly', s => s.getAll())
 }
 
 export async function guardarPalabra(p: Palabra): Promise<void> {
+  await tx(VOCABULARIO, 'readwrite', s => s.put(sellar(p)))
+}
+
+export async function guardarPalabraTalCual(p: Palabra): Promise<void> {
   await tx(VOCABULARIO, 'readwrite', s => s.put(p))
 }
 

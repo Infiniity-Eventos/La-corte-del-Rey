@@ -18,6 +18,8 @@ import { FichaLibro } from './components/FichaLibro'
 import { Ajustes as PantallaAjustes } from './components/Ajustes'
 import { Vocabulario } from './components/Vocabulario'
 import { buscarAhora, entrarEnLaNueva, vigilarActualizaciones } from './lib/actualizacion'
+import type { Quien } from './lib/nube'
+import type { Traida } from './lib/sincronizacion'
 
 /**
  * pdf.js pesa medio megabyte. Si entra en el paquete principal, la biblioteca
@@ -37,6 +39,78 @@ export default function App() {
   const [pantalla, setPantalla] = useState<'biblioteca' | 'ajustes' | 'vocabulario'>('biblioteca')
   const [hayVersionNueva, setHayVersionNueva] = useState(false)
   const [comprobando, setComprobando] = useState(false)
+  const [quien, setQuien] = useState<Quien | null>(null)
+  const [estadoNube, setEstadoNube] = useState('')
+  const [nubeOcupada, setNubeOcupada] = useState(false)
+  const [permitirDatos, setPermitirDatos] = useState(false)
+  const [pidePermiso, setPidePermiso] = useState<{ libro: Libro; mb: number } | null>(null)
+
+  /**
+   * Un ciclo completo con la nube.
+   *
+   * Nunca bloquea nada: si falla, se dice y la app sigue igual. Los datos van
+   * siempre; los PDF respetan el wifi (P68).
+   */
+  const sincronizar = useCallback(async (uid: string) => {
+    setNubeOcupada(true)
+    setEstadoNube('Sincronizando…')
+    try {
+      const { sincronizarDatos, subirArchivosPendientes, limpiarBorrados, porDatos } =
+        await import('./lib/sincronizacion')
+      const r = await sincronizarDatos(uid)
+      const [ls, voc, aj] = await Promise.all([listarLibros(), listarVocabulario(), leerAjustes()])
+      setLibros(ls)
+      setVocabulario(voc)
+      setAjustes(aj)
+
+      await limpiarBorrados(uid)
+      const subidos = await subirArchivosPendientes(uid, permitirDatos, setEstadoNube)
+      const quedan = r.archivosPendientes - subidos
+
+      setEstadoNube(
+        quedan > 0 && porDatos()
+          ? `Todo al día salvo ${quedan} ${quedan === 1 ? 'archivo' : 'archivos'}: esperan al wifi.`
+          : quedan > 0
+            ? `Quedan ${quedan} ${quedan === 1 ? 'archivo' : 'archivos'} por subir.`
+            : 'Todo al día.',
+      )
+      setLibros(await listarLibros())
+    } catch (e) {
+      setEstadoNube(
+        e instanceof Error && /permission|insufficient/i.test(e.message)
+          ? 'Faltan las reglas de acceso en Firebase. Están en el repositorio, sin desplegar.'
+          : 'No se pudo sincronizar. La app sigue funcionando igual.',
+      )
+    } finally {
+      setNubeOcupada(false)
+    }
+  }, [permitirDatos])
+
+  const entrarEnLaCuenta = useCallback(async () => {
+    setNubeOcupada(true)
+    setEstadoNube('')
+    try {
+      const { entrar } = await import('./lib/nube')
+      const q = await entrar()
+      setQuien(q)
+      try { localStorage.setItem('vellum-hubo-sesion', '1') } catch { /* modo privado */ }
+      setNubeOcupada(false)
+      void sincronizar(q.uid)
+    } catch (e) {
+      const { ErrorSesion, explicarSesion } = await import('./lib/nube')
+      const f = e instanceof ErrorSesion ? explicarSesion(e.fallo) : null
+      setEstadoNube(f ? `${f.titulo}. ${f.detalle}` : 'No se pudo entrar.')
+      setNubeOcupada(false)
+    }
+  }, [sincronizar])
+
+  const salirDeLaCuenta = useCallback(async () => {
+    const { salir } = await import('./lib/nube')
+    await salir()
+    setQuien(null)
+    setEstadoNube('')
+    try { localStorage.removeItem('vellum-hubo-sesion') } catch { /* modo privado */ }
+  }, [])
 
   const comprobarVersion = useCallback(async () => {
     setComprobando(true)
@@ -68,6 +142,27 @@ export default function App() {
   useEffect(() => {
     vigilarActualizaciones(() => setHayVersionNueva(true))
   }, [])
+
+  /**
+   * Solo se enciende Firebase si alguna vez hubo sesión.
+   *
+   * Preguntarle a Firebase «¿hay alguien?» cuesta descargar todo el SDK. Para
+   * quien nunca ha entrado —o no piensa hacerlo— eso es medio megabyte por una
+   * respuesta que ya sabemos.
+   */
+  useEffect(() => {
+    let hubo = false
+    try { hubo = localStorage.getItem('vellum-hubo-sesion') === '1' } catch { /* modo privado */ }
+    if (!hubo) return
+    let soltar: (() => void) | undefined
+    void import('./lib/nube').then(async n => {
+      soltar = await n.vigilarSesion(q => {
+        setQuien(q)
+        if (q) void sincronizar(q.uid)
+      })
+    })
+    return () => soltar?.()
+  }, [sincronizar])
 
   useEffect(() => {
     const ocioso =
@@ -165,10 +260,24 @@ export default function App() {
     setVocabulario(await listarVocabulario())
   }, [])
 
-  const abrir = useCallback((libro: Libro) => {
+  const abrir = useCallback(async (libro: Libro) => {
+    // Un libro puede estar en la nube y no aquí: en otro aparato lo importaste
+    // tú, no este.
+    if (quien) {
+      const { asegurarArchivo } = await import('./lib/sincronizacion')
+      const r: Traida = await asegurarArchivo(quien.uid, libro, permitirDatos)
+      if (r.estado === 'hace-falta-permiso') {
+        setPidePermiso({ libro, mb: Math.max(1, Math.round(libro.bytes / 1024 / 1024)) })
+        return
+      }
+      if (r.estado === 'no-esta') {
+        setNota('Ese libro no está en este aparato ni en tu cuenta.')
+        return
+      }
+    }
     setAbierto(libro)
     void actualizarLibro({ ...libro, abiertoEn: Date.now() })
-  }, [])
+  }, [quien, permitirDatos])
 
   const cerrar = useCallback(async () => {
     // Guardar primero y leer después. Al revés, la lista se leía antes de que
@@ -226,6 +335,12 @@ export default function App() {
           clave={clave}
           onGuardar={c => void cambiarClave(c)}
           onCerrar={() => setPantalla('biblioteca')}
+          quien={quien}
+          estadoNube={estadoNube}
+          ocupada={nubeOcupada}
+          onEntrar={() => void entrarEnLaCuenta()}
+          onSalir={() => void salirDeLaCuenta()}
+          onSincronizar={() => quien && void sincronizar(quien.uid)}
         />
         {nota && <div className="aviso" style={{ bottom: '1.4rem' }}><span>{nota}</span></div>}
       </>
@@ -248,14 +363,48 @@ export default function App() {
         libros={libros}
         importando={importando}
         onImportar={importar}
-        onAbrir={abrir}
+        onAbrir={l => void abrir(l)}
         onEditar={setEnFicha}
         vocabulario={vocabulario.length}
         onAjustes={() => setPantalla('ajustes')}
         onVocabulario={() => setPantalla('vocabulario')}
         onComprobarVersion={() => void comprobarVersion()}
         comprobando={comprobando}
+        quien={quien}
+        estadoNube={estadoNube}
+        nubeOcupada={nubeOcupada}
+        onSincronizar={() => quien && void sincronizar(quien.uid)}
       />
+      {pidePermiso && (
+        <div className="telon" onPointerDown={e => { if (e.target === e.currentTarget) setPidePermiso(null) }}>
+          <div className="ficha" role="dialog" aria-label="Descargar por datos">
+            <div className="ficha-asa" aria-hidden="true" />
+            <h2 className="display tarjeta-tit">Estás con datos móviles</h2>
+            <p className="tarjeta-txt">
+              «{pidePermiso.libro.titulo}» no está en este aparato. Traerlo son unos{' '}
+              <strong>{pidePermiso.mb} MB</strong>.
+            </p>
+            <div className="ficha-pie">
+              <button className="btn fantasma peq" onClick={() => setPidePermiso(null)}>Ahora no</button>
+              <button
+                className="btn"
+                onClick={() => {
+                  const l = pidePermiso.libro
+                  setPermitirDatos(true)
+                  setPidePermiso(null)
+                  void (async () => {
+                    const { asegurarArchivo } = await import('./lib/sincronizacion')
+                    if (quien) await asegurarArchivo(quien.uid, l, true)
+                    setAbierto(l)
+                  })()
+                }}
+              >
+                Descargar igual
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {enFicha && (
         <FichaLibro
           key={enFicha.id}
