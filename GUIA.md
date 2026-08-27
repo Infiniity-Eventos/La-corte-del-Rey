@@ -313,6 +313,16 @@ técnicas que descartan opciones desde el primer día. Implican, como mínimo:
   Google: `apagon/LEEME.md` y `guia/paginas/apagon.html`.
 - **Origen:** P69, y T13.
 
+### D-28 · El campo del traductor se vacía al mandar
+- **Decisión:** al pulsar Traducir, el campo queda vacío. Lo normal es traducir
+  varias frases seguidas, y borrar la anterior a mano cada vez estorba.
+- **Lo que mandaste no se pierde:** sigue arriba del panel, encima de la
+  traducción.
+- **Si falla, vuelve al campo.** Reintentar no puede obligarte a teclearlo otra
+  vez, y una cuota agotada o un corte de red son exactamente los momentos en que
+  vas a reintentar.
+- **Origen:** pedido en el uso, 2026-08-27.
+
 ### D-27 · Atrás cierra capas, no la app
 - **Decisión:** el botón de atrás del teléfono deshace lo que tengas encima, de
   dentro hacia fuera: el traductor, las notas de la página, el modo selección,
@@ -938,3 +948,6 @@ construir lo que viene:
   ninguna de las visibles: que cerrar algo a mano no deje su entrada de
   historial colgando. Se comprobó quitando la limpieza a propósito, y falla como
   debe. 260 comprobaciones.
+- **2026-08-27** — El campo del traductor se vacía al mandar (D-28), para poder
+  encadenar frases sin borrar la anterior. Si la traducción falla, lo escrito
+  vuelve al campo. 263 comprobaciones.

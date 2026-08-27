@@ -199,6 +199,13 @@ paso('la pestaña literal funciona', (await page.textContent('.hoja-solapa .lite
 await page.click('.solapa:has-text("En contexto")')
 paso('la pestaña de contexto funciona', (await page.textContent('.hoja-solapa p')) === RESPUESTA.contexto)
 
+/* --- El campo se vacía al mandar, para poder seguir --- */
+paso('al traducir, el campo queda vacío',
+  (await page.inputValue('.barra-burbuja textarea')) === '',
+  `«${await page.inputValue('.barra-burbuja textarea')}»`)
+paso('pero lo que mandaste sigue a la vista',
+  (await page.textContent('.panel-src')) === 'he was over the moon about it')
+
 /* --- Se guarda sola, sin botón (R17 / P57) --- */
 await page.waitForSelector('.guardada .icono', { timeout: 8000 })
 paso('la traducción se guarda sola, sin pulsar nada',
@@ -325,6 +332,8 @@ paso('si el modelo se retira, busca otro y reintenta sola',
 await guionar('normal')
 
 /* --- La cuota (P31) --- */
+// Si la traducción falla, lo escrito tiene que volver al campo: reintentar no
+// puede obligarte a teclearlo otra vez.
 await guionar('cuota')
 await page.click('.panel-top .icono')
 await pedir('another sentence')
@@ -333,6 +342,9 @@ paso('avisa cuando se acaba la cuota',
   (await page.textContent('.fallo-tit')) === 'Se acabaron las traducciones de hoy')
 const cuando = await page.textContent('.fallo-det')
 paso('y dice cuándo vuelve', /Vuelven el .+/.test(cuando), cuando.slice(0, 60) + '…')
+paso('cuando falla, lo escrito vuelve al campo',
+  (await page.inputValue('.barra-burbuja textarea')) === 'another sentence',
+  `«${await page.inputValue('.barra-burbuja textarea')}»`)
 
 /* --- Clave mala --- */
 await guionar('clave-mala')

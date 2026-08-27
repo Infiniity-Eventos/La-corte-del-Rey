@@ -92,6 +92,10 @@ export function Burbuja({ clave, libro, pagina, seleccion, onUsarSeleccion, onIr
     setFallo(null)
     setGuardada(null)
     setConsultado(t)
+    // El campo se vacía al mandar: lo normal es traducir varias frases seguidas
+    // y tener que borrar la anterior a mano cada vez estorba. Lo que mandaste
+    // sigue a la vista arriba del panel, así que no se pierde de vista.
+    setTexto('')
     // Una copia local: para cuando llegue la respuesta, el estado puede haber
     // cambiado, y lo que se guarda tiene que ser lo que se preguntó.
     const consultadoAhora = t
@@ -126,6 +130,9 @@ export function Burbuja({ clave, libro, pagina, seleccion, onUsarSeleccion, onIr
     } catch (e) {
       if (control.signal.aborted) return
       setFallo(explicar(e instanceof ErrorTraductor ? e.fallo : { tipo: 'raro', detalle: 'inesperado' }))
+      // Si falló, lo escrito vuelve al campo: reintentar no puede obligarte a
+      // teclearlo otra vez.
+      setTexto(t)
     } finally {
       if (!control.signal.aborted) setPidiendo(false)
     }

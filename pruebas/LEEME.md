@@ -10,7 +10,7 @@ npm run build
 npx vite preview --port 4173 --host 127.0.0.1 &
 node pruebas/lectura.mjs      # 34 comprobaciones · leer, y las flechas del teclado
 node pruebas/biblioteca.mjs   # 47 comprobaciones · la estantería y crear portada
-node pruebas/traductor.mjs    # 60 comprobaciones · el traductor y las notas de página
+node pruebas/traductor.mjs    # 63 comprobaciones · el traductor y las notas de página
 node pruebas/comic.mjs        # 29 comprobaciones · tamaños mezclados, zoom, pellizco y teclado
 node pruebas/nube.mjs         # 14 comprobaciones · hito 4, la nube sin cuenta
 node pruebas/atras.mjs        # 18 comprobaciones · el botón de atrás del teléfono
@@ -120,6 +120,8 @@ resto.
 | Con un modismo, la pestaña de aviso va primero y se abre sola | R20 · P28 |
 | Con una palabra suelta, su ficha va primero, con pronunciación y ejemplo | R20 · P28 |
 | Las pestañas de literal y contexto | R30 · P54 |
+| Al mandar, el campo se vacía y lo mandado queda a la vista | D-28 |
+| Si falla, lo escrito vuelve al campo | D-28 |
 | **La traducción se guarda sola, sin botón** | D-24 |
 | Traducir lo mismo dos veces no duplica ni crea dos marcas | D-24 |
 | «Quitar» la borra y la marca desaparece | D-24 |
