@@ -15,6 +15,8 @@ const TOQUE = 8
 
 type Direccion = 'siguiente' | 'anterior' | null
 
+interface Medida { w: number; h: number }
+
 interface Props {
   libro: Libro
   ajustes: Ajustes
@@ -25,6 +27,26 @@ interface Props {
   onIrAAjustes: () => void
 }
 
+/** Cada hoja se centra en la escena con su propio tamaño. */
+function sitio(m: Medida, caja: { w: number; h: number }): React.CSSProperties {
+  return {
+    position: 'absolute',
+    width: m.w,
+    height: m.h,
+    left: Math.round((caja.w - m.w) / 2),
+    top: Math.round((caja.h - m.h) / 2),
+  }
+}
+
+function mismas(
+  a: { abajo: Medida | null; arriba: Medida | null },
+  b: { abajo: Medida | null; arriba: Medida | null },
+): boolean {
+  const igual = (x: Medida | null, y: Medida | null) =>
+    x === y || (!!x && !!y && x.w === y.w && x.h === y.h)
+  return igual(a.abajo, b.abajo) && igual(a.arriba, b.arriba)
+}
+
 export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, onIrAAjustes }: Props) {
   const escenaRef = useRef<HTMLDivElement>(null)
   const movilRef = useRef<HTMLDivElement>(null)
@@ -32,7 +54,18 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
   const cuadernoRef = useRef<Cuaderno | null>(null)
 
   const [caja, setCaja] = useState({ w: 0, h: 0 })
-  const [hoja, setHoja] = useState({ w: 0, h: 0 })
+  /**
+   * Cada hoja se mide por su cuenta.
+   *
+   * En un cómic conviven páginas verticales con dobles páginas horizontales, y
+   * durante el volteo hay dos en pantalla a la vez. Con una sola medida
+   * compartida, la que no encajaba se estiraba dentro del marco de la otra: eso
+   * era la página «achatada y cuadrada».
+   */
+  const [hojas, setHojas] = useState<{ abajo: Medida | null; arriba: Medida | null }>({
+    abajo: null,
+    arriba: null,
+  })
   const [pagina, setPagina] = useState(libro.pagina)
   const [dir, setDir] = useState<Direccion>(null)
   const [lista, setLista] = useState(false)
@@ -134,13 +167,16 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
     c.redimensionar(caja.w, caja.h)
 
     const { abajo, arriba } = cuales()
-    const p = await c.dibujar(abajo).catch(() => null)
+    const a = await c.dibujar(abajo).catch(() => null)
     if (mio !== turno.current) return
+    const b = arriba !== null ? await c.dibujar(arriba).catch(() => null) : null
+    if (mio !== turno.current) return
+
+    const medir = (p: typeof a): Medida | null => (p ? { w: p.ancho, h: p.alto } : null)
+    const nuevas = { abajo: medir(a), arriba: medir(b) }
     // Sin comparar antes, cada pasada crearía un objeto nuevo y el efecto se
     // volvería a disparar para siempre.
-    if (p) setHoja(h => (h.w === p.ancho && h.h === p.alto ? h : { w: p.ancho, h: p.alto }))
-    if (arriba !== null) await c.dibujar(arriba).catch(() => null)
-    if (mio !== turno.current) return
+    setHojas(v => (mismas(v, nuevas) ? v : nuevas))
 
     setSello(s => s + 1)
     c.adelantar(pagina)
@@ -160,7 +196,7 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
     const { abajo, arriba } = cuales()
     montar(debajoRef.current, abajo)
     montar(movilRef.current, arriba)
-  }, [cuales, hoja, sello, montar])
+  }, [cuales, hojas, sello, montar])
 
   /**
    * El aviso de «vas por la página X» se va solo. Es útil el primer segundo y
@@ -367,31 +403,28 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
         onPointerCancel={alSoltar}
       >
         {!lista && <span className="cargando">Abriendo</span>}
-        {hoja.w > 0 && (
-          <div
-            className="marco"
-            style={{
-              width: hoja.w,
-              height: hoja.h,
-              left: (caja.w - hoja.w) / 2,
-              top: (caja.h - hoja.h) / 2,
-            }}
-          >
-            <div className="hoja debajo" ref={debajoRef} style={{ inset: 0, position: 'absolute' }} />
+        {hojas.abajo && (
+          <div className="marco">
             <div
-              className="hoja movil"
-              ref={movilRef}
-              style={{
-                inset: 0,
-                position: 'absolute',
-                display: dir ? 'block' : 'none',
-                transform: dir === 'anterior' ? 'rotateY(-180deg)' : 'rotateY(0deg)',
-              }}
+              className="hoja debajo"
+              ref={debajoRef}
+              style={sitio(hojas.abajo, caja)}
             />
+            {hojas.arriba && (
+              <div
+                className="hoja movil"
+                ref={movilRef}
+                style={{
+                  ...sitio(hojas.arriba, caja),
+                  display: dir ? 'block' : 'none',
+                  transform: dir === 'anterior' ? 'rotateY(-180deg)' : 'rotateY(0deg)',
+                }}
+              />
+            )}
             {/* Hermana de las hojas, no hija: al redibujar la página se
                 reemplazan los hijos de la hoja, y ahí dentro la capa de texto
                 desaparecía en silencio. */}
-            <div className="capaTexto" ref={textoRef} />
+            <div className="capaTexto" ref={textoRef} style={sitio(hojas.abajo, caja)} />
           </div>
         )}
       </div>

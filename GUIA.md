@@ -497,6 +497,11 @@ construir lo que viene:
   por la página X» estaba posicionado por su cuenta y aterrizaba justo encima de
   los controles del lector. Va dentro de la misma zona que la burbuja, y lo demás
   se apoya encima midiéndola.
+- **Cada hoja necesita su propia medida.** Un cómic mezcla páginas verticales con
+  dobles páginas horizontales, y durante el volteo hay dos en pantalla a la vez.
+  Con una sola medida compartida, la que no encajaba se estiraba dentro del marco
+  de la otra. Era la causa de fondo de la «página achatada», y ningún PDF de
+  prueba con todas las páginas iguales lo habría destapado.
 - **Los redibujados llevan número.** Dibujar una página tarda, y si mientras
   tanto cambia el tamaño —el teclado abriéndose, por ejemplo— el resultado que
   llega tarde ya no vale. Aplicarlo era lo que dejaba la página achatada: un
@@ -579,3 +584,9 @@ construir lo que viene:
   que no se había visto: **salir de un libro en menos de segundo y medio perdía
   por dónde ibas**. La app pasa a buscar sus propias actualizaciones y a
   ofrecerlas sin interrumpir la lectura. 99 comprobaciones.
+- **2026-08-27** — La «página achatada» tenía una segunda causa, más de fondo:
+  las dobles páginas horizontales de un cómic compartían medida con las
+  verticales y se estiraban unas dentro del marco de otras. Cada hoja pasa a
+  medirse por su cuenta. Se añade `pruebas/comic.mjs` con un PDF de tamaños
+  mezclados, que es el caso que ningún PDF uniforme habría destapado. 107
+  comprobaciones.

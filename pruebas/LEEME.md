@@ -9,6 +9,7 @@ npx vite preview --port 4173 --host 127.0.0.1 &
 node pruebas/lectura.mjs      # 26 comprobaciones · hito 1, leer
 node pruebas/biblioteca.mjs   # 33 comprobaciones · hito 2, la estantería
 node pruebas/traductor.mjs    # 40 comprobaciones · hito 3, el traductor
+node pruebas/comic.mjs        # 8 comprobaciones · páginas de tamaños mezclados
 node pruebas/capturas.mjs     # capturas de cada estado
 
 # Contra la app publicada
@@ -103,6 +104,22 @@ resto.
 | El modo selección avisa de cómo funciona | D-18 · P56 |
 | Seleccionar sobre la página rellena la burbuja | R31 · P56 |
 
+## Qué comprueba `comic.mjs`
+
+Un cómic de verdad mezcla páginas verticales con dobles páginas horizontales, y
+durante el volteo hay dos en pantalla a la vez. Este es el caso que rompió la
+app en el uso real y que ningún PDF de prueba uniforme habría destapado.
+
+| Comprueba |
+|---|
+| Una página vertical se dibuja sin deformar |
+| Durante el volteo conviven dos hojas, cada una con su forma |
+| Ninguna de las dos se estira dentro del marco de la otra |
+| Una doble página se dibuja sin deformar y aprovecha el ancho |
+
+El PDF de prueba se genera con `gen_mixto.py`: páginas impares verticales,
+pares horizontales.
+
 ## Qué comprueba `en-vivo.mjs`
 
 Es la única que puede fallar por motivos que no están en el código: una ruta
@@ -135,8 +152,10 @@ Se dice aquí para que nadie las lea como una garantía que no son:
   oiga. Hay que probarlo en el teléfono.
 - **El gesto con el dedo.** Se simula con el ratón, que se comporta igual en el
   código pero no prueba el multitáctil ni el desplazamiento accidental.
-- **PDF de verdad.** El de prueba pesa dos kilobytes. Un cómic escaneado de
-  200 MB es otro asunto, y hay que medirlo con uno real.
+- **PDF de verdad.** Los de prueba pesan un par de kilobytes. Un cómic escaneado
+  de 200 MB es otro asunto, y hay que medirlo con uno real.
+- **Leer una doble página en un teléfono.** La app la dibuja bien, pero que se
+  pueda leer sin girar el aparato es otra cosa, y eso no lo mide una prueba.
 - **Sin internet.** El service worker está configurado, pero comprobar que la
   app abre sin red pide un escenario aparte.
 - **Gemini de verdad.** La API está simulada. Lo que no se puede probar así es

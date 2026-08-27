@@ -325,9 +325,10 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 .importando p { color: var(--tinta-2); font-size: .9rem; margin-top: var(--e2); }
 
-/* El marco centrado que sostiene las dos hojas. Sin él, el giro en 3D
-   no tiene un plano común y las páginas se desalinean. */
-.marco { position: absolute; transform-style: preserve-3d; }
+/* El marco ocupa toda la escena y solo aporta el plano 3D compartido. Ya no
+   impone tamaño: cada hoja se coloca con el suyo, porque en un cómic conviven
+   páginas verticales con dobles páginas horizontales. */
+.marco { position: absolute; inset: 0; transform-style: preserve-3d; }
 
 
 /* ------------------------------------------------------------------ */
