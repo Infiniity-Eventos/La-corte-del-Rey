@@ -10,6 +10,7 @@ import {
   guardarClave,
   leerAjustes,
   leerClave,
+  listarCatalogo,
   listarLibros,
   listarVocabulario,
 } from './lib/almacen'
@@ -32,6 +33,7 @@ const Lector = lazy(() => import('./components/Lector').then(m => ({ default: m.
 
 export default function App() {
   const [libros, setLibros] = useState<Libro[]>([])
+  const [catalogo, setCatalogo] = useState<Libro[]>([])
   const [ajustes, setAjustes] = useState<Ajustes>(AJUSTES_POR_DEFECTO)
   const [abierto, setAbierto] = useState<Libro | null>(null)
   const [enFicha, setEnFicha] = useState<Libro | null>(null)
@@ -52,15 +54,31 @@ export default function App() {
    * Nunca bloquea nada: si falla, se dice y la app sigue igual. Los datos van
    * siempre; los PDF respetan el wifi (P68).
    */
-  const sincronizar = useCallback(async (uid: string) => {
+  /** Las dos listas salen del mismo sitio, así que se leen juntas. */
+  const refrescar = useCallback(async () => {
+    const [mios, todo] = await Promise.all([listarLibros(), listarCatalogo()])
+    setLibros(mios)
+    setCatalogo(todo)
+  }, [])
+
+  const marcarEstrella = useCallback(async (libro: Libro, puesta: boolean) => {
+    await actualizarLibro({ ...libro, estrella: puesta })
+    await refrescar()
+  }, [refrescar])
+
+  const sincronizar = useCallback(async (q: Quien) => {
+    const uid = q.uid
     setNubeOcupada(true)
     setEstadoNube('Sincronizando…')
     try {
-      const { sincronizarDatos, subirArchivosPendientes, limpiarBorrados, porDatos } =
+      const { sincronizarDatos, sincronizarEstante, subirArchivosPendientes, limpiarBorrados, porDatos } =
         await import('./lib/sincronizacion')
       const r = await sincronizarDatos(uid)
-      const [ls, voc, aj] = await Promise.all([listarLibros(), listarVocabulario(), leerAjustes()])
-      setLibros(ls)
+      // El estante va después de lo propio: compartir un libro es marcar el
+      // tuyo, y hasta que ese cambio no ha viajado no hay nada que poner.
+      await sincronizarEstante(q)
+      const [voc, aj] = await Promise.all([listarVocabulario(), leerAjustes()])
+      await refrescar()
       setVocabulario(voc)
       setAjustes(aj)
 
@@ -75,7 +93,7 @@ export default function App() {
             ? `Quedan ${quedan} ${quedan === 1 ? 'archivo' : 'archivos'} por subir.`
             : 'Todo al día.',
       )
-      setLibros(await listarLibros())
+      await refrescar()
     } catch (e) {
       setEstadoNube(
         e instanceof Error && /permission|insufficient/i.test(e.message)
@@ -96,7 +114,7 @@ export default function App() {
       setQuien(q)
       try { localStorage.setItem('vellum-hubo-sesion', '1') } catch { /* modo privado */ }
       setNubeOcupada(false)
-      void sincronizar(q.uid)
+      void sincronizar(q)
     } catch (e) {
       const { ErrorSesion, explicarSesion } = await import('./lib/nube')
       const f = e instanceof ErrorSesion ? explicarSesion(e.fallo) : null
@@ -126,13 +144,12 @@ export default function App() {
 
   useEffect(() => {
     ;(async () => {
-      const [ls, aj, cl, voc] = await Promise.all([
-        listarLibros(),
+      const [aj, cl, voc] = await Promise.all([
         leerAjustes(),
         leerClave(),
         listarVocabulario(),
       ])
-      setLibros(ls)
+      await refrescar()
       setAjustes(aj)
       setClave(cl)
       setVocabulario(voc)
@@ -159,7 +176,7 @@ export default function App() {
     void import('./lib/nube').then(async n => {
       soltar = await n.vigilarSesion(q => {
         setQuien(q)
-        if (q) void sincronizar(q.uid)
+        if (q) void sincronizar(q)
       })
     })
     return () => soltar?.()
@@ -195,7 +212,7 @@ export default function App() {
       else if (r.estado === 'repetido') repetidos++
       else fallos++
     }
-    setLibros(await listarLibros())
+    await refrescar()
     setImportando(false)
 
     const partes: string[] = []
@@ -251,10 +268,18 @@ export default function App() {
   }, [abierto, guardarAhora])
 
   const cambiarClave = useCallback(async (nueva: string) => {
-    await guardarClave(nueva)
+    await guardarClave(nueva, quien?.uid ?? null)
     setClave(nueva.trim())
     setNota(nueva.trim() ? 'Clave guardada' : 'Clave borrada')
-  }, [])
+  }, [quien])
+
+  // Cada perfil trae la suya. Al entrar y al salir se cambia de cajón, para que
+  // dos personas en el mismo aparato no se gasten la cuota la una a la otra.
+  useEffect(() => {
+    let vivo = true
+    void leerClave(quien?.uid ?? null).then(c => { if (vivo) setClave(c) })
+    return () => { vivo = false }
+  }, [quien])
 
   const quitarPalabra = useCallback(async (id: string) => {
     await borrarPalabra(id)
@@ -285,8 +310,8 @@ export default function App() {
     // se escribiera lo último y la biblioteca aparecía sin el progreso.
     await guardarAhora()
     setAbierto(null)
-    const [ls, voc] = await Promise.all([listarLibros(), listarVocabulario()])
-    setLibros(ls)
+    const voc = await listarVocabulario()
+    await refrescar()
     setVocabulario(voc)
   }, [guardarAhora])
 
@@ -298,14 +323,14 @@ export default function App() {
 
   const guardarFicha = useCallback(async (libro: Libro) => {
     await actualizarLibro(libro)
-    setLibros(await listarLibros())
+    await refrescar()
     setEnFicha(null)
     setNota('Guardado')
   }, [])
 
   const quitar = useCallback(async (libro: Libro) => {
     await borrarLibro(libro)
-    setLibros(await listarLibros())
+    await refrescar()
     setEnFicha(null)
     setNota(`«${libro.titulo}» ya no está en la estantería`)
   }, [])
@@ -347,7 +372,7 @@ export default function App() {
           ocupada={nubeOcupada}
           onEntrar={() => void entrarEnLaCuenta()}
           onSalir={() => void salirDeLaCuenta()}
-          onSincronizar={() => quien && void sincronizar(quien.uid)}
+          onSincronizar={() => quien && void sincronizar(quien)}
         />
         {nota && <div className="aviso" style={{ bottom: '1.4rem' }}><span>{nota}</span></div>}
       </>
@@ -368,6 +393,8 @@ export default function App() {
     <>
       <Biblioteca
         libros={libros}
+        catalogo={catalogo}
+        onEstrella={(l, p) => void marcarEstrella(l, p)}
         importando={importando}
         onImportar={importar}
         onAbrir={l => void abrir(l)}
@@ -380,7 +407,7 @@ export default function App() {
         quien={quien}
         estadoNube={estadoNube}
         nubeOcupada={nubeOcupada}
-        onSincronizar={() => quien && void sincronizar(quien.uid)}
+        onSincronizar={() => quien && void sincronizar(quien)}
       />
       {pidePermiso && (
         <div className="telon" onPointerDown={e => { if (e.target === e.currentTarget) setPidePermiso(null) }}>
@@ -417,6 +444,7 @@ export default function App() {
           key={enFicha.id}
           libro={enFicha}
           etiquetasConocidas={etiquetasConocidas}
+          miUid={quien?.uid ?? null}
           onGuardar={guardarFicha}
           onBorrar={quitar}
           onCerrar={() => setEnFicha(null)}

@@ -313,6 +313,43 @@ técnicas que descartan opciones desde el primer día. Implican, como mínimo:
   Google: `apagon/LEEME.md` y `guia/paginas/apagon.html`.
 - **Origen:** P69, y T13.
 
+### D-29 · Un catálogo para la casa, una estrella para cada quien
+- **Decisión:** todo PDF que sube cualquiera va a un **catálogo común**, que se
+  busca entero desde los dos aparatos. Lo que decide qué hay en **tu**
+  estantería es la **estrella**: marcas lo que quieres a mano, y lo demás sigue
+  ahí, buscable, sin llenarte la pantalla.
+- **Lo que traes nace marcado.** Si lo subiste, lo querías. Lo que sube la otra
+  persona entra al catálogo sin estrella.
+- **Quitar del catálogo es de quien lo subió**, y entonces desaparece para los
+  dos. Quitar la estrella solo te afecta a ti. Son dos gestos distintos y por eso
+  están en sitios distintos: la estrella en la rejilla, borrar en la ficha.
+- **Lo que es de cada quien no viaja a la ficha común:** la estrella, por dónde
+  vas y si lo tienes bajado se quedan en tu espacio. El catálogo guarda el libro,
+  no tu relación con él.
+- **Lo que hay que decir en voz alta:** **no hay libros privados con la sesión
+  abierta.** El catálogo es común por diseño. Es lo que se pidió, y conviene que
+  esté escrito.
+- **Quién es de la casa se pone a mano** en `casa/miembros`, desde la consola de
+  Firebase; las reglas lo dejan leer y no escribir. Si la app pudiera añadir
+  miembros, cualquiera con una cuenta de Google se metería solo.
+- **Sin casa montada no pasa nada.** `sincronizarEstante` no hace nada y los
+  libros propios se sincronizan igual. Y sin otra persona, la app no enseña ni
+  pestañas ni estrellas: elegir entre dos vistas idénticas sería ruido.
+- **Origen:** pedido en el uso, 2026-08-27.
+
+### D-30 · La clave de Gemini es una por perfil
+- **Decisión:** cada cuenta tiene su clave en este aparato. Al entrar y al salir
+  se cambia de cajón.
+- **Por qué:** las mil traducciones diarias **van con la clave, no con la app**.
+  Con una compartida, la primera persona se come la tarde de la otra sin
+  enterarse.
+- **La primera vez se hereda** la que hubiera puesta sin sesión: nadie tiene que
+  volver a buscarla en AI Studio por haber entrado.
+- **Sigue sin viajar** (D-09). Si usas Vellum también en la PC, hay que pegarla
+  allí una vez. Es a propósito: una clave que viaja es una clave que algún día se
+  filtra por un descuido.
+- **Origen:** pedido en el uso, 2026-08-27.
+
 ### D-28 · El campo del traductor se vacía al mandar
 - **Decisión:** al pulsar Traducir, el campo queda vacío. Lo normal es traducir
   varias frases seguidas, y borrar la anterior a mano cada vez estorba.
@@ -583,6 +620,7 @@ las portadas, en `guia/prompts/`.
 |---|---|---|
 | Prompts | El icono y las portadas, listos para copiar | `guia/paginas/prompts.html` |
 | Instalación | Paso a paso de los dos proyectos de Google, con casillas | `guia/paginas/instalacion.html` |
+| La clave de Gemini | Tutorial para sacar la clave, con enlaces. El que se le pasa a quien va a usar la app | `guia/paginas/clave.html` |
 | Apagón | Paso a paso del corte de facturación en 1 dólar, con las órdenes listas para copiar | `guia/paginas/apagon.html` |
 | Encender la nube | Autorizar el dominio y publicar las reglas de Firestore y Storage | `guia/paginas/reglas.html` |
 
@@ -757,6 +795,12 @@ construir lo que viene:
   los llevaba. Cuando pasó a componer también el encargo, marcar «Cómic» y
   añadir etiquetas antes de guardar no llegaba al prompt. Una estructura que
   sirve para dos cosas tiene que estar completa para las dos.
+- **Compartir y «tener a mano» no son lo mismo, y mezclarlos se nota.** La
+  primera versión del estante hacía de compartir un acto: marcabas un libro y la
+  otra persona lo veía. Al usarlo aparece el modelo de verdad: **el catálogo es
+  común y lo que se elige es qué tienes tú a mano**. Es la misma pieza por
+  dentro —lo que cambió fue de quién es el gesto— pero la diferencia entre las
+  dos versiones es que en la segunda nadie tiene que acordarse de compartir nada.
 - **Abrir algo y cerrarlo son dos caminos, y el segundo se olvida.** La pila de
   atrás funcionaba a la primera abriendo capas; lo que no funcionaba era cerrar
   una con su propio botón, que dejaba su entrada de historial huérfana. El
@@ -951,3 +995,12 @@ construir lo que viene:
 - **2026-08-27** — El campo del traductor se vacía al mandar (D-28), para poder
   encadenar frases sin borrar la anterior. Si la traducción falla, lo escrito
   vuelve al campo. 263 comprobaciones.
+- **2026-08-27** — **El catálogo de la casa** (D-29) y **la clave por perfil**
+  (D-30). Todo lo que sube cualquiera va a un catálogo común que se busca entero;
+  la estrella decide qué hay en tu estantería. Reglas nuevas para Firestore y
+  Storage, con la lista de miembros en `casa/miembros`, que solo se toca desde la
+  consola. La clave de Gemini pasa a ser una por cuenta en este aparato, porque
+  las mil traducciones del día van con la clave y no con la app. Y un tutorial
+  entero para sacarla, con enlaces, para pasárselo a quien vaya a usar Vellum.
+  19 comprobaciones nuevas del catálogo, sin red y sin cuenta. 275
+  comprobaciones.

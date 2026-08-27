@@ -20,6 +20,7 @@ node pruebas/capturas.mjs     # capturas de cada estado
 node pruebas/fusion.mjs       # 14 comprobaciones · la fusión entre aparatos
 node pruebas/apagon.mjs       # 14 comprobaciones · el corte de facturación
 node pruebas/portadas.mjs     # 20 comprobaciones · el encargo de las portadas
+node pruebas/estante.mjs      # 19 comprobaciones · el catálogo de la casa
 
 # Contra la app publicada
 node pruebas/en-vivo.mjs      # 15 comprobaciones sobre la app en su dirección real
@@ -234,6 +235,25 @@ nada y hay que pulsarlo tres veces sin saber por qué.
 | Y sin saltarse ninguno por el camino | D-27 |
 | Sale del modo selección sin salir del libro | D-27 |
 | **Cerrar a mano no deja entradas de más en el historial** | D-27 |
+
+## Qué comprueba `estante.mjs`
+
+El catálogo de la casa, sin red y sin cuenta. Es la parte que puede hacer daño
+en silencio: borrar el libro de otra persona, resucitar uno que retiró, o volver
+a subir el mismo PDF en cada sincronización — nada de eso da un error en
+pantalla.
+
+| Comprueba | Requisito |
+|---|---|
+| Todo lo que traes va al catálogo, sin marcarlo | D-29 |
+| **Lo que no cambió no se vuelve a subir** | D-29 |
+| Borrarlo lo saca del catálogo, para todos | D-29 |
+| **Nunca se retira ni se pisa lo de otra persona** | D-29 |
+| Lo que retira, se va de aquí y no se le devuelve | D-29 |
+| Quitarse la estrella no toca el catálogo de nadie | D-29 |
+
+Lo que **no** cubre: que dos cuentas de verdad se vean entre ellas. Eso necesita
+dos cuentas de Google y una ventana que no se puede automatizar.
 
 ## Qué comprueba `en-vivo.mjs`
 

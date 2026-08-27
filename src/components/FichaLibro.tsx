@@ -13,6 +13,8 @@ import { Portada } from './Portada'
 interface Props {
   libro: Libro
   etiquetasConocidas: string[]
+  /** Quién eres ahora mismo. Sin sesión no hay estante que compartir. */
+  miUid: string | null
   onGuardar: (libro: Libro) => void
   onBorrar: (libro: Libro) => void
   onCerrar: () => void
@@ -29,7 +31,7 @@ function tamano(bytes: number): string {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`
 }
 
-export function FichaLibro({ libro, etiquetasConocidas, onGuardar, onBorrar, onCerrar }: Props) {
+export function FichaLibro({ libro, etiquetasConocidas, miUid, onGuardar, onBorrar, onCerrar }: Props) {
   const [titulo, setTitulo] = useState(libro.titulo)
   const [tipo, setTipo] = useState(libro.tipo)
   const [etiquetas, setEtiquetas] = useState<string[]>(libro.etiquetas)
@@ -75,6 +77,8 @@ export function FichaLibro({ libro, etiquetasConocidas, onGuardar, onBorrar, onC
     })
   }
 
+  // Un libro de otra persona se lee, no se edita: lo que ves de él es suyo.
+  const ajeno = !!libro.de && libro.de !== miUid
   const sugerencias = etiquetasConocidas.filter(e => !etiquetas.includes(e)).slice(0, 8)
   // Lo que estás editando ahora mismo, sin haber guardado todavía. Sirve para
   // la portada de arriba y, sobre todo, para el encargo: si acabas de marcar
@@ -114,6 +118,7 @@ export function FichaLibro({ libro, etiquetasConocidas, onGuardar, onBorrar, onC
 
         <div className="ficha-cabeza">
           <Portada libro={vistaPrevia} grande />
+          {ajeno ? null : (
           <div className="ficha-acciones">
             <button className="btn fantasma peq" onClick={() => imagen.current?.click()}>
               {portada ? 'Cambiar portada' : 'Poner portada'}
@@ -145,6 +150,7 @@ export function FichaLibro({ libro, etiquetasConocidas, onGuardar, onBorrar, onC
               <p className="ficha-pista">Sin imagen, la portada se compone con el título.</p>
             )}
           </div>
+          )}
         </div>
 
         {encargo && (
@@ -190,6 +196,7 @@ export function FichaLibro({ libro, etiquetasConocidas, onGuardar, onBorrar, onC
           }}
         />
 
+        {!ajeno && (
         <label className="campo">
           <span className="campo-eti">Título</span>
           <input
@@ -200,7 +207,9 @@ export function FichaLibro({ libro, etiquetasConocidas, onGuardar, onBorrar, onC
             placeholder="Cómo se llama"
           />
         </label>
+        )}
 
+        {!ajeno && (<>
         <div className="campo">
           <span className="campo-eti">Qué es</span>
           <div className="segmento">
@@ -254,21 +263,45 @@ export function FichaLibro({ libro, etiquetasConocidas, onGuardar, onBorrar, onC
             </div>
           )}
         </div>
+        </>)}
+
+        {ajeno ? (
+          <div className="prestado">
+            <p className="prestado-tit">Lo comparte {libro.deNombre || 'la otra persona'}</p>
+            <p className="prestado-txt">
+              Puedes leerlo y traducirlo, y <strong>por dónde vas es tuyo</strong>.
+              El título, las etiquetas y la portada son suyos y se actualizan
+              solos: por eso aquí no se editan. Si lo quita del catálogo,
+              desaparece también de aquí.
+            </p>
+          </div>
+        ) : miUid ? (
+          <p className="ficha-pista compartir">
+            Con la sesión abierta, lo que traes va al catálogo de la casa: la otra
+            persona puede encontrarlo y leerlo.
+          </p>
+        ) : null}
 
         <div className="ficha-pie">
           {confirmando ? (
             <>
-              <span className="ficha-pregunta">¿Seguro? Se borra el PDF de este aparato.</span>
+              <span className="ficha-pregunta">
+                {ajeno
+                  ? '¿Seguro? Se quita de tu estantería; quien lo subió lo conserva.'
+                  : '¿Seguro? Sale del catálogo de la casa, para todos.'}
+              </span>
               <button className="btn fantasma peq" onClick={() => setConfirmando(false)}>No</button>
               <button className="btn peligro peq" onClick={() => onBorrar(libro)}>Sí, borrar</button>
             </>
           ) : (
             <>
-              <button className="btn fantasma peq" onClick={() => setConfirmando(true)}>Quitar</button>
+              <button className="btn fantasma peq" onClick={() => setConfirmando(true)}>
+                {ajeno ? 'Quitar de aquí' : 'Quitar'}
+              </button>
               <span className="ficha-datos mono">
                 {libro.paginas} pág. · {tamano(libro.bytes)}
               </span>
-              <button className="btn" onClick={guardar}>Guardar</button>
+              {!ajeno && <button className="btn" onClick={guardar}>Guardar</button>}
             </>
           )}
         </div>

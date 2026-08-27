@@ -1,8 +1,15 @@
 rules_version = '2';
 
-// Los PDF de cada persona, y solo los suyos.
+// Los PDF de cada persona, y solo los suyos. Más el estante de la casa.
 service firebase.storage {
   match /b/{bucket}/o {
+
+    // La lista de la casa vive en Firestore: aquí se consulta, no se duplica.
+    // Dos listas acaban diciendo cosas distintas.
+    function deLaCasa() {
+      return request.auth != null
+        && request.auth.uid in firestore.get(/databases/(default)/documents/casa/miembros).data.uids;
+    }
 
     match /gente/{uid}/{archivo=**} {
       allow read: if request.auth != null && request.auth.uid == uid;
@@ -11,6 +18,14 @@ service firebase.storage {
       allow write: if request.auth != null
                    && request.auth.uid == uid
                    && request.resource.size < 300 * 1024 * 1024;
+    }
+
+    // El estante: lo lee cualquiera de la casa y lo escribe cualquiera de la
+    // casa. Quién puso qué se controla en Firestore, que es donde está el dato;
+    // aquí solo hay bytes y no se puede saber de quién es un PDF.
+    match /casa/libros/{archivo} {
+      allow read: if deLaCasa();
+      allow write: if deLaCasa() && request.resource.size < 300 * 1024 * 1024;
     }
 
     match /{archivo=**} {

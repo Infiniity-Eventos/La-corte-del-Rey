@@ -59,6 +59,8 @@ export async function importarPdf(archivo: File): Promise<Resultado> {
       bytes: archivo.size,
       archivo: `${id}.pdf`,
       nombreOriginal: archivo.name,
+      // Lo que traes tú nace en tu estantería: si lo subiste, lo querías.
+      estrella: true,
       anadidoEn: ahora,
       pagina: 1,
       abiertoEn: ahora,

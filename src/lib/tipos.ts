@@ -36,6 +36,22 @@ export interface Libro {
   archivoEnNube?: boolean
   /** Marcado para no volver a bajar aquí lo que ya se borró. */
   borrado?: boolean
+
+  /**
+   * Si está en **tu** estantería.
+   *
+   * Todo lo que sube cualquiera va al catálogo de la casa, que es común y se
+   * busca entero. La estrella es lo que decide qué se queda en tu perfil: lo
+   * que marcas aparece en tu estantería y baja a tu aparato; lo demás existe,
+   * se busca y se puede abrir, pero no te llena la estantería.
+   *
+   * Lo que traes tú nace marcado: si lo subiste, es porque lo querías.
+   */
+  estrella?: boolean
+  /** Si llegó del estante: de quién es. Vacío en los tuyos. */
+  de?: string
+  /** Y cómo se llama quien lo puso, que es lo que se enseña. */
+  deNombre?: string
 }
 
 export type Tema = 'papel' | 'sepia' | 'oscuro'

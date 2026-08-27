@@ -4,7 +4,11 @@ import type { Quien } from '../lib/nube'
 import { Portada } from './Portada'
 
 interface Props {
+  /** Tu estantería: lo marcado con estrella. */
   libros: Libro[]
+  /** Todo lo que hay en la casa, tuyo o de la otra persona. */
+  catalogo: Libro[]
+  onEstrella: (libro: Libro, puesta: boolean) => void
   importando: boolean
   onImportar: (archivos: FileList) => void
   onAbrir: (libro: Libro) => void
@@ -42,29 +46,40 @@ function compilado(): string {
 }
 
 export function Biblioteca({
-  libros, importando, onImportar, onAbrir, onEditar, vocabulario, onAjustes, onVocabulario,
-  onComprobarVersion, comprobando, quien, estadoNube, nubeOcupada, onSincronizar,
+  libros, catalogo, onEstrella, importando, onImportar, onAbrir, onEditar, vocabulario,
+  onAjustes, onVocabulario, onComprobarVersion, comprobando, quien, estadoNube,
+  nubeOcupada, onSincronizar,
 }: Props) {
   const input = useRef<HTMLInputElement>(null)
   const [busqueda, setBusqueda] = useState('')
   const [filtro, setFiltro] = useState<string | null>(null)
+  /**
+   * Dos vistas del mismo sitio: tu estantería y el catálogo de la casa.
+   *
+   * La pestaña solo aparece cuando hay algo que no está en tu estantería. Con
+   * un aparato y una persona no hay dos vistas que elegir, y una pestaña que
+   * siempre lleva al mismo sitio es ruido.
+   */
+  const [vista, setVista] = useState<'mia' | 'casa'>('mia')
+  const hayCasa = catalogo.length > libros.length
+  const fuente = vista === 'casa' && hayCasa ? catalogo : libros
 
   const etiquetas = useMemo(() => {
     const cuenta = new Map<string, number>()
-    for (const l of libros) for (const e of l.etiquetas) cuenta.set(e, (cuenta.get(e) ?? 0) + 1)
+    for (const l of fuente) for (const e of l.etiquetas) cuenta.set(e, (cuenta.get(e) ?? 0) + 1)
     return [...cuenta.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([e]) => e)
-  }, [libros])
+  }, [fuente])
 
   const visibles = useMemo(() => {
     const q = plano(busqueda.trim())
-    return libros.filter(l => {
+    return fuente.filter(l => {
       if (filtro && !l.etiquetas.includes(filtro)) return false
       if (!q) return true
       // R27 / P41: por título. Las etiquetas entran también porque son las que
       // hacen el trabajo que haría el autor, que quitaste en P42.
       return plano(l.titulo).includes(q) || l.etiquetas.some(e => plano(e).includes(q))
     })
-  }, [libros, busqueda, filtro])
+  }, [fuente, busqueda, filtro])
 
   // R25 / P39: arriba lo que estoy leyendo; debajo, el resto. Solo cuando no
   // estás buscando: si buscas, quieres una lista, no un destacado.
@@ -110,7 +125,18 @@ export function Biblioteca({
         }}
       />
 
-      {libros.length === 0 ? (
+      {hayCasa && (
+        <div className="segmento vistas">
+          <button className="segmento-op" aria-pressed={vista === 'mia'} onClick={() => setVista('mia')}>
+            Mi estantería <span className="mono">{libros.length}</span>
+          </button>
+          <button className="segmento-op" aria-pressed={vista === 'casa'} onClick={() => setVista('casa')}>
+            Toda la casa <span className="mono">{catalogo.length}</span>
+          </button>
+        </div>
+      )}
+
+      {fuente.length === 0 && vista === 'mia' ? (
         <div className="vacio">
           <h2 className="display">La estantería está vacía</h2>
           <p>
@@ -179,12 +205,30 @@ export function Biblioteca({
                     <Portada libro={l} />
                   </button>
                   <button className="mas" onClick={() => onEditar(l)} aria-label={`Ficha de ${l.titulo}`}>⋯</button>
+                  {/* De quién es, cuando no es tuyo. Sin esto, un catálogo
+                      común se vuelve un cajón de cosas sin dueño. */}
+                  {l.de && <span className="sello-prestado" title={`Lo subió ${l.deNombre}`}>{(l.deNombre || '?')[0]}</span>}
+                  {/* La estrella solo hace falta cuando hay catálogo: sin otra
+                      persona, todo lo tuyo está en tu estantería y ya está. */}
+                  {hayCasa && (
+                    <button
+                      className="estrella"
+                      aria-pressed={l.estrella !== false}
+                      onClick={() => onEstrella(l, l.estrella === false)}
+                      aria-label={l.estrella !== false
+                        ? `Quitar ${l.titulo} de mi estantería`
+                        : `Poner ${l.titulo} en mi estantería`}
+                      title={l.estrella !== false ? 'En tu estantería' : 'Ponerlo en tu estantería'}
+                    >
+                      {l.estrella !== false ? '★' : '☆'}
+                    </button>
+                  )}
                   <span className="libro-sub mono">
                     {l.paginas} pág.{l.pagina > 1 ? ` · ${porcentaje(l)} %` : ''}
                   </span>
                 </div>
               ))}
-              {!filtrando && (
+              {!filtrando && vista === 'mia' && (
                 <div className="libro">
                   <button
                     className="libro-abrir"

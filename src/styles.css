@@ -123,6 +123,50 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .libro-abrir[disabled] { opacity: .45; cursor: default; }
 .libro-sub { font-size: .72rem; color: var(--tinta-3); padding-left: .1rem; }
 
+/* De quién es cada libro del estante. Una inicial basta: con dos personas,
+   más que eso sería ruido en una rejilla de miniaturas. */
+.sello-prestado, .sello-compartido {
+  position: absolute; top: .3rem; left: .3rem; z-index: 2;
+  width: 1.35rem; height: 1.35rem; border-radius: 50%;
+  display: grid; place-items: center; line-height: 1;
+  font-size: .68rem; font-weight: 700; text-transform: uppercase;
+  border: 1px solid var(--linea);
+}
+.sello-prestado { background: var(--ocre); color: var(--vitela-alta); border-color: var(--ocre); }
+
+/* La estrella: lo que decide qué está en TU estantería. Abajo a la izquierda,
+   lejos de los tres puntos, porque marcar y editar no se parecen en nada. */
+.estrella {
+  position: absolute; bottom: 1.35rem; left: .3rem; z-index: 2;
+  width: 1.7rem; height: 1.7rem; border-radius: 50%; line-height: 1; padding: 0;
+  display: grid; place-items: center; font-size: .95rem;
+  background: var(--vitela-alta); border: 1px solid var(--linea); color: var(--tinta-3);
+  transition: color var(--paso) var(--curva), border-color var(--paso) var(--curva);
+}
+.estrella[aria-pressed='true'] { color: var(--ocre); border-color: var(--ocre-suave); }
+.estrella:hover { border-color: var(--ocre); }
+
+/* Las dos vistas del mismo sitio. */
+.segmento.vistas { margin-bottom: var(--e3); }
+.segmento.vistas .mono { opacity: .55; margin-left: .3rem; font-size: .8em; }
+
+/* En la ficha: lo que comparte otra persona se lee, no se edita. */
+.prestado {
+  background: var(--vitela-alta); border: 1px solid var(--linea); border-radius: var(--r);
+  padding: var(--e2) var(--e3); margin-bottom: var(--e3);
+}
+.prestado-tit { margin: 0 0 .2rem; font-weight: 700; font-size: .88rem; color: var(--ocre); }
+.prestado-txt { margin: 0; font-size: .82rem; color: var(--tinta-2); }
+.ficha-pista.compartir { margin-bottom: var(--e3); }
+
+/* Los pasos para sacar la clave: un enlace que se ve como lo que es, y el
+   aviso que hace que este trámite pueda salir caro si se hace mal. */
+.enlace-paso { display: inline-block; margin-top: .4rem; text-decoration: none; }
+.paso-ojo {
+  display: block; margin-top: .4rem; padding: .5rem .65rem; border-radius: 6px;
+  background: #F5E1D6; border: 1px solid #DCB49A; color: #8C3F1D; font-size: .82rem;
+}
+
 /* El botón de ficha. Tocar el libro es leerlo —lo que haces el 90 % de las
    veces—; los tres puntos son para lo demás. */
 .mas {

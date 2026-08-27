@@ -90,7 +90,7 @@ export async function leerArchivo(nombre: string): Promise<Blob | null> {
   return (await tx<Blob | undefined>(ARCHIVOS, 'readonly', s => s.get(nombre))) ?? null
 }
 
-async function borrarArchivo(nombre: string): Promise<void> {
+export async function borrarArchivo(nombre: string): Promise<void> {
   const dir = await carpeta()
   if (dir) {
     try {
@@ -118,8 +118,19 @@ export async function pedirPermanencia(): Promise<boolean> {
 
 /* --------------------------------- Libros -------------------------------- */
 
-/** Los libros que se ven. Las lápidas de los borrados quedan fuera. */
+/**
+ * Tu estantería: lo que has marcado con estrella.
+ *
+ * Lo que traes tú nace marcado, así que en la práctica esto es «lo tuyo más lo
+ * que te has traído del catálogo». Lo demás no desaparece: está en el catálogo,
+ * se busca y se abre.
+ */
 export async function listarLibros(): Promise<Libro[]> {
+  return (await listarCatalogo()).filter(l => l.estrella !== false)
+}
+
+/** El catálogo de la casa: todo lo que hay, tuyo o de la otra persona. */
+export async function listarCatalogo(): Promise<Libro[]> {
   const libros = await listarLibrosCrudo()
   return libros.filter(l => !l.borrado).sort((a, b) => b.abiertoEn - a.abiertoEn)
 }
@@ -203,13 +214,31 @@ export async function hayArchivo(nombre: string): Promise<boolean> {
   return (await leerArchivo(nombre)) !== null
 }
 
-/** Va en su propio cajón, no en los ajustes: ver el comentario en tipos.ts. */
-export async function leerClave(): Promise<string> {
+/**
+ * La clave de Gemini, una por perfil y en su propio cajón.
+ *
+ * En su propio cajón porque no puede colarse en la sincronización: ver el
+ * comentario en tipos.ts. Y una por perfil porque la cuota gratuita —mil
+ * traducciones al día— **va con la clave, no con la app**: si dos personas
+ * comparten una, la primera se come la tarde de la otra. Cada quien la suya.
+ *
+ * Sin sesión hay un cajón aparte, para que la app siga entera sin cuenta (D-08).
+ */
+function cajonDeClave(uid: string | null): string {
+  return uid ? `claveGemini:${uid}` : 'claveGemini'
+}
+
+export async function leerClave(uid: string | null = null): Promise<string> {
+  const propia = await tx<string | undefined>(AJUSTES, 'readonly', s => s.get(cajonDeClave(uid)))
+  if (propia !== undefined) return propia
+  // La primera vez que entras con una cuenta, se hereda la que ya habías
+  // pegado sin sesión: nadie tiene por qué volver a buscarla en AI Studio.
+  if (!uid) return ''
   return (await tx<string | undefined>(AJUSTES, 'readonly', s => s.get('claveGemini'))) ?? ''
 }
 
-export async function guardarClave(clave: string): Promise<void> {
-  await tx(AJUSTES, 'readwrite', s => s.put(clave.trim(), 'claveGemini'))
+export async function guardarClave(clave: string, uid: string | null = null): Promise<void> {
+  await tx(AJUSTES, 'readwrite', s => s.put(clave.trim(), cajonDeClave(uid)))
 }
 
 /* ------------------------------ Vocabulario ------------------------------ */

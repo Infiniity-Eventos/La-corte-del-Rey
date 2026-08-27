@@ -148,6 +148,12 @@ await page.reload({ waitUntil: 'networkidle' })
 await page.waitForSelector(LIBROS)
 paso('la portada sobrevive a recargar', (await page.locator('.rejilla .portada-img').count()) === 1)
 
+/* --- El catálogo: sin otra persona no hay dos vistas --- */
+paso('sin catálogo ajeno no hay pestañas', (await page.locator('.segmento.vistas').count()) === 0,
+  'con una sola persona, elegir entre dos vistas iguales sería ruido')
+paso('ni estrellas que marcar', (await page.locator('.estrella').count()) === 0)
+paso('ni sellos de quién lo subió', (await page.locator('.sello-prestado').count()) === 0)
+
 /* --- Crear portada: el encargo (D-13 / hito 5) --- */
 await page.click('.rejilla .libro:has(.portada-tit:text-is("Notas sueltas")) .mas')
 await page.waitForSelector('.ficha')

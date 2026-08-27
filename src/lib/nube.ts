@@ -139,6 +139,19 @@ export function explicarSesion(f: FalloSesion): { titulo: string; detalle: strin
 const CAJONES = { libros: 'libros', vocabulario: 'vocabulario' } as const
 export type Cajon = keyof typeof CAJONES
 
+/**
+ * Firestore no admite `undefined`, y un Blob —la portada— no cabe en un
+ * documento: eso va a Storage o se queda en el aparato.
+ */
+function paraFirestore(c: object): Record<string, unknown> {
+  const limpio: Record<string, unknown> = {}
+  for (const [k, v] of Object.entries(c) as [string, unknown][]) {
+    if (v === undefined || v instanceof Blob) continue
+    limpio[k] = v
+  }
+  return limpio
+}
+
 export async function leerCajon<T>(uid: string, cajon: Cajon): Promise<T[]> {
   const [d, { collection, getDocs }] = await Promise.all([bd(), import('firebase/firestore')])
   const r = await getDocs(collection(d, 'gente', uid, CAJONES[cajon]))
@@ -157,15 +170,7 @@ export async function escribirCajon<T extends { id: string }>(
   for (let i = 0; i < cosas.length; i += 400) {
     const tanda = writeBatch(d)
     for (const c of cosas.slice(i, i + 400)) {
-      // Firestore no admite `undefined`, y un Blob no cabe en un documento.
-      const limpio: Record<string, unknown> = {}
-      for (const [k, v] of Object.entries(c) as [string, unknown][]) {
-        // Firestore no admite `undefined`, y un Blob —la portada— no cabe en
-        // un documento: eso va a Storage o se queda en el aparato.
-        if (v === undefined || v instanceof Blob) continue
-        limpio[k] = v
-      }
-      tanda.set(doc(d, 'gente', uid, CAJONES[cajon], c.id), limpio)
+      tanda.set(doc(d, 'gente', uid, CAJONES[cajon], c.id), paraFirestore(c))
     }
     await tanda.commit()
   }
@@ -180,6 +185,57 @@ export async function leerAjustesNube(uid: string): Promise<Record<string, unkno
 export async function escribirAjustesNube(uid: string, ajustes: object): Promise<void> {
   const [b, { doc, setDoc }] = await Promise.all([bd(), import('firebase/firestore')])
   await setDoc(doc(b, 'gente', uid, 'preferencias', 'ajustes'), { ...ajustes })
+}
+
+/* ------------------------------ El estante ------------------------------- */
+
+/**
+ * El estante de la casa: una colección aparte que leen y escriben los miembros.
+ *
+ * No cuelga de nadie a propósito. Colgarlo de quien comparte obligaría a la
+ * otra persona a leer dentro del espacio ajeno, y eso son reglas más flojas
+ * para todo lo demás. Aquí la puerta es una sola y está en un sitio.
+ *
+ * Quién es miembro se decide en `casa/miembros`, un documento que **solo se
+ * toca desde la consola de Firebase**: las reglas lo dejan leer y no escribir.
+ * Así nadie puede meterse solo en la casa desde la app.
+ */
+const ESTANTE = 'estanteria'
+
+export async function leerEstante<T>(): Promise<T[]> {
+  const [d, { collection, getDocs }] = await Promise.all([bd(), import('firebase/firestore')])
+  const r = await getDocs(collection(d, ESTANTE))
+  return r.docs.map(d => ({ ...(d.data() as T), id: d.id }))
+}
+
+export async function ponerEnEstante<T extends { id: string }>(cosas: T[]): Promise<void> {
+  if (cosas.length === 0) return
+  const [d, { doc, writeBatch }] = await Promise.all([bd(), import('firebase/firestore')])
+  const tanda = writeBatch(d)
+  for (const c of cosas) tanda.set(doc(d, ESTANTE, c.id), paraFirestore(c))
+  await tanda.commit()
+}
+
+export async function quitarDelEstante(ids: string[]): Promise<void> {
+  if (ids.length === 0) return
+  const [d, { doc, writeBatch }] = await Promise.all([bd(), import('firebase/firestore')])
+  const tanda = writeBatch(d)
+  for (const id of ids) tanda.delete(doc(d, ESTANTE, id))
+  await tanda.commit()
+}
+
+/** Si esta cuenta está en la lista de la casa. Sin ella, el estante no existe. */
+export async function soyDeLaCasa(uid: string): Promise<boolean> {
+  const [b, { doc, getDoc }] = await Promise.all([bd(), import('firebase/firestore')])
+  try {
+    const d = await getDoc(doc(b, 'casa', 'miembros'))
+    const uids = (d.data()?.uids ?? []) as string[]
+    return Array.isArray(uids) && uids.includes(uid)
+  } catch {
+    // Sin documento o sin permiso: no hay casa montada, y no pasa nada. Los
+    // libros propios siguen sincronizándose igual.
+    return false
+  }
 }
 
 /* -------------------------------- Archivos ------------------------------- */
@@ -201,6 +257,32 @@ export async function bajarPdf(uid: string, libroId: string): Promise<Blob | nul
     return await getBlob(ref(st, rutaPdf(uid, libroId)))
   } catch {
     return null
+  }
+}
+
+/** Los PDF del estante viven aparte, y los lee cualquiera de la casa. */
+const rutaEstante = (libroId: string) => `casa/libros/${libroId}.pdf`
+
+export async function subirPdfEstante(libroId: string, datos: Blob): Promise<void> {
+  const [st, { ref, uploadBytes }] = await Promise.all([archivos(), import('firebase/storage')])
+  await uploadBytes(ref(st, rutaEstante(libroId)), datos, { contentType: 'application/pdf' })
+}
+
+export async function bajarPdfEstante(libroId: string): Promise<Blob | null> {
+  const [st, { ref, getBlob }] = await Promise.all([archivos(), import('firebase/storage')])
+  try {
+    return await getBlob(ref(st, rutaEstante(libroId)))
+  } catch {
+    return null
+  }
+}
+
+export async function borrarPdfEstante(libroId: string): Promise<void> {
+  const [st, { ref, deleteObject }] = await Promise.all([archivos(), import('firebase/storage')])
+  try {
+    await deleteObject(ref(st, rutaEstante(libroId)))
+  } catch {
+    // Si no está, ya está fuera.
   }
 }
 

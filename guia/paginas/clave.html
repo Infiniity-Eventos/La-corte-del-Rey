@@ -1,0 +1,319 @@
+<title>Tu Clave de Gemini</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Karla:wght@400;500;700&display=swap">
+
+<style>
+  :root{
+    --pergamino:#EDE6D6; --vitela:#F6F1E5; --vitela-alta:#FCF9F1;
+    --tinta:#2E2822; --tinta-2:#6B5F4E; --tinta-3:#9A8E79;
+    --ocre:#8A5A2B; --linea:#DDD2BC; --linea-tenue:#E7DEC9;
+    --rojo:#8C3F1D; --rojo-fondo:#F5E1D6; --rojo-linea:#DCB49A;
+    --verde:#4F6B3A; --verde-fondo:#E7EDDE;
+    --r:8px;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  body{margin:0;background:var(--pergamino);color:var(--tinta);
+    font-family:'Karla',ui-sans-serif,system-ui,sans-serif;font-size:16px;line-height:1.55;
+    -webkit-font-smoothing:antialiased}
+  .env{max-width:42rem;margin:0 auto;padding:0 1.15rem 5rem}
+
+  .barra{position:sticky;top:0;z-index:20;background:rgba(237,230,214,.93);
+    backdrop-filter:blur(10px);border-bottom:1px solid var(--linea-tenue)}
+  .barra-in{max-width:42rem;margin:0 auto;padding:.65rem 1.15rem;display:flex;
+    justify-content:space-between;align-items:center;gap:1rem}
+  .barra-nom{font-family:ui-monospace,Menlo,monospace;font-size:.68rem;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--tinta-3)}
+  .barra-n{font-family:ui-monospace,Menlo,monospace;font-size:.76rem;color:var(--ocre)}
+  .via{height:2px;background:var(--linea-tenue)}
+  .via i{display:block;height:2px;width:0;background:var(--ocre);transition:width .3s ease}
+
+  header{padding:3rem 0 1.6rem}
+  .ceja{font-family:ui-monospace,Menlo,monospace;font-size:.68rem;letter-spacing:.17em;
+    text-transform:uppercase;color:var(--ocre);margin:0 0 1rem}
+  h1{font-family:'Fraunces',Georgia,serif;font-variation-settings:'SOFT' 30,'WONK' 1,'opsz' 100;
+    font-weight:600;font-size:clamp(2rem,7.5vw,2.9rem);line-height:1.03;letter-spacing:-.015em;
+    margin:0 0 .9rem;text-wrap:balance}
+  .entrada{color:var(--tinta-2);font-size:1rem;margin:0 0 1.2rem;max-width:33rem}
+
+  h2{font-family:'Fraunces',Georgia,serif;font-variation-settings:'SOFT' 20,'opsz' 40;
+    font-weight:600;font-size:1.32rem;margin:0;letter-spacing:-.01em}
+  .cabeza{display:flex;align-items:baseline;gap:.8rem;border-bottom:1px solid var(--linea);
+    padding-bottom:.6rem;margin:2.6rem 0 1.1rem}
+  .cabeza .cual{font-family:ui-monospace,Menlo,monospace;font-size:.68rem;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--ocre)}
+  .cabeza .tiempo{margin-left:auto;font-size:.8rem;color:var(--tinta-3);white-space:nowrap}
+
+  p{margin:0 0 .9rem}
+  .nota{color:var(--tinta-2);font-size:.93rem}
+  strong{color:var(--tinta)}
+  code{font-family:ui-monospace,'JetBrains Mono',Menlo,monospace;font-size:.86em;
+    background:var(--vitela-alta);border:1px solid var(--linea-tenue);
+    border-radius:4px;padding:.08em .35em;word-break:break-word}
+
+  /* ---- el aviso que justifica toda la página ---- */
+  .clave{background:var(--rojo-fondo);border:1px solid var(--rojo-linea);border-radius:var(--r);
+    padding:1.1rem 1.15rem;margin:0 0 1.5rem}
+  .clave h3{font-family:'Fraunces',Georgia,serif;font-size:1.08rem;font-weight:600;
+    margin:0 0 .55rem;color:var(--rojo)}
+  .clave p{font-size:.94rem;color:var(--tinta-2);margin:0 0 .6rem}
+  .clave p:last-child{margin:0}
+
+  .dos{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin:1rem 0 0}
+  @media (max-width:30rem){.dos{grid-template-columns:1fr}}
+  .caja{background:var(--vitela-alta);border:1px solid var(--linea);border-radius:6px;padding:.75rem .8rem}
+  .caja b{display:block;font-size:.88rem;margin-bottom:.2rem}
+  .caja span{font-size:.82rem;color:var(--tinta-2);display:block}
+  .caja .si{color:var(--verde);font-weight:700}
+  .caja .no{color:var(--rojo);font-weight:700}
+
+  /* ---- pasos ---- */
+  ol.pasos{list-style:none;margin:0;padding:0;counter-reset:n}
+  ol.pasos>li{counter-increment:n;position:relative;padding-left:2.6rem;margin-bottom:1.4rem}
+  ol.pasos>li::before{content:counter(n);position:absolute;left:0;top:-.1rem;
+    width:1.8rem;height:1.8rem;border-radius:50%;display:grid;place-items:center;
+    font-family:ui-monospace,Menlo,monospace;font-size:.78rem;
+    background:var(--vitela);border:1px solid var(--linea);color:var(--ocre)}
+  ol.pasos>li.ok::before{background:var(--ocre);border-color:var(--ocre);color:var(--vitela-alta);content:'✓'}
+  .paso-t{font-weight:700;font-size:1rem;margin:0 0 .3rem;display:block}
+  .paso-d{color:var(--tinta-2);font-size:.93rem;margin:0 0 .5rem}
+  .marca{display:inline-flex;align-items:center;gap:.45rem;font-size:.84rem;color:var(--tinta-3);cursor:pointer;
+    border:1px solid var(--linea);border-radius:999px;padding:.28rem .75rem;background:var(--vitela);
+    transition:border-color .14s ease,color .14s ease}
+  .marca:hover{border-color:var(--ocre);color:var(--ocre)}
+  .marca input{appearance:none;-webkit-appearance:none;width:.85rem;height:.85rem;flex:none;
+    border:1.5px solid currentColor;border-radius:3px;display:grid;place-content:center;cursor:pointer}
+  .marca input::after{content:'';width:.42rem;height:.42rem;background:var(--ocre);transform:scale(0);transition:transform .12s ease}
+  .marca input:checked{border-color:var(--ocre)}
+  .marca input:checked::after{transform:scale(1)}
+  li.ok .marca{border-color:var(--ocre);color:var(--ocre)}
+
+  .enlace{display:inline-block;font-family:ui-monospace,Menlo,monospace;font-size:.82rem;
+    color:var(--ocre);border-bottom:1px solid var(--linea);text-decoration:none;margin-bottom:.5rem;
+    word-break:break-all}
+  .enlace:hover{border-color:var(--ocre)}
+
+  .ojo{background:var(--vitela-alta);border-left:2px solid var(--ocre);padding:.55rem .75rem;
+    font-size:.88rem;color:var(--tinta-2);margin:.5rem 0 0;border-radius:0 4px 4px 0}
+  .ojo b{color:var(--tinta)}
+  .ojo.rojo{border-left-color:var(--rojo);background:var(--rojo-fondo)}
+
+  .bloque{background:var(--vitela);border:1px solid var(--linea);border-radius:var(--r);
+    overflow:hidden;margin:.6rem 0}
+  .bloque-top{display:flex;align-items:center;gap:.7rem;padding:.55rem .8rem;
+    border-bottom:1px solid var(--linea-tenue);background:var(--vitela-alta)}
+  .bloque-nom{font-size:.82rem;font-weight:700;flex:1;min-width:0}
+  pre{margin:0;padding:.8rem;font-family:ui-monospace,'JetBrains Mono',Menlo,monospace;
+    font-size:.76rem;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+  .copiar{flex:none;font:inherit;font-size:.78rem;font-weight:700;background:var(--tinta);
+    color:var(--pergamino);border:none;border-radius:5px;padding:.35rem .8rem;cursor:pointer;
+    transition:opacity .14s ease,background .14s ease}
+  .copiar:hover{opacity:.87}
+  .copiar.ok{background:var(--ocre)}
+
+  table{border-collapse:collapse;width:100%;font-size:.84rem;margin:.6rem 0}
+  th,td{text-align:left;padding:.4rem .55rem;border-bottom:1px solid var(--linea-tenue);vertical-align:top}
+  thead th{font-family:ui-monospace,Menlo,monospace;font-size:.64rem;letter-spacing:.09em;
+    text-transform:uppercase;color:var(--tinta-3);border-bottom:1px solid var(--linea)}
+  tbody th{font-weight:700;white-space:nowrap}
+  .scroll{overflow-x:auto}
+
+  footer{margin-top:3rem;padding-top:1.2rem;border-top:1px solid var(--linea);
+    font-size:.85rem;color:var(--tinta-3)}
+  .reset{background:none;border:none;color:var(--tinta-3);font-size:.8rem;text-decoration:underline;
+    cursor:pointer;padding:0;margin-top:.5rem}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<style>
+  .grande{font-size:1.05rem}
+  .porque{background:var(--vitela-alta);border:1px solid var(--linea);border-radius:var(--r);
+    padding:1rem 1.1rem;margin:1.2rem 0 0}
+  .porque h3{font-family:'Fraunces',Georgia,serif;font-size:1.05rem;font-weight:600;margin:0 0 .5rem}
+  .porque p{font-size:.93rem;color:var(--tinta-2);margin:0 0 .55rem}
+  .porque p:last-child{margin:0}
+  .cifras{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin:1.1rem 0 0}
+  @media (max-width:22rem){.cifras{grid-template-columns:1fr}}
+  .cifra{background:var(--vitela);border:1px solid var(--linea);border-radius:6px;padding:.7rem .75rem;text-align:center}
+  .cifra b{display:block;font-family:'Fraunces',Georgia,serif;font-size:clamp(1.15rem,5vw,1.5rem);line-height:1.1;color:var(--ocre)}
+  .cifra span{display:block;font-size:.72rem;color:var(--tinta-2);margin-top:.15rem}
+  .boton{display:inline-flex;align-items:center;gap:.45rem;background:var(--tinta);color:var(--pergamino);
+    text-decoration:none;border-radius:6px;padding:.55rem 1rem;font-weight:700;font-size:.9rem;margin:.2rem 0 .3rem}
+  .boton:hover{opacity:.88}
+  .tecla{display:inline-block;font-family:ui-monospace,Menlo,monospace;font-size:.82em;
+    background:var(--vitela-alta);border:1px solid var(--linea);border-bottom-width:2px;
+    border-radius:4px;padding:.05em .4em}
+  .sino{display:grid;grid-template-columns:auto 1fr;gap:.5rem .7rem;margin:.6rem 0 0;font-size:.9rem}
+  .sino i{font-style:normal;font-weight:700}
+  .sino .s{color:var(--verde)}
+  .sino .n{color:var(--rojo)}
+  dl.dudas{margin:.4rem 0 0}
+  dl.dudas dt{font-weight:700;font-size:.95rem;margin-top:.9rem}
+  dl.dudas dd{margin:.25rem 0 0;color:var(--tinta-2);font-size:.92rem}
+</style>
+
+<div class="barra">
+  <div class="barra-in">
+    <span class="barra-nom">La clave del traductor</span>
+    <span class="barra-n"><b id="hechos">0</b>/<span id="total">0</span></span>
+  </div>
+  <div class="via"><i id="via"></i></div>
+</div>
+
+<div class="env">
+  <header>
+    <p class="ceja">Infiniity Vellum · 5 minutos, una sola vez</p>
+    <h1>Tu clave de Gemini</h1>
+    <p class="entrada grande">Vellum traduce con Gemini, la IA de Google. Para usarlo necesitas una clave tuya. Es gratis, no pide tarjeta y se pega una sola vez.</p>
+
+    <div class="cifras">
+      <div class="cifra"><b>1.000</b><span>traducciones al día</span></div>
+      <div class="cifra"><b>0 €</b><span>sin tarjeta</span></div>
+      <div class="cifra"><b>5 min</b><span>una sola vez</span></div>
+    </div>
+
+    <div class="porque">
+      <h3>¿Por qué tengo que hacer esto yo?</h3>
+      <p>Porque esas mil traducciones diarias <strong>van con la clave, no con la app</strong>. Si dos personas comparten una, la primera se come el día de la otra sin enterarse.</p>
+      <p>Y porque Vellum no tiene servidor: la clave se queda <strong>en tu teléfono</strong> y habla directamente con Google. Nadie más la ve, ni siquiera quien te pasó la app.</p>
+    </div>
+  </header>
+
+  <div class="cabeza"><span class="cual">Los pasos</span><h2>Sacar la clave</h2><span class="tiempo">5 min</span></div>
+
+  <ol class="pasos" data-parte="c">
+    <li>
+      <span class="paso-t">Abre Google AI Studio</span>
+      <p class="paso-d">Inicia sesión con tu cuenta de Google, la de siempre. Si te pide aceptar las condiciones de uso, acéptalas.</p>
+      <a class="boton" href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Abrir AI Studio ↗</a>
+      <p class="paso-d"><span class="tecla">aistudio.google.com/apikey</span></p>
+    </li>
+
+    <li>
+      <span class="paso-t">Pulsa «Create API key»</span>
+      <p class="paso-d">Es un botón azul, normalmente arriba a la derecha. En español puede aparecer como <strong>Crear clave de API</strong>.</p>
+    </li>
+
+    <li>
+      <span class="paso-t">Elige «en un proyecto nuevo»</span>
+      <p class="paso-d">Te va a preguntar dónde crearla. Escoge <strong>«Create API key in a new project»</strong>.</p>
+      <div class="ojo rojo">
+        <b>Aquí es donde se decide si esto te sale gratis o no.</b>
+        El nivel gratuito de Gemini <strong>solo existe mientras ese proyecto no tenga la facturación activada</strong>. En un proyecto nuevo nunca la tiene. Si la creas en uno que ya usabas para otra cosa, y ese tiene tarjeta puesta, cada traducción pasa a facturarse y <strong>nada te avisa</strong>: la app funciona igual, solo llega el cobro.
+      </div>
+    </li>
+
+    <li>
+      <span class="paso-t">Copia el código largo</span>
+      <p class="paso-d">Sale una cadena de unos cuarenta caracteres. Cópiala entera.</p>
+      <div class="sino">
+        <i class="s">✓</i><span>Las claves nuevas empiezan por <span class="tecla">AQ.Ab</span></span>
+        <i class="s">✓</i><span>Las de antes empiezan por <span class="tecla">AIza</span> — también sirven, hasta septiembre de 2026</span>
+        <i class="n">✕</i><span>Si copias solo un trozo, la app dirá que la clave no vale</span>
+      </div>
+    </li>
+
+    <li>
+      <span class="paso-t">Pégala en Vellum</span>
+      <p class="paso-d">Abre la app, entra en <strong>Ajustes</strong> (arriba a la derecha en la estantería) y pégala en el campo <strong>Clave de Gemini</strong>. Pulsa <strong>Guardar</strong>.</p>
+      <a class="boton" href="https://infiniity-eventos.github.io/La-corte-del-Rey/" target="_blank" rel="noopener">Abrir Vellum ↗</a>
+    </li>
+
+    <li>
+      <span class="paso-t">Pulsa «Probar la clave»</span>
+      <p class="paso-d">La app hace una traducción de prueba de verdad. Si responde <strong>«✓ Funciona»</strong> y te dice con qué modelo está traduciendo, ya está: cierra los ajustes y a leer.</p>
+      <div class="ojo">Este botón existe para que no tengas que abrir un libro y quedarte con la duda. Si algo va mal, te dice exactamente qué.</div>
+    </li>
+  </ol>
+
+  <div class="cabeza"><span class="cual">Si algo falla</span><h2>Lo que puede salir mal</h2></div>
+  <dl class="dudas">
+    <dt>«La clave no vale»</dt>
+    <dd>Casi siempre es que se copió a medias. Vuelve a AI Studio, cópiala entera y pégala otra vez. Si insiste, comprueba que la creaste en <strong>AI Studio</strong> y no en otro sitio de Google Cloud.</dd>
+
+    <dt>«Se acabaron las traducciones de hoy»</dt>
+    <dd>Llegaste a las mil. La app te dice a qué hora vuelven — Google las repone a medianoche del Pacífico, que en España es sobre las 9 de la mañana. No hay nada que arreglar.</dd>
+
+    <dt>«El servidor está saturado»</dt>
+    <dd>Es de Google, no tuyo. Espera un momento y vuelve a darle a Traducir.</dd>
+
+    <dt>«Sin conexión»</dt>
+    <dd>Traducir necesita internet; leer no. Los libros se abren igual sin red.</dd>
+
+    <dt>¿Y si quiero cambiar de clave?</dt>
+    <dd>En los mismos ajustes: <strong>Borrar la clave</strong> y pegar la nueva. La vieja no se queda en ningún sitio.</dd>
+
+    <dt>¿Puede costarme dinero alguna vez?</dt>
+    <dd>Mientras el proyecto donde la creaste no tenga facturación activada, no. Google simplemente deja de responder cuando se acaba la cuota del día. Por eso el paso 3 importa tanto.</dd>
+  </dl>
+
+  <div class="cabeza"><span class="cual">Dónde vive</span><h2>Tu clave no sale de tu teléfono</h2></div>
+  <p>Se guarda en el aparato donde la pegas, en el almacén privado de la app. <strong>No viaja a la nube ni siquiera con la sesión abierta</strong>, y no se sincroniza entre tus aparatos: si usas Vellum también en el ordenador, tendrás que pegarla allí una vez más.</p>
+  <p class="nota">Es a propósito. Una clave que viaja es una clave que algún día se filtra por un descuido, y esto cuesta cinco minutos de repetir.</p>
+
+  <footer>
+    <p>Esta página se guarda sola: puedes cerrarla a medias y volver.</p>
+    <button class="reset" id="reset">Empezar de cero</button>
+  </footer>
+</div>
+<script>
+  var LLAVE = 'vellum-clave-v1'
+  var guardado = {}
+  try { guardado = JSON.parse(localStorage.getItem(LLAVE) || '{}') || {} } catch (e) { guardado = {} }
+
+  var pasos = []
+  document.querySelectorAll('ol.pasos').forEach(function (lista) {
+    var parte = lista.dataset.parte
+    lista.querySelectorAll(':scope > li').forEach(function (li, i) {
+      var id = parte + '-' + (i + 1)
+      var eti = document.createElement('label')
+      eti.className = 'marca'
+      var caja = document.createElement('input')
+      caja.type = 'checkbox'
+      caja.checked = !!guardado[id]
+      var txt = document.createElement('span')
+      txt.textContent = 'Hecho'
+      eti.appendChild(caja); eti.appendChild(txt)
+      li.appendChild(eti)
+      li.classList.toggle('ok', caja.checked)
+      caja.addEventListener('change', function () {
+        guardado[id] = caja.checked
+        li.classList.toggle('ok', caja.checked)
+        try { localStorage.setItem(LLAVE, JSON.stringify(guardado)) } catch (e) {}
+        pintar()
+      })
+      pasos.push(caja)
+    })
+  })
+
+  document.getElementById('total').textContent = pasos.length
+  function pintar () {
+    var n = pasos.filter(function (c) { return c.checked }).length
+    document.getElementById('hechos').textContent = n
+    document.getElementById('via').style.width = (n / pasos.length * 100) + '%'
+  }
+  pintar()
+
+  document.getElementById('reset').addEventListener('click', function () {
+    pasos.forEach(function (c) { c.checked = false; c.dispatchEvent(new Event('change')) })
+  })
+
+  document.querySelectorAll('.copiar').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var texto = document.getElementById(b.dataset.c).textContent
+      var listo = function () {
+        var antes = b.textContent
+        b.textContent = 'Copiado'; b.classList.add('ok')
+        setTimeout(function () { b.textContent = antes; b.classList.remove('ok') }, 1800)
+      }
+      function manual () {
+        var a = document.createElement('textarea')
+        a.value = texto; document.body.appendChild(a); a.select()
+        try { document.execCommand('copy'); listo() } catch (e) { b.textContent = 'Selecciónalo a mano' }
+        document.body.removeChild(a)
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(texto).then(listo, manual)
+      } else manual()
+    })
+  })
+</script>

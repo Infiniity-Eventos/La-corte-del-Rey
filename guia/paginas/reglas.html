@@ -157,7 +157,7 @@
   <header>
     <p class="ceja">Infiniity Vellum · 10 minutos, una sola vez</p>
     <h1>Encender la nube</h1>
-    <p class="entrada">Dos cosas que solo puedes hacer tú, porque son de tu cuenta y no del código. Sin ellas, «Entrar con Google» se abre y falla.</p>
+    <p class="entrada">Lo que solo puedes hacer tú, porque es de tu cuenta y no del código. Sin las dos primeras, «Entrar con Google» se abre y falla; la tercera es la que junta los libros de los dos en un catálogo común.</p>
 
     <div class="mitades">
       <div class="mitad">
@@ -275,6 +275,45 @@ service firebase.storage {
   <div class="senal mal"><i>✕</i><span><b>«Este dominio no está autorizado»</b> — falta la parte A, o el dominio se escribió con <code>https://</code> delante.</span></div>
   <div class="senal mal"><i>✕</i><span><b>Entras, pero dice que no pudo sincronizar</b> — faltan las reglas, o se publicaron en un proyecto distinto. Comprueba arriba en la consola que pone <code>infiniity-vellum</code>.</span></div>
   <div class="senal mal"><i>✕</i><span><b>La ventana se abre y se cierra sin más</b> — casi siempre es el bloqueador de ventanas emergentes del navegador. Permítelas para esta página y vuelve a intentarlo.</span></div>
+
+  <div class="cabeza"><span class="cual">Parte C</span><h2>El catálogo de la casa</h2><span class="tiempo">4 min</span></div>
+  <p class="nota"><strong>Todo PDF que suba cualquiera va a un catálogo común</strong>, y se busca entero desde los dos aparatos. Lo que decide qué hay en <em>tu</em> estantería es la <strong>estrella</strong>: marcas lo que quieres tener a mano y lo demás sigue ahí, buscable, sin llenarte la pantalla.</p>
+  <p class="nota">Quitar un libro del catálogo solo puede hacerlo quien lo subió, y entonces desaparece para los dos. Quitarle la estrella solo te afecta a ti.</p>
+  <div class="ojo rojo"><b>Todo lo que subas lo verá la otra persona.</b> No hay libros privados: el catálogo es común por diseño, que es justo lo que se pidió. Si algún día quieres uno solo para ti, no lo subas con la sesión abierta.</div>
+  <p class="nota">Para que el catálogo exista hay que decir <strong>quién vive en la casa</strong>, y eso se pone a mano. A propósito: si la app pudiera añadir miembros, cualquiera con una cuenta de Google se metería solo.</p>
+
+  <ol class="pasos" data-parte="c">
+    <li>
+      <span class="paso-t">Entrad los dos en Vellum, una vez</span>
+      <p class="paso-d">Cada persona tiene que pulsar <strong>Entrar con Google</strong> al menos una vez para que Firebase le dé un identificador. Sin eso no hay nada que apuntar.</p>
+    </li>
+    <li>
+      <span class="paso-t">Copia los dos identificadores</span>
+      <a class="enlace" href="https://console.firebase.google.com/project/infiniity-vellum/authentication/users" target="_blank" rel="noopener">console.firebase.google.com › Authentication › Users</a>
+      <p class="paso-d">Salen las dos cuentas con una columna <strong>Identificador de usuario</strong> (o <em>User UID</em>): una cadena larga de letras y números. Copia las dos.</p>
+    </li>
+    <li>
+      <span class="paso-t">Crea el documento de la casa</span>
+      <a class="enlace" href="https://console.firebase.google.com/project/infiniity-vellum/firestore/data" target="_blank" rel="noopener">console.firebase.google.com › Firestore Database › Datos</a>
+      <p class="paso-d">Pulsa <strong>Iniciar colección</strong>, y ponle de nombre exactamente:</p>
+      <div class="bloque">
+        <div class="bloque-top"><span class="bloque-nom">Nombre de la colección</span><button class="copiar" data-c="k1">Copiar</button></div>
+        <pre id="k1">casa</pre>
+      </div>
+      <p class="paso-d">Dentro, el <strong>ID del documento</strong> tiene que ser:</p>
+      <div class="bloque">
+        <div class="bloque-top"><span class="bloque-nom">ID del documento</span><button class="copiar" data-c="k2">Copiar</button></div>
+        <pre id="k2">miembros</pre>
+      </div>
+      <p class="paso-d">Y un solo campo: nombre <code>uids</code>, tipo <strong>array</strong>, con un elemento de tipo <em>string</em> por cada identificador que copiaste.</p>
+      <div class="ojo"><b>Los nombres tienen que ser exactos.</b> <code>casa</code>, <code>miembros</code> y <code>uids</code>, en minúsculas. Las reglas buscan justo eso y no hay margen.</div>
+    </li>
+    <li>
+      <span class="paso-t">Comprueba que funcionó</span>
+      <p class="paso-d">Pulsa <strong>Sincronizar ahora</strong> en los ajustes, en los dos aparatos.</p>
+      <div class="ojo">En cada uno aparecerán dos pestañas arriba: <strong>Mi estantería</strong> y <strong>Toda la casa</strong>. En «Toda la casa» salen los libros de los dos, cada uno con un círculo y la inicial de quien lo subió, y una estrella para traértelo a tu estantería. Si no aparecen las pestañas, casi siempre falta un uid en la lista o algún nombre no está en minúsculas.</div>
+    </li>
+  </ol>
 
   <div class="cabeza"><span class="cual">Alternativa</span><h2>Desde la PC, en un comando</h2></div>
   <p class="nota">Si prefieres no tocar la consola web y tienes el repositorio clonado en tu Fedora, la parte B se hace de una vez. La parte A no: los dominios autorizados solo se tocan a mano.</p>

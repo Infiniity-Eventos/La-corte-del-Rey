@@ -145,12 +145,38 @@ export function Ajustes({
 
         <details className="comoseSaca">
           <summary>Cómo se saca, paso a paso</summary>
+          <p className="tarjeta-nota">
+            Son cinco minutos y una sola vez. Es gratis, no pide tarjeta y da 1.000
+            traducciones al día. <strong>La clave es tuya:</strong> cada persona necesita la
+            suya, porque esas mil traducciones van con la clave, no con la app.
+          </p>
           <ol className="lista-pasos">
-            <li>Entra en <strong>aistudio.google.com</strong> con tu cuenta de Google.</li>
-            <li>Busca <strong>Get API key</strong> y pulsa <strong>Create API key</strong>.</li>
             <li>
-              Copia el código largo y pégalo aquí. Las claves nuevas empiezan por
-              <strong> AQ.Ab</strong>; las de antes empezaban por <strong>AIza</strong>. Las dos sirven.
+              Abre <strong>Google AI Studio</strong> e inicia sesión con tu cuenta de Google.
+              Si te pide aceptar las condiciones, acéptalas.
+              <a className="btn fantasma peq enlace-paso" href="https://aistudio.google.com/apikey"
+                 target="_blank" rel="noopener">Abrir AI Studio</a>
+            </li>
+            <li>
+              Pulsa <strong>Create API key</strong> (en español, <strong>Crear clave de API</strong>).
+            </li>
+            <li>
+              Te pregunta en qué proyecto crearla. Elige
+              <strong> «Create API key in a new project»</strong> — en un proyecto nuevo.
+              <span className="paso-ojo">
+                Aquí se decide todo. No la crees en un proyecto que ya tengas, y menos
+                en uno con facturación: el nivel gratuito de Gemini solo existe
+                mientras ese proyecto no tenga la facturación activada.
+              </span>
+            </li>
+            <li>
+              Copia el código largo que sale y pégalo aquí arriba. Las claves nuevas
+              empiezan por <strong>AQ.Ab</strong>; las de antes, por <strong>AIza</strong>.
+              Las dos sirven.
+            </li>
+            <li>
+              Pulsa <strong>Probar la clave</strong>. Si dice «Funciona», ya está: cierra
+              esto y a leer.
             </li>
           </ol>
         </details>

@@ -9,8 +9,11 @@
  */
 import type { Ajustes, Libro, Palabra } from './tipos'
 import { fusionar } from './fusion'
+import { repartir } from './estante'
+import type { Quien } from './nube'
 import {
   actualizarLibro,
+  borrarArchivo,
   guardarAjustes,
   guardarArchivoDeLibro,
   guardarLibroTalCual,
@@ -25,12 +28,19 @@ import {
 } from './almacen'
 import {
   bajarPdf,
+  bajarPdfEstante,
+  borrarPdfEstante,
   borrarPdfNube,
   escribirAjustesNube,
   escribirCajon,
   leerAjustesNube,
   leerCajon,
+  leerEstante,
+  ponerEnEstante,
+  quitarDelEstante,
+  soyDeLaCasa,
   subirPdf,
+  subirPdfEstante,
 } from './nube'
 
 /**
@@ -82,7 +92,7 @@ export async function sincronizarDatos(uid: string): Promise<Resumen> {
   await sincronizarAjustes(uid)
 
   const tras = await listarLibrosCrudo()
-  const pendientes = tras.filter(l => !l.borrado && !l.archivoEnNube).length
+  const pendientes = tras.filter(l => !l.borrado && !l.de && !l.archivoEnNube).length
 
   return {
     traidos: fl.paraAqui.length + fv.paraAqui.length,
@@ -107,6 +117,66 @@ async function sincronizarAjustes(uid: string): Promise<void> {
   }
 }
 
+/* ------------------------------ El estante ------------------------------- */
+
+/**
+ * Un ciclo del estante de la casa.
+ *
+ * Si no hay casa montada —nadie te ha puesto en `casa/miembros`— no hace nada
+ * y no falla: los libros propios se sincronizan igual. Compartir es un extra,
+ * no un requisito.
+ */
+export async function sincronizarEstante(quien: Quien): Promise<{ puestos: number; traidos: number }> {
+  if (!(await soyDeLaCasa(quien.uid))) return { puestos: 0, traidos: 0 }
+
+  const aqui = await listarLibrosCrudo()
+  const estante = await leerEstante<Libro>()
+  const r = repartir(aqui, estante, quien.uid)
+
+  for (const l of r.aSubir) {
+    // El PDF va antes que la ficha: si se pusiera la ficha primero y fallara la
+    // subida, la otra persona vería un libro que no se puede abrir.
+    const datos = await leerArchivo(l.archivo)
+    if (!datos) continue
+    await subirPdfEstante(l.id, datos)
+    // Lo del catálogo es la ficha del libro, no tu relación con él: la estrella,
+    // por dónde vas y si lo tienes bajado son tuyos y no pintan nada ahí.
+    const { estrella, pagina, abiertoEn, archivoEnNube, ...ficha } = l
+    void estrella; void pagina; void abiertoEn; void archivoEnNube
+    await ponerEnEstante([{ ...ficha, de: quien.uid, deNombre: quien.nombre }])
+  }
+
+  for (const id of r.aQuitar) {
+    await quitarDelEstante([id])
+    await borrarPdfEstante(id)
+  }
+
+  for (const l of r.aTraer) {
+    const mio = aqui.find(x => x.id === l.id)
+    await guardarLibroTalCual({
+      ...l,
+      portada: mio?.portada,
+      // Lo de otra persona no se sube al espacio propio: está en el estante.
+      archivoEnNube: false,
+      // Por dónde vas en un libro de la casa es tuyo, no suyo.
+      pagina: mio?.pagina ?? l.pagina,
+      abiertoEn: mio?.abiertoEn ?? l.abiertoEn,
+      // La estrella no viene en la ficha del catálogo: lo que sube la otra
+      // persona entra al catálogo, no a tu estantería. Si ya lo marcaste, se
+      // respeta.
+      estrella: mio?.estrella ?? false,
+    })
+  }
+
+  for (const id of r.aOlvidar) {
+    const l = aqui.find(x => x.id === id)
+    if (l) await borrarArchivo(l.archivo)
+    await olvidarLibro(id)
+  }
+
+  return { puestos: r.aSubir.length, traidos: r.aTraer.length }
+}
+
 /* -------------------------------- Archivos ------------------------------- */
 
 export interface Aviso {
@@ -127,7 +197,9 @@ export async function subirArchivosPendientes(
 ): Promise<number> {
   if (porDatos() && !permitirDatos) return 0
 
-  const libros = (await listarLibrosCrudo()).filter(l => !l.borrado && !l.archivoEnNube)
+  // Lo de otra persona no se sube a tu espacio: ya está en el catálogo, y
+  // duplicarlo gastaría el doble de sitio para nada.
+  const libros = (await listarLibrosCrudo()).filter(l => !l.borrado && !l.de && !l.archivoEnNube)
   let subidos = 0
   for (const l of libros) {
     const datos = await leerArchivo(l.archivo)
@@ -173,10 +245,12 @@ export async function asegurarArchivo(
   permitirDatos: boolean,
 ): Promise<Traida> {
   if (await hayArchivo(libro.archivo)) return { estado: 'ya-estaba' }
-  if (!libro.archivoEnNube) return { estado: 'no-esta' }
+  // Un libro del estante siempre tiene su PDF arriba: es la condición para
+  // haberlo puesto.
+  if (!libro.de && !libro.archivoEnNube) return { estado: 'no-esta' }
   if (porDatos() && !permitirDatos) return { estado: 'hace-falta-permiso' }
 
-  const datos = await bajarPdf(uid, libro.id)
+  const datos = libro.de ? await bajarPdfEstante(libro.id) : await bajarPdf(uid, libro.id)
   if (!datos) return { estado: 'no-esta' }
   await guardarArchivoDeLibro(libro.archivo, datos)
   return { estado: 'traido' }
