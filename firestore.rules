@@ -1,0 +1,20 @@
+rules_version = '2';
+
+// Cada persona ve lo suyo y nada más.
+//
+// Esta es la única barrera real: la configuración de Firebase es pública, así
+// que sin estas reglas cualquiera podría leer y escribir en la base de datos.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Todo lo de una persona cuelga de su identificador de sesión.
+    match /gente/{uid}/{documento=**} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // Lo que no encaje arriba, se deniega. Sin excepciones y sin silencios.
+    match /{documento=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -2,7 +2,13 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// Vellum se publica en dos sitios: en GitHub Pages vive en una subcarpeta con
+// el nombre del repositorio, y en Firebase Hosting vivirá en la raíz. La ruta
+// base se pasa desde fuera para que el mismo código sirva para los dos.
+const base = process.env.VITE_BASE ?? '/'
+
 export default defineConfig({
+  base,
   plugins: [
     react(),
     VitePWA({
@@ -13,8 +19,8 @@ export default defineConfig({
         short_name: 'Vellum',
         description: 'Lector de PDF con traductor',
         lang: 'es',
-        start_url: '/',
-        scope: '/',
+        start_url: base,
+        scope: base,
         display: 'standalone',
         orientation: 'any',
         background_color: '#EDE6D6',

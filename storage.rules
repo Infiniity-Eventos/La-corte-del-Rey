@@ -1,0 +1,20 @@
+rules_version = '2';
+
+// Los PDF de cada persona, y solo los suyos.
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    match /gente/{uid}/{archivo=**} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      // Un tope por archivo: sin él, un fallo subiendo en bucle sale caro, y
+      // Blaze no corta solo (D-12).
+      allow write: if request.auth != null
+                   && request.auth.uid == uid
+                   && request.resource.size < 300 * 1024 * 1024;
+    }
+
+    match /{archivo=**} {
+      allow read, write: if false;
+    }
+  }
+}

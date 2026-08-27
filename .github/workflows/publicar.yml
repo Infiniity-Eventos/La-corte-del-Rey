@@ -1,0 +1,58 @@
+name: Publicar Vellum
+
+# Cada vez que cambia el código, la app se reconstruye y se publica sola.
+# No hay nada que hacer a mano: es lo que pediste en P2.
+on:
+  push:
+    branches: [main, claude/book-reader-app-planning-w4ukog]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Si llegan dos cambios seguidos, se publica el último y se descarta el anterior.
+concurrency:
+  group: paginas
+  cancel-in-progress: true
+
+jobs:
+  construir:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar
+        run: npm ci
+        env:
+          # Playwright solo se usa para las pruebas locales. Sin esto, cada
+          # publicación se descargaría un Chromium entero para nada.
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+
+      - name: Construir
+        run: npm run build
+        env:
+          # En GitHub Pages la app vive en una subcarpeta con el nombre del
+          # repositorio, no en la raíz del dominio.
+          VITE_BASE: /La-corte-del-Rey/
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  publicar:
+    needs: construir
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.desplegar.outputs.page_url }}
+    steps:
+      - id: desplegar
+        uses: actions/deploy-pages@v4
