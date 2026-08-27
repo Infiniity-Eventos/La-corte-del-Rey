@@ -648,6 +648,7 @@ Las respuestas están en `guia/respuestas/`. El prompt del icono, en `guia/promp
 | La clave de Gemini | Tutorial para sacar la clave, con enlaces. El que se le pasa a quien va a usar la app | `guia/paginas/clave.html` |
 | Apagón | Paso a paso del corte de facturación en 1 dólar, con las órdenes listas para copiar | `guia/paginas/apagon.html` |
 | Encender la nube | Autorizar el dominio y publicar las reglas de Firestore y Storage | `guia/paginas/reglas.html` |
+| Lo que falta | Los tres trámites que quedan en Google, en orden, y lo que solo se comprueba usando la app | `guia/paginas/falta.html` |
 
 ## 10. Hallazgos al construir
 

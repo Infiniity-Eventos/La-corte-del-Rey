@@ -1,0 +1,545 @@
+<title>Lo que Falta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Karla:wght@400;500;700&display=swap">
+
+<style>
+  :root{
+    --pergamino:#EDE6D6; --vitela:#F6F1E5; --vitela-alta:#FCF9F1;
+    --tinta:#2E2822; --tinta-2:#6B5F4E; --tinta-3:#9A8E79;
+    --ocre:#8A5A2B; --linea:#DDD2BC; --linea-tenue:#E7DEC9;
+    --rojo:#8C3F1D; --rojo-fondo:#F5E1D6; --rojo-linea:#DCB49A;
+    --verde:#4F6B3A; --verde-fondo:#E7EDDE;
+    --r:8px;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  body{margin:0;background:var(--pergamino);color:var(--tinta);
+    font-family:'Karla',ui-sans-serif,system-ui,sans-serif;font-size:16px;line-height:1.55;
+    -webkit-font-smoothing:antialiased}
+  .env{max-width:42rem;margin:0 auto;padding:0 1.15rem 5rem}
+
+  .barra{position:sticky;top:0;z-index:20;background:rgba(237,230,214,.93);
+    backdrop-filter:blur(10px);border-bottom:1px solid var(--linea-tenue)}
+  .barra-in{max-width:42rem;margin:0 auto;padding:.65rem 1.15rem;display:flex;
+    justify-content:space-between;align-items:center;gap:1rem}
+  .barra-nom{font-family:ui-monospace,Menlo,monospace;font-size:.68rem;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--tinta-3)}
+  .barra-n{font-family:ui-monospace,Menlo,monospace;font-size:.76rem;color:var(--ocre)}
+  .via{height:2px;background:var(--linea-tenue)}
+  .via i{display:block;height:2px;width:0;background:var(--ocre);transition:width .3s ease}
+
+  header{padding:3rem 0 1.6rem}
+  .ceja{font-family:ui-monospace,Menlo,monospace;font-size:.68rem;letter-spacing:.17em;
+    text-transform:uppercase;color:var(--ocre);margin:0 0 1rem}
+  h1{font-family:'Fraunces',Georgia,serif;font-variation-settings:'SOFT' 30,'WONK' 1,'opsz' 100;
+    font-weight:600;font-size:clamp(2rem,7.5vw,2.9rem);line-height:1.03;letter-spacing:-.015em;
+    margin:0 0 .9rem;text-wrap:balance}
+  .entrada{color:var(--tinta-2);font-size:1rem;margin:0 0 1.2rem;max-width:33rem}
+
+  h2{font-family:'Fraunces',Georgia,serif;font-variation-settings:'SOFT' 20,'opsz' 40;
+    font-weight:600;font-size:1.32rem;margin:0;letter-spacing:-.01em}
+  .cabeza{display:flex;align-items:baseline;gap:.8rem;border-bottom:1px solid var(--linea);
+    padding-bottom:.6rem;margin:2.6rem 0 1.1rem}
+  .cabeza .cual{font-family:ui-monospace,Menlo,monospace;font-size:.68rem;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--ocre)}
+  .cabeza .tiempo{margin-left:auto;font-size:.8rem;color:var(--tinta-3);white-space:nowrap}
+
+  p{margin:0 0 .9rem}
+  .nota{color:var(--tinta-2);font-size:.93rem}
+  strong{color:var(--tinta)}
+  code{font-family:ui-monospace,'JetBrains Mono',Menlo,monospace;font-size:.86em;
+    background:var(--vitela-alta);border:1px solid var(--linea-tenue);
+    border-radius:4px;padding:.08em .35em;word-break:break-word}
+
+  /* ---- el aviso que justifica toda la página ---- */
+  .clave{background:var(--rojo-fondo);border:1px solid var(--rojo-linea);border-radius:var(--r);
+    padding:1.1rem 1.15rem;margin:0 0 1.5rem}
+  .clave h3{font-family:'Fraunces',Georgia,serif;font-size:1.08rem;font-weight:600;
+    margin:0 0 .55rem;color:var(--rojo)}
+  .clave p{font-size:.94rem;color:var(--tinta-2);margin:0 0 .6rem}
+  .clave p:last-child{margin:0}
+
+  .dos{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin:1rem 0 0}
+  @media (max-width:30rem){.dos{grid-template-columns:1fr}}
+  .caja{background:var(--vitela-alta);border:1px solid var(--linea);border-radius:6px;padding:.75rem .8rem}
+  .caja b{display:block;font-size:.88rem;margin-bottom:.2rem}
+  .caja span{font-size:.82rem;color:var(--tinta-2);display:block}
+  .caja .si{color:var(--verde);font-weight:700}
+  .caja .no{color:var(--rojo);font-weight:700}
+
+  /* ---- pasos ---- */
+  ol.pasos{list-style:none;margin:0;padding:0;counter-reset:n}
+  ol.pasos>li{counter-increment:n;position:relative;padding-left:2.6rem;margin-bottom:1.4rem}
+  ol.pasos>li::before{content:counter(n);position:absolute;left:0;top:-.1rem;
+    width:1.8rem;height:1.8rem;border-radius:50%;display:grid;place-items:center;
+    font-family:ui-monospace,Menlo,monospace;font-size:.78rem;
+    background:var(--vitela);border:1px solid var(--linea);color:var(--ocre)}
+  ol.pasos>li.ok::before{background:var(--ocre);border-color:var(--ocre);color:var(--vitela-alta);content:'✓'}
+  .paso-t{font-weight:700;font-size:1rem;margin:0 0 .3rem;display:block}
+  .paso-d{color:var(--tinta-2);font-size:.93rem;margin:0 0 .5rem}
+  .marca{display:inline-flex;align-items:center;gap:.45rem;font-size:.84rem;color:var(--tinta-3);cursor:pointer;
+    border:1px solid var(--linea);border-radius:999px;padding:.28rem .75rem;background:var(--vitela);
+    transition:border-color .14s ease,color .14s ease}
+  .marca:hover{border-color:var(--ocre);color:var(--ocre)}
+  .marca input{appearance:none;-webkit-appearance:none;width:.85rem;height:.85rem;flex:none;
+    border:1.5px solid currentColor;border-radius:3px;display:grid;place-content:center;cursor:pointer}
+  .marca input::after{content:'';width:.42rem;height:.42rem;background:var(--ocre);transform:scale(0);transition:transform .12s ease}
+  .marca input:checked{border-color:var(--ocre)}
+  .marca input:checked::after{transform:scale(1)}
+  li.ok .marca{border-color:var(--ocre);color:var(--ocre)}
+
+  .enlace{display:inline-block;font-family:ui-monospace,Menlo,monospace;font-size:.82rem;
+    color:var(--ocre);border-bottom:1px solid var(--linea);text-decoration:none;margin-bottom:.5rem;
+    word-break:break-all}
+  .enlace:hover{border-color:var(--ocre)}
+
+  .ojo{background:var(--vitela-alta);border-left:2px solid var(--ocre);padding:.55rem .75rem;
+    font-size:.88rem;color:var(--tinta-2);margin:.5rem 0 0;border-radius:0 4px 4px 0}
+  .ojo b{color:var(--tinta)}
+  .ojo.rojo{border-left-color:var(--rojo);background:var(--rojo-fondo)}
+
+  .bloque{background:var(--vitela);border:1px solid var(--linea);border-radius:var(--r);
+    overflow:hidden;margin:.6rem 0}
+  .bloque-top{display:flex;align-items:center;gap:.7rem;padding:.55rem .8rem;
+    border-bottom:1px solid var(--linea-tenue);background:var(--vitela-alta)}
+  .bloque-nom{font-size:.82rem;font-weight:700;flex:1;min-width:0}
+  pre{margin:0;padding:.8rem;font-family:ui-monospace,'JetBrains Mono',Menlo,monospace;
+    font-size:.76rem;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+  .copiar{flex:none;font:inherit;font-size:.78rem;font-weight:700;background:var(--tinta);
+    color:var(--pergamino);border:none;border-radius:5px;padding:.35rem .8rem;cursor:pointer;
+    transition:opacity .14s ease,background .14s ease}
+  .copiar:hover{opacity:.87}
+  .copiar.ok{background:var(--ocre)}
+
+  table{border-collapse:collapse;width:100%;font-size:.84rem;margin:.6rem 0}
+  th,td{text-align:left;padding:.4rem .55rem;border-bottom:1px solid var(--linea-tenue);vertical-align:top}
+  thead th{font-family:ui-monospace,Menlo,monospace;font-size:.64rem;letter-spacing:.09em;
+    text-transform:uppercase;color:var(--tinta-3);border-bottom:1px solid var(--linea)}
+  tbody th{font-weight:700;white-space:nowrap}
+  .scroll{overflow-x:auto}
+
+  footer{margin-top:3rem;padding-top:1.2rem;border-top:1px solid var(--linea);
+    font-size:.85rem;color:var(--tinta-3)}
+  .reset{background:none;border:none;color:var(--tinta-3);font-size:.8rem;text-decoration:underline;
+    cursor:pointer;padding:0;margin-top:.5rem}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<style>
+  /* --- el mapa: qué falta y qué desbloquea cada cosa --- */
+  .mapa{display:grid;gap:.55rem;margin:1.3rem 0 0}
+  .tramo{display:grid;grid-template-columns:2.2rem 1fr auto;gap:.8rem;align-items:start;
+    background:var(--vitela);border:1px solid var(--linea);border-radius:var(--r);padding:.8rem .9rem}
+  .tramo .n{font-family:ui-monospace,Menlo,monospace;font-size:.72rem;color:var(--vitela-alta);
+    background:var(--ocre);border-radius:50%;width:1.6rem;height:1.6rem;display:grid;place-items:center}
+  .tramo.suelto .n{background:var(--vitela-alta);color:var(--tinta-3);border:1px solid var(--linea)}
+  .tramo b{display:block;font-family:'Fraunces',Georgia,serif;font-size:1.02rem;font-weight:600}
+  .tramo span{display:block;font-size:.86rem;color:var(--tinta-2);margin-top:.1rem}
+  .tramo em{font-style:normal;font-size:.74rem;color:var(--tinta-3);white-space:nowrap;padding-top:.3rem}
+
+  .tramo .sinesto{display:block;margin-top:.35rem;font-size:.8rem;color:var(--rojo)}
+
+  .lista-mano{list-style:none;margin:.6rem 0 0;padding:0;display:grid;gap:.5rem}
+  .lista-mano li{display:grid;grid-template-columns:auto 1fr;gap:.65rem;align-items:start;
+    font-size:.93rem;color:var(--tinta-2)}
+  .lista-mano b{color:var(--tinta)}
+  .lista-mano input{appearance:none;-webkit-appearance:none;width:1rem;height:1rem;margin-top:.22rem;
+    flex:none;border:1.5px solid var(--linea);border-radius:3px;display:grid;place-content:center;cursor:pointer}
+  .lista-mano input::after{content:'';width:.5rem;height:.5rem;background:var(--ocre);transform:scale(0);transition:transform .12s ease}
+  .lista-mano input:checked{border-color:var(--ocre)}
+  .lista-mano input:checked::after{transform:scale(1)}
+</style>
+
+<style>
+  .boton-enlace{display:inline-block;background:var(--tinta);color:var(--pergamino);text-decoration:none;
+    border-radius:6px;padding:.45rem .9rem;font-weight:700;font-size:.86rem;margin:.35rem 0 .2rem}
+  .boton-enlace:hover{opacity:.88}
+  dl.dudas{margin:.4rem 0 0}
+  dl.dudas dt{font-weight:700;font-size:.95rem;margin-top:.9rem}
+  dl.dudas dd{margin:.25rem 0 0;color:var(--tinta-2);font-size:.92rem}
+</style>
+
+<div class="barra">
+  <div class="barra-in">
+    <span class="barra-nom">Lo que falta</span>
+    <span class="barra-n"><b id="hechos">0</b>/<span id="total">0</span></span>
+  </div>
+  <div class="via"><i id="via"></i></div>
+</div>
+
+<div class="env">
+  <header>
+    <p class="ceja">Infiniity Vellum · 25 minutos en total</p>
+    <h1>Lo que falta</h1>
+    <p class="entrada">Todo lo que queda es de tu cuenta de Google, no del código. En este orden: sin la primera, la segunda no sirve.</p>
+
+    <div class="mapa">
+      <div class="tramo">
+        <span class="n">1</span>
+        <div>
+          <b>Las reglas</b>
+          <span>Publicar otra vez las de Firestore y Storage. Cambiaron las dos.</span>
+          <span class="sinesto">Sin esto: entras, pero nada se sincroniza.</span>
+        </div>
+        <em>5 min</em>
+      </div>
+      <div class="tramo">
+        <span class="n">2</span>
+        <div>
+          <b>La casa</b>
+          <span>Apuntar quiénes sois, para que los libros de los dos se junten.</span>
+          <span class="sinesto">Sin esto: cada quien ve solo lo suyo.</span>
+        </div>
+        <em>5 min</em>
+      </div>
+      <div class="tramo">
+        <span class="n">3</span>
+        <div>
+          <b>El apagón</b>
+          <span>El corte de facturación en un dólar.</span>
+          <span class="sinesto">Sin esto: Blaze no tiene tope.</span>
+        </div>
+        <em>15 min</em>
+      </div>
+      <div class="tramo suelto">
+        <span class="n">4</span>
+        <div>
+          <b>Probarlo</b>
+          <span>Lo que ninguna prueba automática puede cubrir. Se va haciendo, sin prisa.</span>
+        </div>
+        <em>usándolo</em>
+      </div>
+    </div>
+  </header>
+
+  <div class="cabeza"><span class="cual">Parte 1</span><h2>Las reglas</h2><span class="tiempo">5 min</span></div>
+  <p class="nota">Las reglas son la <strong>única</strong> barrera real de tus datos: la configuración de Firebase va dentro de la app y cualquiera puede leerla. Las que tienes publicadas son las de antes del catálogo, así que hay que reemplazarlas por estas.</p>
+
+  <ol class="pasos" data-parte="a">
+    <li>
+      <span class="paso-t">Firestore → Reglas → borrar → pegar → Publicar</span>
+      <a class="enlace" href="https://console.firebase.google.com/project/infiniity-vellum/firestore/rules" target="_blank" rel="noopener">console.firebase.google.com › Firestore Database › Reglas</a>
+      <p class="paso-d"><strong>Reemplazar, no añadir.</strong> Selecciona todo lo que haya en el editor, bórralo, y pega esto.</p>
+      <div class="bloque">
+        <div class="bloque-top"><span class="bloque-nom">firestore.rules</span><button class="copiar" data-c="r1">Copiar</button></div>
+        <pre id="r1">rules_version = &#x27;2&#x27;;
+
+// Cada persona ve lo suyo y nada más, salvo lo que ponga en el estante.
+//
+// Esta es la única barrera real: la configuración de Firebase es pública, así
+// que sin estas reglas cualquiera podría leer y escribir en la base de datos.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Quién vive en la casa. Se lee para saber si puedes tocar el estante, y
+    // **no se escribe desde la app**: los uid se ponen a mano en la consola de
+    // Firebase. Si se pudiera escribir desde aquí, cualquiera con una cuenta de
+    // Google se metería solo.
+    function deLaCasa() {
+      return request.auth != null
+        &amp;&amp; request.auth.uid in get(/databases/$(database)/documents/casa/miembros).data.uids;
+    }
+
+    match /casa/miembros {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    // Todo lo de una persona cuelga de su identificador de sesión.
+    match /gente/{uid}/{documento=**} {
+      allow read, write: if request.auth != null &amp;&amp; request.auth.uid == uid;
+    }
+
+    // El estante de la casa. Lo lee cualquiera de la casa; cada quien solo
+    // puede poner y quitar lo suyo, y lo suyo es lo que lleva su uid en `de`.
+    match /estanteria/{libro} {
+      allow read: if deLaCasa();
+      allow create: if deLaCasa() &amp;&amp; request.resource.data.de == request.auth.uid;
+      allow update: if deLaCasa()
+                    &amp;&amp; resource.data.de == request.auth.uid
+                    &amp;&amp; request.resource.data.de == request.auth.uid;
+      allow delete: if deLaCasa() &amp;&amp; resource.data.de == request.auth.uid;
+    }
+
+    // Lo que no encaje arriba, se deniega. Sin excepciones y sin silencios.
+    match /{documento=**} {
+      allow read, write: if false;
+    }
+  }
+}</pre>
+      </div>
+      <div class="ojo">El botón <strong>Publicar</strong> está arriba a la derecha. Si está apagado es que no detectó cambios: comprueba que de verdad reemplazaste el texto.</div>
+    </li>
+    <li>
+      <span class="paso-t">Storage → Reglas → lo mismo</span>
+      <a class="enlace" href="https://console.firebase.google.com/project/infiniity-vellum/storage/rules" target="_blank" rel="noopener">console.firebase.google.com › Storage › Reglas</a>
+      <div class="bloque">
+        <div class="bloque-top"><span class="bloque-nom">storage.rules</span><button class="copiar" data-c="r2">Copiar</button></div>
+        <pre id="r2">rules_version = &#x27;2&#x27;;
+
+// Los PDF de cada persona, y solo los suyos. Más el estante de la casa.
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // La lista de la casa vive en Firestore: aquí se consulta, no se duplica.
+    // Dos listas acaban diciendo cosas distintas.
+    function deLaCasa() {
+      return request.auth != null
+        &amp;&amp; request.auth.uid in firestore.get(/databases/(default)/documents/casa/miembros).data.uids;
+    }
+
+    match /gente/{uid}/{archivo=**} {
+      allow read: if request.auth != null &amp;&amp; request.auth.uid == uid;
+      // Un tope por archivo: sin él, un fallo subiendo en bucle sale caro, y
+      // Blaze no corta solo (D-12).
+      allow write: if request.auth != null
+                   &amp;&amp; request.auth.uid == uid
+                   &amp;&amp; request.resource.size &lt; 300 * 1024 * 1024;
+    }
+
+    // El estante: lo lee cualquiera de la casa y lo escribe cualquiera de la
+    // casa. Quién puso qué se controla en Firestore, que es donde está el dato;
+    // aquí solo hay bytes y no se puede saber de quién es un PDF.
+    match /casa/libros/{archivo} {
+      allow read: if deLaCasa();
+      allow write: if deLaCasa() &amp;&amp; request.resource.size &lt; 300 * 1024 * 1024;
+    }
+
+    match /{archivo=**} {
+      allow read, write: if false;
+    }
+  }
+}</pre>
+      </div>
+      <p class="paso-d">Borra, pega, <strong>Publicar</strong>. Espera a ver el aviso de publicado con la fecha de hoy.</p>
+    </li>
+  </ol>
+
+  <div class="cabeza"><span class="cual">Parte 2</span><h2>La casa</h2><span class="tiempo">5 min</span></div>
+  <p class="nota">Todo PDF que suba cualquiera va a un catálogo común, y la estrella decide qué hay en la estantería de cada quien. Para que exista hay que apuntar quiénes sois, y eso se pone a mano: si la app pudiera añadir miembros, cualquiera con una cuenta de Google se metería solo.</p>
+
+  <ol class="pasos" data-parte="b">
+    <li>
+      <span class="paso-t">Entrad los dos en Vellum, una vez</span>
+      <p class="paso-d">Cada persona pulsa <strong>Ajustes → Entrar con Google</strong> al menos una vez. Hasta que no entra, Firebase no le ha dado identificador y no hay nada que apuntar.</p>
+      <a class="boton-enlace" href="https://infiniity-eventos.github.io/La-corte-del-Rey/" target="_blank" rel="noopener">Abrir Vellum ↗</a>
+    </li>
+    <li>
+      <span class="paso-t">Copia los dos identificadores</span>
+      <a class="enlace" href="https://console.firebase.google.com/project/infiniity-vellum/authentication/users" target="_blank" rel="noopener">console.firebase.google.com › Authentication › Users</a>
+      <p class="paso-d">Salen las dos cuentas con una columna <strong>Identificador de usuario</strong> (<em>User UID</em>): una cadena larga de letras y números. Copia las dos, por ejemplo en una nota del teléfono.</p>
+    </li>
+    <li>
+      <span class="paso-t">Crea la colección «casa»</span>
+      <a class="enlace" href="https://console.firebase.google.com/project/infiniity-vellum/firestore/data" target="_blank" rel="noopener">console.firebase.google.com › Firestore Database › Datos</a>
+      <p class="paso-d">Pulsa <strong>Iniciar colección</strong>. ID de la colección:</p>
+      <div class="bloque">
+        <div class="bloque-top"><span class="bloque-nom">ID de la colección</span><button class="copiar" data-c="k1">Copiar</button></div>
+        <pre id="k1">casa</pre>
+      </div>
+      <p class="paso-d">Te pedirá el primer documento. <strong>ID del documento</strong> (no dejes que lo genere solo, escríbelo):</p>
+      <div class="bloque">
+        <div class="bloque-top"><span class="bloque-nom">ID del documento</span><button class="copiar" data-c="k2">Copiar</button></div>
+        <pre id="k2">miembros</pre>
+      </div>
+    </li>
+    <li>
+      <span class="paso-t">Un solo campo, con los dos identificadores</span>
+      <p class="paso-d">En ese documento, añade un campo así:</p>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Campo</th><th>Tipo</th><th>Valor</th></tr></thead>
+          <tbody>
+            <tr><th>uids</th><td>array</td><td>dos elementos de tipo <em>string</em>, uno por cada identificador</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="ojo rojo"><b>Los tres nombres tienen que ser exactos y en minúsculas:</b> <code>casa</code>, <code>miembros</code>, <code>uids</code>. Las reglas buscan justo eso y no hay margen. Es el fallo número uno de este paso.</div>
+    </li>
+    <li>
+      <span class="paso-t">Sincroniza en los dos aparatos</span>
+      <p class="paso-d">En Vellum, <strong>Ajustes → Sincronizar ahora</strong>. Al volver a la estantería tienen que aparecer dos pestañas arriba: <strong>Mi estantería</strong> y <strong>Toda la casa</strong>.</p>
+      <div class="ojo">En «Toda la casa» salen los libros de los dos, cada uno con un círculo y la inicial de quien lo subió, y una estrella debajo para traértelo a tu estantería. Si no aparecen las pestañas, casi siempre falta un uid o algún nombre no está en minúsculas.</div>
+    </li>
+  </ol>
+
+  <div class="cabeza"><span class="cual">Parte 3</span><h2>El apagón</h2><span class="tiempo">15 min</span></div>
+  <p class="nota">El presupuesto de un dólar que pusiste <strong>avisa pero no corta</strong>: manda un correo y la factura sigue subiendo. Esto corta de verdad — cuando el gasto pasa de un dólar, le quita al proyecto la cuenta de facturación.</p>
+  <p class="nota">Cuando salte pierdes las subidas de PDF. Leer, traducir y el progreso siguen igual, porque todo está también en el aparato.</p>
+
+  <ol class="pasos" data-parte="c">
+    <li>
+      <span class="paso-t">Abre Cloud Shell</span>
+      <a class="enlace" href="https://console.cloud.google.com" target="_blank" rel="noopener">console.cloud.google.com</a>
+      <p class="paso-d">Comprueba arriba que el proyecto es <code>infiniity-vellum</code>. Pulsa el icono de terminal <code>&gt;_</code> arriba a la derecha: es una consola dentro del navegador, no hay que instalar nada. La primera vez tarda un minuto y pide autorizar.</p>
+    </li>
+    <li>
+      <span class="paso-t">Enciende las piezas y crea el canal</span>
+      <div class="bloque">
+        <div class="bloque-top"><span class="bloque-nom">Pega esto entero</span><button class="copiar" data-c="c1">Copiar</button></div>
+        <pre id="c1">gcloud services enable \
+  cloudfunctions.googleapis.com run.googleapis.com cloudbuild.googleapis.com \
+  eventarc.googleapis.com artifactregistry.googleapis.com \
+  pubsub.googleapis.com cloudbilling.googleapis.com billingbudgets.googleapis.com
+
+gcloud pubsub topics create presupuesto-vellum</pre>
+      </div>
+      <p class="paso-d">Tarda un par de minutos y no dice gran cosa. Si acaba sin errores, listo.</p>
+    </li>
+    <li>
+      <span class="paso-t">Sube los dos archivos del vigía</span>
+      <p class="paso-d">Están en el repositorio, en la carpeta <code>apagon/</code>: <code>index.js</code> y <code>package.json</code>. En Cloud Shell, tres puntos <code>⋮</code> arriba a la derecha → <strong>Subir</strong>. Luego colócalos:</p>
+      <div class="bloque">
+        <div class="bloque-top"><span class="bloque-nom">Ordenarlos</span><button class="copiar" data-c="c2">Copiar</button></div>
+        <pre id="c2">mkdir -p ~/apagon &amp;&amp; mv ~/index.js ~/package.json ~/apagon/ &amp;&amp; ls ~/apagon</pre>
+      </div>
+      <div class="ojo">Debe responder <code>index.js  package.json</code>.</div>
+    </li>
+    <li>
+      <span class="paso-t">Publica la función</span>
+      <div class="bloque">
+        <div class="bloque-top"><span class="bloque-nom">Desplegar</span><button class="copiar" data-c="c3">Copiar</button></div>
+        <pre id="c3">gcloud functions deploy apagon-vellum \
+  --gen2 --runtime=nodejs24 --region=us-central1 \
+  --trigger-topic=presupuesto-vellum \
+  --entry-point=apagon \
+  --set-env-vars TOPE=1,PROYECTO_VIGILADO=infiniity-vellum \
+  --source=./apagon</pre>
+      </div>
+      <div class="ojo">Si se queja de <code>nodejs24</code> es que Google lo retiró: <code>gcloud functions runtimes list</code> dice cuáles hay, y sirve el Node más nuevo.</div>
+    </li>
+    <li>
+      <span class="paso-t">Dale permiso para cortar</span>
+      <p class="paso-d">Sin esto se despierta y no puede hacer nada. Primero, mira con qué identidad corre:</p>
+      <div class="bloque">
+        <div class="bloque-top"><span class="bloque-nom">Ver su identidad</span><button class="copiar" data-c="c4">Copiar</button></div>
+        <pre id="c4">gcloud functions describe apagon-vellum --gen2 --region=us-central1 \
+  --format='value(serviceConfig.serviceAccountEmail)'</pre>
+      </div>
+      <p class="paso-d">Te devuelve un correo acabado en <code>.gserviceaccount.com</code>. Cópialo, ve a facturación → pestaña <strong>Permisos</strong>, y añádelo con el rol <strong>Administrador de la cuenta de facturación</strong>.</p>
+      <a class="enlace" href="https://console.cloud.google.com/billing" target="_blank" rel="noopener">console.cloud.google.com/billing</a>
+      <div class="ojo rojo"><b>Sí, es un rol fuerte.</b> Es el único que permite desenganchar la facturación. Por eso la función no hace nada más: lee un número y, si se pasa, desengancha.</div>
+    </li>
+    <li>
+      <span class="paso-t">Conecta el presupuesto al canal</span>
+      <p class="paso-d">En <strong>Facturación → Presupuestos y alertas</strong>, abre el presupuesto de 1 dólar (o créalo: ámbito solo <code>infiniity-vellum</code>, 1 USD, mensual, umbrales al 50 %, 90 % y 100 % del gasto <strong>real</strong>).</p>
+      <p class="paso-d">Baja a <strong>Gestionar notificaciones</strong> y marca <strong>«Conectar un tema de Pub/Sub a este presupuesto»</strong>. Elige <code>presupuesto-vellum</code>. Guarda.</p>
+      <div class="ojo">Este paso es el que une las dos mitades. Sin él la función existe pero nadie la llama.</div>
+    </li>
+    <li>
+      <span class="paso-t">Comprueba que está viva</span>
+      <div class="bloque">
+        <div class="bloque-top"><span class="bloque-nom">Ensayo</span><button class="copiar" data-c="c5">Copiar</button></div>
+        <pre id="c5">gcloud pubsub topics publish presupuesto-vellum \
+  --message='{"costAmount":0.10,"budgetAmount":1,"currencyCode":"USD"}'
+sleep 20
+gcloud functions logs read apagon-vellum --region=us-central1 --limit=5</pre>
+      </div>
+      <p class="paso-d">Tiene que salir <strong>«Va por 0.1 USD, el tope es 1. Nada que hacer.»</strong> Si sale eso, la cadena entera funciona.</p>
+      <div class="ojo rojo"><b>No pruebes con un número mayor que 1.</b> La función haría su trabajo y te dejaría el proyecto sin facturación de verdad.</div>
+    </li>
+  </ol>
+
+  <div class="cabeza"><span class="cual">Parte 4</span><h2>Lo que solo se sabe usándola</h2></div>
+  <p>Hay 262 comprobaciones automáticas, y ninguna cubre esto. No es trabajo pendiente: es la parte que solo se comprueba leyendo. Ve marcando cuando lo veas funcionar.</p>
+
+  <ul class="lista-mano">
+    <li><input type="checkbox" data-mano="1"><span><b>Entrar con Google de verdad.</b> Lo primero, porque desbloquea el resto.</span></li>
+    <li><input type="checkbox" data-mano="2"><span><b>Que los dos os veáis.</b> Sube un PDF en un aparato y búscalo en el otro, en «Toda la casa».</span></li>
+    <li><input type="checkbox" data-mano="3"><span><b>El sonido y la vibración</b> al pasar página, en el teléfono.</span></li>
+    <li><input type="checkbox" data-mano="4"><span><b>Sin internet.</b> Pon el avión y abre la app: tiene que abrir y dejarte leer.</span></li>
+    <li><input type="checkbox" data-mano="5"><span><b>Un cómic pesado de verdad.</b> Los PDF de prueba pesan kilobytes. Vigila cuánto tarda en subir y cuánto ocupa.</span></li>
+    <li><input type="checkbox" data-mano="6"><span><b>Pellizcar y seleccionar con los dedos.</b> Los gestos se prueban simulados, no con dedos.</span></li>
+    <li><input type="checkbox" data-mano="7"><span><b>Si Gemini traduce bien.</b> La API está simulada en las pruebas: se comprueba el cliente, no la calidad.</span></li>
+  </ul>
+
+  <div class="cabeza"><span class="cual">Y además</span><h2>Cinco cosas que esperan tu palabra</h2></div>
+  <p class="nota">Ninguna bloquea nada. Cuando tengas opinión, me dices y lo cambio.</p>
+  <dl class="dudas">
+    <dt>¿Vuelve «Quitar portada»?</dt>
+    <dd>Hoy subir otra la reemplaza, pero no se puede dejar un libro sin imagen otra vez.</dd>
+    <dt>¿La clave de Gemini debería viajar entre tus aparatos?</dt>
+    <dd>Hoy no viaja: si usas Vellum en la PC hay que pegarla allí. Fue decisión de seguridad, pero es tuya.</dd>
+    <dt>¿El doble toque acerca lo justo?</dt>
+    <dd>Está en 2,6 aumentos.</dd>
+    <dt>¿El volteo se siente bien?</dt>
+    <dd>Dura 450 milisegundos. Lo acorté y no llegaste a decirme.</dd>
+    <dt>¿El tono de las traducciones te sirve?</dt>
+    <dd>Eso solo se ve leyendo unas cuantas.</dd>
+  </dl>
+
+  <footer>
+    <p>Esta página se guarda sola: puedes dejarla a medias y volver.</p>
+    <button class="reset" id="reset">Empezar de cero</button>
+  </footer>
+</div>
+<script>
+  var LLAVE = 'vellum-falta-v1'
+  var guardado = {}
+  try { guardado = JSON.parse(localStorage.getItem(LLAVE) || '{}') || {} } catch (e) { guardado = {} }
+
+  var pasos = []
+  document.querySelectorAll('ol.pasos').forEach(function (lista) {
+    var parte = lista.dataset.parte
+    lista.querySelectorAll(':scope > li').forEach(function (li, i) {
+      var id = parte + '-' + (i + 1)
+      var eti = document.createElement('label')
+      eti.className = 'marca'
+      var caja = document.createElement('input')
+      caja.type = 'checkbox'
+      caja.checked = !!guardado[id]
+      var txt = document.createElement('span')
+      txt.textContent = 'Hecho'
+      eti.appendChild(caja); eti.appendChild(txt)
+      li.appendChild(eti)
+      li.classList.toggle('ok', caja.checked)
+      caja.addEventListener('change', function () {
+        guardado[id] = caja.checked
+        li.classList.toggle('ok', caja.checked)
+        try { localStorage.setItem(LLAVE, JSON.stringify(guardado)) } catch (e) {}
+        pintar()
+      })
+      pasos.push(caja)
+    })
+  })
+
+  document.getElementById('total').textContent = pasos.length
+  function pintar () {
+    var n = pasos.filter(function (c) { return c.checked }).length
+    document.getElementById('hechos').textContent = n
+    document.getElementById('via').style.width = (n / pasos.length * 100) + '%'
+  }
+  pintar()
+
+  document.getElementById('reset').addEventListener('click', function () {
+    pasos.forEach(function (c) { c.checked = false; c.dispatchEvent(new Event('change')) })
+  })
+
+  document.querySelectorAll('.lista-mano input').forEach(function (c) {
+    var id = 'mano-' + c.dataset.mano
+    c.checked = !!guardado[id]
+    c.addEventListener('change', function () {
+      guardado[id] = c.checked
+      try { localStorage.setItem(LLAVE, JSON.stringify(guardado)) } catch (e) {}
+    })
+  })
+
+  document.querySelectorAll('.copiar').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var texto = document.getElementById(b.dataset.c).textContent
+      var listo = function () {
+        var antes = b.textContent
+        b.textContent = 'Copiado'; b.classList.add('ok')
+        setTimeout(function () { b.textContent = antes; b.classList.remove('ok') }, 1800)
+      }
+      function manual () {
+        var a = document.createElement('textarea')
+        a.value = texto; document.body.appendChild(a); a.select()
+        try { document.execCommand('copy'); listo() } catch (e) { b.textContent = 'Selecciónalo a mano' }
+        document.body.removeChild(a)
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(texto).then(listo, manual)
+      } else manual()
+    })
+  })
+</script>
