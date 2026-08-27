@@ -1,4 +1,5 @@
 import { chromium } from 'playwright'
+import { exigirCompilacionAlDia } from './fresco.mjs'
 
 /**
  * Prueba del hito 3 sin gastar cuota de Gemini.
@@ -34,6 +35,8 @@ const PALABRA = {
     ejemploTraducido: 'Una promesa inquebrantable.',
   },
 }
+
+exigirCompilacionAlDia()
 
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' })
 const ctx = await browser.newContext({ viewport: { width: 412, height: 900 }, deviceScaleFactor: 2, hasTouch: true })

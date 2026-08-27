@@ -1,4 +1,5 @@
 import { chromium } from 'playwright'
+import { exigirCompilacionAlDia } from './fresco.mjs'
 
 /**
  * Un cómic de verdad mezcla páginas verticales con dobles páginas horizontales.
@@ -13,6 +14,8 @@ const paso = (n, ok, extra = '') => {
   console.log(`${ok ? '  OK  ' : ' FALLA'} ${n}${extra ? ' — ' + extra : ''}`)
   if (!ok) process.exitCode = 1
 }
+
+exigirCompilacionAlDia()
 
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' })
 const ctx = await browser.newContext({ viewport: { width: 412, height: 892 }, deviceScaleFactor: 2, hasTouch: true })
@@ -204,6 +207,71 @@ await page.mouse.click(punto.x, punto.y)
 await page.mouse.click(punto.x, punto.y, { delay: 30 })
 await page.waitForTimeout(500)
 paso('otro doble toque la devuelve a su sitio', (await marco()).escala === 1)
+
+/* --- Pellizcar para acercar --- */
+// Playwright no tiene pellizco: se mandan los dos dedos a mano, que es
+// exactamente lo que le llega a la app desde una pantalla táctil.
+const dedo = (tipo, id, x, y) => page.evaluate(({ tipo, id, x, y }) => {
+  document.querySelector('.escena').dispatchEvent(new PointerEvent(tipo, {
+    pointerId: id, pointerType: 'touch', isPrimary: id === 1,
+    clientX: x, clientY: y, bubbles: true, cancelable: true,
+  }))
+}, { tipo, id, x, y })
+
+// El centro del pellizco va fuera del medio a propósito: si se pellizca justo
+// en el centro, «lo de en medio sigue en medio» se cumple solo y no comprueba
+// nada.
+const pellizcar = async (desde, hasta, pasos = 8, fx = 0.32, fy = 0.36) => {
+  const c = await page.locator('.escena').boundingBox()
+  const cx = c.x + c.width * fx
+  const cy = c.y + c.height * fy
+  await dedo('pointerdown', 1, cx - desde, cy)
+  await dedo('pointerdown', 2, cx + desde, cy)
+  for (let i = 1; i <= pasos; i++) {
+    const r = desde + (hasta - desde) * (i / pasos)
+    await dedo('pointermove', 1, cx - r, cy)
+    await dedo('pointermove', 2, cx + r, cy)
+    await page.waitForTimeout(20)
+  }
+  await dedo('pointerup', 1, cx - hasta, cy)
+  await dedo('pointerup', 2, cx + hasta, cy)
+  await page.waitForTimeout(300)
+  return { cx, cy, c }
+}
+
+paso('antes de pellizcar no hay acercamiento', (await marco()).escala === 1)
+const cajaEscena = await page.locator('.escena').boundingBox()
+const antesDebajo = await page.evaluate(({ mx, my }) => {
+  const r = document.querySelector('.escena').getBoundingClientRect()
+  const t = new DOMMatrix(getComputedStyle(document.querySelector('.marco')).transform)
+  return { x: Math.round((mx - r.left - t.e) / t.a), y: Math.round((my - r.top - t.f) / t.d) }
+}, { mx: cajaEscena.x + cajaEscena.width * 0.32, my: cajaEscena.y + cajaEscena.height * 0.36 })
+const donde = await pellizcar(50, 150)
+const trasAbrir = await marco()
+paso('separar los dedos acerca la página', trasAbrir.escala > 2.4,
+  `×${trasAbrir.escala.toFixed(2)} (se separaron ×3)`)
+paso('y el acercamiento se queda puesto al soltar',
+  (await page.locator('.escena.lupa').count()) === 1)
+
+// Lo que estaba entre los dedos tiene que seguir entre los dedos: es lo que
+// diferencia pellizcar de que la página pegue un salto y se acerque sola.
+const debajoDe = (mx, my) => page.evaluate(({ mx, my }) => {
+  const r = document.querySelector('.escena').getBoundingClientRect()
+  const t = new DOMMatrix(getComputedStyle(document.querySelector('.marco')).transform)
+  return { x: Math.round((mx - r.left - t.e) / t.a), y: Math.round((my - r.top - t.f) / t.d) }
+}, { mx, my })
+const ahoraDebajo = await debajoDe(donde.cx, donde.cy)
+paso('el punto que estaba entre los dedos sigue entre los dedos',
+  Math.abs(ahoraDebajo.x - antesDebajo.x) < 12 && Math.abs(ahoraDebajo.y - antesDebajo.y) < 12,
+  `(${antesDebajo.x}, ${antesDebajo.y}) → (${ahoraDebajo.x}, ${ahoraDebajo.y})`)
+
+await pellizcar(150, 40)
+paso('juntar los dedos la devuelve a su tamaño', (await marco()).escala === 1,
+  `×${(await marco()).escala.toFixed(2)}`)
+paso('y se quita el modo acercado', (await page.locator('.escena.lupa').count()) === 0)
+paso('pellizcar no pasa de página', (await page.textContent('.folio')).trim() === '2 / 6',
+  (await page.textContent('.folio')).trim())
+
 
 await page.screenshot({ path: `${SC}/comic-doble.png` })
 console.log(errores.length ? `\nErrores de consola:\n${errores.join('\n')}` : '\nSin errores de consola.')

@@ -313,6 +313,29 @@ técnicas que descartan opciones desde el primer día. Implican, como mínimo:
   Google: `apagon/LEEME.md` y `guia/paginas/apagon.html`.
 - **Origen:** P69, y T13.
 
+### D-26 · En la PC las flechas voltean; en el teléfono se pellizca
+- **Decisión:** las flechas ←/→ (y AvPág/RePág y la barra espaciadora) pasan
+  página **con el mismo volteo** que el dedo, no saltando. Y en pantalla táctil,
+  dos dedos acercan y alejan.
+- **Por qué el volteo y no un salto:** el volteo es de las pocas cosas de la app
+  que se eligieron por cómo se sienten (P51). Que en la PC el libro cambiara de
+  página de golpe la convertía en otra app según dónde la abrieras.
+- **Cómo se hace:** no basta con cambiar de página. Se pone la hoja en su sitio,
+  **se espera a que la página vecina esté dibujada** y entonces se suelta. Sin
+  esa espera lo que gira es una hoja en blanco.
+- **Escribir no pasa página.** Las flechas dentro del campo del traductor mueven
+  el cursor. Estaba mal desde antes —solo se excluía `INPUT`, y la burbuja es un
+  `TEXTAREA`— y se arregla aquí.
+- **El pellizco ancla lo que hay entre los dedos.** El punto de la página que
+  estaba en medio de los dedos sigue en medio al acabar. Es lo que separa
+  pellizcar de que la página pegue un salto y se acerque sola.
+- **Tope en ×5.** Más allá se ven los píxeles del PDF y no se lee mejor. Al
+  volver a tamaño natural el acercamiento se quita del todo, en vez de quedarse
+  en un ×1,01 que no se ve pero sigue atrapando el arrastre.
+- **Dos dedos y un volteo empezado no se mezclan:** si el giro ya arrancó, el
+  segundo dedo se ignora. Interrumpirlo a medias dejaría la hoja colgando.
+- **Origen:** pedido en el uso, 2026-08-27.
+
 ### D-25 · El teclado no cambia el tamaño de la página
 - **Decisión:** mientras la burbuja del traductor está en uso, la medida del
   área de lectura **se congela**. La página no se mueve ni se redibuja, y el
@@ -704,6 +727,14 @@ construir lo que viene:
   los llevaba. Cuando pasó a componer también el encargo, marcar «Cómic» y
   añadir etiquetas antes de guardar no llegaba al prompt. Una estructura que
   sirve para dos cosas tiene que estar completa para las dos.
+- **Una compilación que falla no borra la anterior.** El servidor sigue
+  sirviendo el paquete de antes y las pruebas pasan **contra él**: verde sin
+  haber probado nada. Pasó dos veces en la misma tarde, y las dos justo mientras
+  comprobaba a propósito que una prueba fallaba — no fallaba porque el arreglo
+  roto ni siquiera había llegado al paquete. Ahora las pruebas de navegador se
+  niegan a arrancar si algo de `src/` es más nuevo que `dist/`
+  (`pruebas/fresco.mjs`). **El falso verde más peligroso no es una comprobación
+  mal escrita: es una comprobación correcta mirando al sitio equivocado.**
 - **Un teclado no es un cambio de tamaño.** El navegador lo cuenta como si la
   ventana se hubiera encogido, y todo lo que reacciona al tamaño reacciona: se
   reparte la página otra vez, se redibuja, se recorta el zoom. Pero lo que ha
@@ -866,3 +897,12 @@ construir lo que viene:
   mientras la burbuja está en uso; se prefiere tapar antes que mover. Seis
   comprobaciones nuevas, y se quitó el arreglo a propósito para ver cuáles se
   ponían rojas de verdad: las dos que importan. 221 comprobaciones.
+- **2026-08-27** — **Flechas en la PC y pellizco en el teléfono** (D-26). Las
+  flechas voltean la hoja con la misma animación que el dedo —esperando a que la
+  página vecina esté dibujada, o lo que giraría sería una hoja en blanco— y dos
+  dedos acercan anclando lo que hay entre ellos. De paso se arregla que escribir
+  en el traductor pasara de página: solo se excluía `INPUT` y la burbuja es un
+  `TEXTAREA`. Y algo más importante que las dos cosas: las pruebas de navegador
+  ahora **se niegan a correr contra un paquete viejo**, después de descubrir que
+  dos comprobaciones «rotas a propósito» habían pasado por eso. 242
+  comprobaciones.

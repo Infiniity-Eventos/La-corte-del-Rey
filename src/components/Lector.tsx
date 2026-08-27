@@ -16,6 +16,8 @@ const TOQUE = 8
 const DOBLE = 320
 /** Cuánto acerca el doble toque. Suficiente para leer una viñeta pequeña. */
 const AUMENTO = 2.6
+/** Tope del pellizco. Más allá se ven los píxeles del PDF y no se lee mejor. */
+const MAXIMO = 5
 
 interface Lupa { s: number; x: number; y: number }
 
@@ -125,6 +127,14 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
   // Del doble toque solo hace falta recordar cuándo y dónde fue el anterior.
   const ultimoToque = useRef({ t: 0, x: 0, y: 0 })
   const arrastreLupa = useRef({ x: 0, y: 0, ox: 0, oy: 0 })
+  // Los dedos que hay puestos ahora mismo. Con dos, el gesto deja de ser pasar
+  // página y pasa a ser pellizcar.
+  const dedos = useRef(new Map<number, { x: number; y: number }>())
+  const pellizco = useRef<
+    { d0: number; s0: number; x0: number; y0: number; m0: { x: number; y: number } } | null
+  >(null)
+  // El volteo pedido con el teclado, esperando a que la hoja esté dibujada.
+  const auto = useRef<'siguiente' | 'anterior' | null>(null)
 
   /* ------------------------------ medir ------------------------------ */
 
@@ -400,6 +410,41 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
   )
 
   /**
+   * Pasar página con el teclado, con el mismo volteo que con el dedo.
+   *
+   * No basta con cambiar de página: hay que poner la hoja en su sitio, esperar
+   * a que esté dibujada y entonces soltarla. Si se anima antes de que la página
+   * vecina exista, lo que gira es una hoja en blanco.
+   */
+  const voltear = useCallback((d: 'siguiente' | 'anterior') => {
+    const g = gesto.current
+    if (!lista || g.activo || g.asentando || auto.current) return
+    if (d === 'siguiente' && pagina >= libro.paginas) return
+    if (d === 'anterior' && pagina <= 1) return
+    setLupa(null)
+    g.p = 0
+    g.dir = d
+    auto.current = d
+    setDir(d)
+  }, [lista, pagina, libro.paginas])
+
+  useEffect(() => {
+    const d = auto.current
+    if (!d || dir !== d) return
+    // La hoja que gira tiene que tener su página dentro antes de moverse.
+    if (!movilRef.current?.querySelector('canvas')) return
+    auto.current = null
+    // Un fotograma de por medio: el efecto de abajo acaba de poner la hoja en
+    // su sitio sin transición, y sin dejar pasar un fotograma el navegador
+    // junta las dos cosas y no anima nada.
+    //
+    // Sin limpieza a propósito: cancelarlo al volver a renderizar —y se
+    // renderiza— mataría el volteo antes de que empiece. Si el lector se cierra
+    // antes, `asentar` no encuentra la hoja y se va sin hacer nada.
+    requestAnimationFrame(() => asentar(true, d))
+  }, [dir, sello, hojas, asentar])
+
+  /**
    * Después de cada renderizado, la hoja vuelve a donde la dejó el dedo.
    *
    * El giro se aplicaba en el estilo del renderizado, así que cualquier
@@ -421,6 +466,28 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
     if (!lista || g.asentando || seleccionando) return
     despertarSonido()
     setAcercando(false)
+
+    dedos.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
+    // Dos dedos: se deja de pasar página y se empieza a pellizcar. Si el volteo
+    // ya había arrancado se ignora el segundo dedo, que interrumpirlo a medias
+    // dejaría la hoja colgando.
+    if (dedos.current.size === 2 && !g.dir) {
+      const escena = escenaRef.current
+      const [a, b] = [...dedos.current.values()]
+      if (escena) {
+        const r = escena.getBoundingClientRect()
+        pellizco.current = {
+          d0: Math.max(1, Math.hypot(a.x - b.x, a.y - b.y)),
+          s0: lupa?.s ?? 1,
+          x0: lupa?.x ?? 0,
+          y0: lupa?.y ?? 0,
+          m0: { x: (a.x + b.x) / 2 - r.left, y: (a.y + b.y) / 2 - r.top },
+        }
+        g.activo = false
+        return
+      }
+    }
+    if (pellizco.current) return
     if (lupa) {
       // Acercado, arrastrar mueve la vista. Pasar página aquí no tendría
       // sentido: no se ve la página entera.
@@ -441,6 +508,30 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
 
   const alMover = (e: React.PointerEvent) => {
     const g = gesto.current
+
+    if (dedos.current.has(e.pointerId)) {
+      dedos.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
+    }
+
+    const pz = pellizco.current
+    if (pz && dedos.current.size >= 2) {
+      const escena = escenaRef.current
+      if (!escena) return
+      const [a, b] = [...dedos.current.values()]
+      const d1 = Math.hypot(a.x - b.x, a.y - b.y)
+      if (d1 < 1) return
+      const r = escena.getBoundingClientRect()
+      const mx = (a.x + b.x) / 2 - r.left
+      const my = (a.y + b.y) / 2 - r.top
+      const s = Math.max(1, Math.min(MAXIMO, pz.s0 * (d1 / pz.d0)))
+      // El punto de la página que estaba entre los dedos se queda entre los
+      // dedos: es lo que hace que pellizcar se sienta como agarrar el papel.
+      const cx = (pz.m0.x - pz.x0) / pz.s0
+      const cy = (pz.m0.y - pz.y0) / pz.s0
+      setLupa(encajar({ s, x: mx - cx * s, y: my - cy * s }, caja))
+      return
+    }
+
     if (!g.activo) return
 
     if (lupa) {
@@ -470,6 +561,18 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
 
   const alSoltar = (e: React.PointerEvent) => {
     const g = gesto.current
+    dedos.current.delete(e.pointerId)
+
+    if (pellizco.current) {
+      if (dedos.current.size >= 2) return
+      pellizco.current = null
+      g.activo = false
+      // Volver a tamaño natural quita el acercamiento del todo, en vez de
+      // dejarlo en un 1,01 que no se ve pero sigue atrapando el arrastre.
+      setLupa(l => (l && l.s <= 1.02 ? null : l))
+      return
+    }
+
     if (!g.activo) return
     g.activo = false
 
@@ -539,10 +642,22 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
 
   useEffect(() => {
     const teclas = (e: KeyboardEvent) => {
-      if ((e.target as HTMLElement)?.tagName === 'INPUT') return
-      if (e.key === 'ArrowRight' || e.key === 'PageDown') irA(pagina + 1)
-      else if (e.key === 'ArrowLeft' || e.key === 'PageUp') irA(pagina - 1)
-      else if (e.key === 'Escape') onCerrar()
+      // TEXTAREA es el campo del traductor: sin esto, escribir una frase y
+      // mover el cursor con las flechas pasaba de página por debajo.
+      const donde = (e.target as HTMLElement)?.tagName
+      if (donde === 'INPUT' || donde === 'TEXTAREA') return
+      if (e.key === 'Escape') { onCerrar(); return }
+      if (e.metaKey || e.ctrlKey || e.altKey) return
+
+      // Las flechas voltean la hoja, no saltan de página: en la PC el libro se
+      // pasa igual que en el teléfono, solo que el gesto lo hace la tecla.
+      if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
+        e.preventDefault()
+        voltear('siguiente')
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault()
+        voltear('anterior')
+      }
     }
     window.addEventListener('keydown', teclas)
     return () => window.removeEventListener('keydown', teclas)

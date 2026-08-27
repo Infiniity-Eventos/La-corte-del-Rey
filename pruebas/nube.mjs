@@ -1,4 +1,5 @@
 import { chromium } from 'playwright'
+import { exigirCompilacionAlDia } from './fresco.mjs'
 
 /**
  * El hito 4 sin cuenta de Google.
@@ -15,6 +16,8 @@ const paso = (n, ok, extra = '') => {
   console.log(`${ok ? '  OK  ' : ' FALLA'} ${n}${extra ? ' — ' + extra : ''}`)
   if (!ok) process.exitCode = 1
 }
+
+exigirCompilacionAlDia()
 
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' })
 const ctx = await browser.newContext({ viewport: { width: 412, height: 892 }, deviceScaleFactor: 2, hasTouch: true })

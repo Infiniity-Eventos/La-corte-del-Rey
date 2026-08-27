@@ -1,8 +1,11 @@
 import { chromium } from 'playwright'
+import { exigirCompilacionAlDia } from './fresco.mjs'
 
 const SC = process.env.SC ?? '/tmp'
 const PDF = `${SC}/Prueba_de_Lectura.pdf`
 const errores = []
+
+exigirCompilacionAlDia()
 
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' })
 const ctx = await browser.newContext({ viewport: { width: 412, height: 900 }, deviceScaleFactor: 2, hasTouch: true })
@@ -119,6 +122,45 @@ paso('volver atrás se anima durante todo el gesto', distintos >= 5,
   `${distintos} posiciones distintas de ${pasos.length}`)
 paso('y la hoja se ve mientras vuelve',
   pasos.filter(p => p !== 'sin hoja' && Number(p.split('|')[1]) > 0.5).length >= 4)
+
+/* --- Las flechas del teclado, con el mismo volteo --- */
+const folio = async () => (await page.textContent('.folio')).trim()
+const hojaMovil = () => page.evaluate(() => {
+  const m = document.querySelector('.hoja.movil')
+  const cs = m && getComputedStyle(m)
+  return m && cs.display !== 'none' ? cs.transform : 'sin hoja'
+})
+
+const antesDeFlecha = await folio()
+await page.evaluate(() => document.activeElement?.blur?.())
+await page.keyboard.press('ArrowRight')
+const enVuelo = []
+for (let i = 0; i < 6; i++) { await page.waitForTimeout(55); enVuelo.push(await hojaMovil()) }
+await page.waitForTimeout(700)
+const posiciones = new Set(enVuelo.filter(t => t !== 'sin hoja')).size
+paso('la flecha derecha voltea la hoja, no salta', posiciones >= 3,
+  `${posiciones} posiciones distintas de ${enVuelo.length}`)
+paso('y acaba en la página siguiente',
+  (await folio()) !== antesDeFlecha && (await folio()).startsWith(`${Number(antesDeFlecha.split('/')[0]) + 1} `),
+  `${antesDeFlecha} → ${await folio()}`)
+
+const trasDerecha = await folio()
+await page.keyboard.press('ArrowLeft')
+await page.waitForTimeout(900)
+paso('y la izquierda vuelve', (await folio()) === antesDeFlecha,
+  `${trasDerecha} → ${await folio()}`)
+
+// Escribir en el traductor no puede pasar de página por debajo.
+await page.focus('.barra-burbuja textarea')
+await page.fill('.barra-burbuja textarea', 'over the moon')
+await page.keyboard.press('ArrowLeft')
+await page.keyboard.press('ArrowRight')
+await page.waitForTimeout(600)
+paso('escribiendo en el traductor las flechas mueven el cursor, no la página',
+  (await folio()) === antesDeFlecha, await folio())
+await page.fill('.barra-burbuja textarea', '')
+await page.evaluate(() => document.querySelector('.barra-burbuja textarea').blur())
+await page.waitForTimeout(400)
 
 // 6. Arrastre corto: la página debe volver
 await page.mouse.move(caja.x + caja.width * 0.8, y)

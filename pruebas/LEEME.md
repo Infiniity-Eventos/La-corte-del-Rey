@@ -8,10 +8,10 @@ lo que prueban es una decisión y no necesita navegador.
 ```bash
 npm run build
 npx vite preview --port 4173 --host 127.0.0.1 &
-node pruebas/lectura.mjs      # 30 comprobaciones · hito 1, leer
+node pruebas/lectura.mjs      # 34 comprobaciones · leer, y las flechas del teclado
 node pruebas/biblioteca.mjs   # 47 comprobaciones · la estantería y crear portada
 node pruebas/traductor.mjs    # 60 comprobaciones · el traductor y las notas de página
-node pruebas/comic.mjs        # 22 comprobaciones · tamaños mezclados, zoom y teclado
+node pruebas/comic.mjs        # 29 comprobaciones · tamaños mezclados, zoom, pellizco y teclado
 node pruebas/nube.mjs         # 14 comprobaciones · hito 4, la nube sin cuenta
 node pruebas/capturas.mjs     # capturas de cada estado
 
@@ -26,6 +26,11 @@ node pruebas/en-vivo.mjs      # 15 comprobaciones sobre la app en su dirección 
 
 `SC` es la carpeta donde están el PDF de prueba y donde se guardan las
 capturas. Por defecto, `/tmp`.
+
+**Las pruebas de navegador no arrancan si `dist/` es más viejo que `src/`.** Una
+compilación que falla no borra la anterior: el servidor sigue sirviendo el
+paquete de antes y las pruebas pasan contra él, verdes sin haber probado nada.
+Eso lo corta `pruebas/fresco.mjs`.
 
 Los PDF de prueba se generan con `gen_pdf.py`. Cada uno lleva su nombre escrito
 dentro: si no, dos archivos con el mismo número de páginas salen byte a byte
@@ -61,6 +66,8 @@ vea de dónde sale y no parezca una prueba puesta por costumbre.
 | Ofrece volver al principio, y el aviso no se pisa con los controles | P62 · P63 |
 | El aviso se va solo a los pocos segundos | P63 |
 | Salir enseguida de saltar de página no pierde por dónde ibas | R16 · P15 |
+| **Las flechas voltean la hoja, no saltan de página** | D-26 |
+| Escribiendo en el traductor, las flechas mueven el cursor | D-26 |
 
 ## Qué comprueba `biblioteca.mjs`
 
@@ -146,6 +153,10 @@ app en el uso real y que ningún PDF de prueba uniforme habría destapado.
 | El papel sobrante toma el color del fondo, opaco |
 | El doble toque acerca la página y centra lo que tocaste |
 | Acercado, arrastrar mueve la vista y no pasa de página |
+| **Pellizcar acerca, con el tope en ×5** | 
+| Y lo que estaba entre los dedos sigue entre los dedos |
+| Juntarlos la devuelve a su tamaño y quita el modo acercado |
+| Pellizcar no pasa de página |
 | **Con el teclado abierto, la página no se mueve ni se redibuja** |
 | Al cerrarse, vuelve a ocupar lo suyo |
 | Y si el tamaño cambió de verdad, se entera al soltar el campo |
