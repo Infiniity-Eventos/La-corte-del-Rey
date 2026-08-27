@@ -8,7 +8,7 @@ npm run build
 npx vite preview --port 4173 --host 127.0.0.1 &
 node pruebas/lectura.mjs      # 21 comprobaciones · hito 1, leer
 node pruebas/biblioteca.mjs   # 33 comprobaciones · hito 2, la estantería
-node pruebas/traductor.mjs    # 27 comprobaciones · hito 3, el traductor
+node pruebas/traductor.mjs    # 29 comprobaciones · hito 3, el traductor
 node pruebas/capturas.mjs     # capturas de cada estado
 
 # Contra la app publicada
@@ -84,6 +84,7 @@ resto.
 | Comprueba | Requisito |
 |---|---|
 | La barra del traductor está siempre visible | R30 · P55 |
+| El botón «Probar la clave» la prueba de verdad, y dice el motivo si no vale | P26 · P31 |
 | Sin clave lo explica y ofrece ir a los ajustes | P31 · D-09 |
 | La clave se guarda, sobrevive a recargar y llega oculta | D-09 · P26 |
 | **La traducción aparece antes que las pestañas** | R19 · R20 · P28 |

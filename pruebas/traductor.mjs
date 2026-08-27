@@ -108,12 +108,27 @@ paso('y ofrece ir a los ajustes', (await page.locator('.panel-fallo .btn').count
 await page.click('.panel-fallo .btn')
 await page.waitForSelector('.tarjeta', { timeout: 8000 })
 paso('el botón lleva a los ajustes', (await page.textContent('.titulo-pantalla')) === 'Ajustes')
-await page.fill('.campo-fila input', 'AIzaFalsaParaLaPrueba123')
+// Formato nuevo de clave: desde 2026, AI Studio las entrega como AQ.Ab…
+await page.fill('.campo-fila input', 'AQ.Ab8FalsaParaLaPrueba123')
+
+await page.click('.fila-botones .btn.fantasma')
+await page.waitForSelector('.prueba', { timeout: 10000 })
+paso('el botón de probar la clave la prueba de verdad',
+  (await page.locator('.prueba.bien').count()) === 1,
+  (await page.textContent('.prueba')).trim())
+
+await guionar('clave-mala')
+await page.click('.fila-botones .btn.fantasma')
+await page.waitForSelector('.prueba.mal', { timeout: 10000 })
+paso('y dice el motivo cuando no vale',
+  (await page.textContent('.prueba.mal')).includes('no vale'))
+await guionar('normal')
+
 await page.click('.tarjeta .btn')
 await page.waitForTimeout(500)
 await page.reload({ waitUntil: 'networkidle' })
 await page.waitForSelector('.rejilla .libro', { timeout: 10000 })
-await page.click('.biblio-top .icono:last-child')
+await page.click('.biblio-top .icono:has-text("Ajustes")')
 await page.waitForSelector('.campo-fila input')
 paso('la clave sobrevive a recargar', (await page.inputValue('.campo-fila input')).length > 10)
 paso('la clave llega oculta', (await page.getAttribute('.campo-fila input', 'type')) === 'password')
@@ -223,7 +238,7 @@ paso('seleccionar rellena la burbuja',
 /* --- El vocabulario, con libro y página (P57) --- */
 await page.click('.chrome.arriba .icono:first-child')
 await page.waitForSelector('.biblio-top', { timeout: 10000 })
-await page.click('.biblio-top .icono:first-child')
+await page.click('.biblio-top .icono:has-text("Vocabulario")')
 await page.waitForSelector('.voc-fila', { timeout: 8000 })
 paso('el vocabulario guarda lo consultado', (await page.textContent('.voc-en')) === 'he was over the moon about it')
 paso('y su traducción', (await page.textContent('.voc-es')) === RESPUESTA.natural)
