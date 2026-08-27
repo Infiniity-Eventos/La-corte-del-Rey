@@ -592,8 +592,29 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
    * El segundo toque vuelve a alternar la interfaz, así que un doble toque la
    * deja como estaba. Es lo que evita tener que esperar a ver si viene un
    * segundo toque antes de reaccionar al primero.
+   *
+   * Con `paso: 'tocar'` la pantalla se parte en tres franjas, como en los
+   * lectores de siempre: borde izquierdo vuelve, borde derecho avanza, y el
+   * centro sigue siendo la interfaz. **Pasar página no puede esperar** a ver si
+   * viene un segundo toque, así que en las franjas de los bordes no hay doble
+   * toque: para acercar está el centro, y el pellizco, que funciona en toda la
+   * pantalla.
    */
   const alTocar = (e: React.PointerEvent) => {
+    const escena0 = escenaRef.current
+    if (ajustes.paso === 'tocar' && escena0 && !lupa) {
+      const r = escena0.getBoundingClientRect()
+      const donde = (e.clientX - r.left) / r.width
+      if (donde < 0.3) {
+        voltear('anterior')
+        return
+      }
+      if (donde > 0.7) {
+        voltear('siguiente')
+        return
+      }
+    }
+
     setChrome(c => !c)
 
     const ahora = Date.now()

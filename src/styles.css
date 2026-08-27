@@ -156,6 +156,7 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; justif
 .segmento.vistas { margin-bottom: var(--e3); }
 .segmento.vistas .mono { opacity: .55; margin-left: .3rem; font-size: .8em; }
 .pista-vista { margin: 0 0 var(--e2); font-size: .82rem; color: var(--tinta-3); }
+.paso-como { margin-top: var(--e2); min-height: 2.6rem; }
 
 /* En la ficha: lo que comparte otra persona se lee, no se edita. */
 .prestado {

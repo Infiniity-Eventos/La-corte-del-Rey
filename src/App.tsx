@@ -364,6 +364,8 @@ export default function App() {
     return (
       <>
         <PantallaAjustes
+          ajustes={ajustes}
+          onCambiarAjustes={cambiarAjustes}
           clave={clave}
           onGuardar={c => void cambiarClave(c)}
           onCerrar={() => setPantalla('biblioteca')}

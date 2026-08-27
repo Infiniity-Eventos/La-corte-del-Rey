@@ -8,7 +8,7 @@ lo que prueban es una decisión y no necesita navegador.
 ```bash
 npm run build
 npx vite preview --port 4173 --host 127.0.0.1 &
-node pruebas/lectura.mjs      # 34 comprobaciones · leer, y las flechas del teclado
+node pruebas/lectura.mjs      # 43 comprobaciones · leer, las flechas y los dos modos de pasar página
 node pruebas/biblioteca.mjs   # 47 comprobaciones · la estantería y crear portada
 node pruebas/traductor.mjs    # 63 comprobaciones · el traductor y las notas de página
 node pruebas/comic.mjs        # 29 comprobaciones · tamaños mezclados, zoom, pellizco y teclado
@@ -69,6 +69,10 @@ vea de dónde sale y no parezca una prueba puesta por costumbre.
 | El aviso se va solo a los pocos segundos | P63 |
 | Salir enseguida de saltar de página no pierde por dónde ibas | R16 · P15 |
 | **Las flechas voltean la hoja, no saltan de página** | D-26 |
+| Por defecto, tocar el borde abre la interfaz y no pasa página | D-32 |
+| En modo «tocar»: el borde derecho avanza, el izquierdo vuelve | D-32 |
+| Y el centro sigue abriendo la interfaz | D-32 |
+| Deslizar sigue funcionando en los dos modos | D-32 |
 | Escribiendo en el traductor, las flechas mueven el cursor | D-26 |
 
 ## Qué comprueba `biblioteca.mjs`

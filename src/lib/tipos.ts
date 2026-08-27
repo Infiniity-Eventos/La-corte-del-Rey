@@ -78,10 +78,21 @@ export interface Palabra {
   borrado?: boolean
 }
 
+/**
+ * Cómo se pasa de página.
+ *
+ * `deslizar` es el gesto de siempre: arrastras y la hoja gira contigo. `tocar`
+ * es lo que hacen los lectores de toda la vida — un toque en el borde derecho
+ * avanza, en el izquierdo vuelve — y va mejor con una sola mano y con el
+ * teléfono apoyado.
+ */
+export type Paso = 'deslizar' | 'tocar'
+
 export interface Ajustes {
   tema: Tema
   sonido: boolean
   vibracion: boolean
+  paso: Paso
 }
 
 /**
@@ -98,4 +109,6 @@ export const AJUSTES_POR_DEFECTO: Ajustes = {
   tema: 'papel',
   sonido: true,
   vibracion: true,
+  // El de siempre. Quien prefiera tocar lo cambia una vez y no vuelve a pensarlo.
+  paso: 'deslizar',
 }

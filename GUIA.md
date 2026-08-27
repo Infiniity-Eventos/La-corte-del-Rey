@@ -314,6 +314,22 @@ técnicas que descartan opciones desde el primer día. Implican, como mínimo:
   Google: `apagon/LEEME.md` y `guia/paginas/apagon.html`.
 - **Origen:** P69, y T13.
 
+### D-32 · Pasar página: deslizar o tocar, a elección
+- **Decisión:** en Ajustes se elige entre **Deslizar** (lo de siempre) y
+  **Tocar**: un toque en el borde derecho avanza, en el izquierdo vuelve, y el
+  centro sigue abriendo la interfaz. Deslizar sigue funcionando en los dos modos.
+- **Por qué:** lo pidió quien la está usando. Con el teléfono en una mano y
+  apoyado, el arrastre obliga a recolocar el pulgar en cada página; el toque en
+  el borde no.
+- **En los bordes no hay doble toque, a propósito.** Pasar página no puede
+  esperar 320 ms a ver si viene un segundo dedo — es justo la espera que toda la
+  app evita. Para acercar quedan el doble toque en el centro y el pellizco, que
+  funciona en toda la pantalla.
+- **Acercado no se pasa página tocando**, igual que ya pasaba con el arrastre:
+  con la página acercada no se ve entera y cambiarla sin querer es lo peor que
+  puede hacer.
+- **Origen:** pedido por quien usa la app, 2026-08-27.
+
 ### D-31 · Las portadas se buscan y se suben. Nada más
 - **Decisión:** en la ficha de cada libro hay **dos botones y ya**. *Buscar
   portada* abre Google Imágenes buscando «portada» y el título; *Subir imagen*
@@ -821,6 +837,11 @@ construir lo que viene:
   los llevaba. Cuando pasó a componer también el encargo, marcar «Cómic» y
   añadir etiquetas antes de guardar no llegaba al prompt. Una estructura que
   sirve para dos cosas tiene que estar completa para las dos.
+- **Una prueba que mueve el mundo rompe a las de al lado.** El bloque nuevo de
+  «tocar para pasar página» dejaba el libro una página más adelante, y dos
+  comprobaciones de más abajo —que daban por hecho la página 2— se pusieron
+  rojas sin que nada estuviera roto. Se arregló haciendo que el bloque devuelva
+  la página donde la encontró, no relajando las de al lado.
 - **Lo bonito perdió contra lo correcto.** Todo el sistema de portadas
   generadas —plantilla, estilo idéntico, título compuesto por la app— estaba
   bien pensado y bien probado, y sobrevivió exactamente hasta que se usó: la
@@ -1057,3 +1078,9 @@ construir lo que viene:
   del prompt, la casilla del título y el título compuesto encima de la imagen —
   las portadas de verdad ya traen el suyo. Estaba bien hecho y bien probado, y
   duró exactamente hasta que se usó. 262 comprobaciones.
+- **2026-08-27** — **Se puede elegir cómo pasar página** (D-32): deslizar, como
+  hasta ahora, o tocar los bordes como en los lectores de siempre. Lo pidió quien
+  usa la app: con el teléfono en una mano, el arrastre obliga a recolocar el
+  pulgar en cada página. En los bordes no hay doble toque a propósito —pasar
+  página no puede esperar a ver si viene un segundo dedo— y para acercar quedan
+  el centro y el pellizco. 271 comprobaciones.

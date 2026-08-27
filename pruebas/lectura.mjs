@@ -123,6 +123,102 @@ paso('volver atrás se anima durante todo el gesto', distintos >= 5,
 paso('y la hoja se ve mientras vuelve',
   pasos.filter(p => p !== 'sin hoja' && Number(p.split('|')[1]) > 0.5).length >= 4)
 
+/* --- Pasar página tocando los bordes (a elección, en ajustes) --- */
+const folioAhora = async () => (await page.textContent('.folio')).trim()
+// Con progreso, el libro sube al destacado de «seguir leyendo» y deja la rejilla
+// con solo el botón de traer. Abrir por la rejilla abriría el selector de
+// archivos, no el libro.
+// La interfaz se alterna con cada toque, así que dar por hecho que un toque la
+// enseña es apostar. Se mira y se insiste.
+const mostrarChrome = async () => {
+  for (let i = 0; i < 3; i++) {
+    if ((await page.getAttribute('.chrome.arriba', 'data-visible')) === 'true') return
+    await page.click('.escena', { position: { x: 200, y: 300 } })
+    await page.waitForTimeout(300)
+  }
+}
+const abrirElLibro = async () => {
+  if (await page.locator('.seguir-abrir').count()) await page.click('.seguir-abrir')
+  else await page.click('.rejilla .libro .libro-abrir')
+  await page.waitForSelector('.hoja.debajo canvas', { timeout: 25000 })
+}
+const cajaEsc = await page.locator('.escena').boundingBox()
+const medio = cajaEsc.y + cajaEsc.height / 2
+
+// Por defecto, deslizar: un toque en el borde solo abre la interfaz.
+const antesDeTocar = await folioAhora()
+await page.mouse.click(cajaEsc.x + cajaEsc.width * 0.9, medio)
+await page.waitForTimeout(700)
+paso('por defecto, tocar el borde no pasa página', (await folioAhora()) === antesDeTocar,
+  `${antesDeTocar} → ${await folioAhora()}`)
+paso('lo que hace es abrir la interfaz',
+  (await page.getAttribute('.chrome.arriba', 'data-visible')) === 'true')
+
+// Se cambia el modo en los ajustes.
+await mostrarChrome()
+await page.click('.chrome.arriba .icono:first-child')
+await page.waitForSelector('.rejilla .libro', { timeout: 10000 })
+await page.click('.biblio-top .icono:has-text("Ajustes")')
+await page.waitForSelector('.tarjeta')
+paso('los ajustes dejan elegir cómo pasar página',
+  (await page.locator('.segmento-op:has-text("Tocar")').count()) === 1)
+await page.click('.segmento-op:has-text("Tocar")')
+await page.waitForTimeout(300)
+paso('y explican qué hace cada forma',
+  /borde derecho avanza/.test(await page.textContent('.paso-como')))
+await page.click('.icono.volver')
+await page.waitForSelector('.rejilla .libro')
+await abrirElLibro()
+
+const desde = await folioAhora()
+const n = t => Number(t.split('/')[0].trim())
+await page.mouse.click(cajaEsc.x + cajaEsc.width * 0.9, medio)
+await page.waitForTimeout(900)
+paso('tocando el borde derecho, avanza', n(await folioAhora()) === n(desde) + 1,
+  `${desde} → ${await folioAhora()}`)
+
+await page.mouse.click(cajaEsc.x + cajaEsc.width * 0.1, medio)
+await page.waitForTimeout(900)
+paso('y el izquierdo vuelve', (await folioAhora()) === desde, await folioAhora())
+
+const antesDelCentro = await folioAhora()
+await page.mouse.click(cajaEsc.x + cajaEsc.width * 0.5, medio)
+await page.waitForTimeout(700)
+paso('el centro no pasa página: abre la interfaz',
+  (await folioAhora()) === antesDelCentro
+  && (await page.getAttribute('.chrome.arriba', 'data-visible')) === 'true')
+
+// Deslizar tiene que seguir funcionando: no se cambia una cosa por otra.
+await page.mouse.move(cajaEsc.x + cajaEsc.width * 0.85, medio)
+await page.mouse.down()
+for (let i = 1; i <= 10; i++) {
+  await page.mouse.move(cajaEsc.x + cajaEsc.width * (0.85 - 0.7 * (i / 10)), medio)
+  await page.waitForTimeout(14)
+}
+await page.mouse.up()
+await page.waitForTimeout(900)
+paso('y deslizar sigue funcionando igual', n(await folioAhora()) === n(antesDelCentro) + 1,
+  `${antesDelCentro} → ${await folioAhora()}`)
+
+// Este bloque deja la página donde la encontró: lo que viene después cuenta
+// desde ahí, y una prueba que mueve el mundo rompe a las de al lado.
+await page.mouse.click(cajaEsc.x + cajaEsc.width * 0.1, medio)
+await page.waitForTimeout(900)
+paso('el bloque deja la página donde estaba', (await folioAhora()) === antesDeTocar,
+  `${antesDeTocar} → ${await folioAhora()}`)
+
+// Se devuelve el modo a como estaba para lo que viene después.
+await mostrarChrome()
+await page.click('.chrome.arriba .icono:first-child')
+await page.waitForSelector('.rejilla .libro', { timeout: 10000 })
+await page.click('.biblio-top .icono:has-text("Ajustes")')
+await page.waitForSelector('.tarjeta')
+await page.click('.segmento-op:has-text("Deslizar")')
+await page.waitForTimeout(300)
+await page.click('.icono.volver')
+await page.waitForSelector('.rejilla .libro')
+await abrirElLibro()
+
 /* --- Las flechas del teclado, con el mismo volteo --- */
 const folio = async () => (await page.textContent('.folio')).trim()
 const hojaMovil = () => page.evaluate(() => {

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { explicar, probarClave } from '../lib/traductor'
 import type { Quien } from '../lib/nube'
+import type { Ajustes as LosAjustes, Paso } from '../lib/tipos'
 
 /**
  * Los ajustes: por ahora, solo la clave de Gemini.
@@ -12,6 +13,8 @@ import type { Quien } from '../lib/nube'
  */
 
 interface Props {
+  ajustes: LosAjustes
+  onCambiarAjustes: (a: LosAjustes) => void
   clave: string
   onGuardar: (clave: string) => void
   onCerrar: () => void
@@ -23,8 +26,14 @@ interface Props {
   onSincronizar: () => void
 }
 
+const PASOS: { id: Paso; nombre: string; como: string }[] = [
+  { id: 'deslizar', nombre: 'Deslizar', como: 'Arrastras y la hoja gira contigo, como pasar una página de verdad.' },
+  { id: 'tocar', nombre: 'Tocar', como: 'Un toque en el borde derecho avanza y en el izquierdo vuelve. El centro sigue abriendo la interfaz. Va mejor con una mano.' },
+]
+
 export function Ajustes({
-  clave, onGuardar, onCerrar, quien, estadoNube, ocupada, onEntrar, onSalir, onSincronizar,
+  ajustes, onCambiarAjustes, clave, onGuardar, onCerrar, quien, estadoNube, ocupada,
+  onEntrar, onSalir, onSincronizar,
 }: Props) {
   const [valor, setValor] = useState(clave)
   const [visible, setVisible] = useState(false)
@@ -94,6 +103,32 @@ export function Ajustes({
             </div>
             {estadoNube && <p className="aviso-sesion">{estadoNube}</p>}
           </>
+        )}
+      </section>
+
+      <section className="tarjeta">
+        <h2 className="display tarjeta-tit">Cómo pasar página</h2>
+        <div className="segmento">
+          {PASOS.map(p => (
+            <button
+              key={p.id}
+              className="segmento-op"
+              aria-pressed={ajustes.paso === p.id}
+              onClick={() => onCambiarAjustes({ ...ajustes, paso: p.id })}
+            >
+              {p.nombre}
+            </button>
+          ))}
+        </div>
+        <p className="tarjeta-txt paso-como">
+          {PASOS.find(p => p.id === ajustes.paso)?.como}
+        </p>
+        {ajustes.paso === 'tocar' && (
+          <p className="tarjeta-nota">
+            Deslizar sigue funcionando igual. Para acercar, doble toque en el centro
+            o pellizcar en cualquier parte: en los bordes no hay doble toque, porque
+            pasar página no puede esperar a ver si viene un segundo dedo.
+          </p>
         )}
       </section>
 
