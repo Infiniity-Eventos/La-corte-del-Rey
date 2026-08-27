@@ -298,6 +298,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 .icono:hover { opacity: 1; border-color: rgba(138, 90, 43, .3); }
 .icono[aria-pressed='true'] { opacity: 1; border-color: currentColor; }
+.icono.peq { font-size: .7rem; padding: .22rem .4rem; }
 
 .salto { display: flex; align-items: center; gap: .4rem; }
 .salto input {
@@ -312,6 +313,65 @@ button { font: inherit; color: inherit; cursor: pointer; }
 /* La línea finísima de progreso (R53 / P53) */
 .progreso { position: absolute; left: 0; right: 0; bottom: var(--alto-burbuja, 0px); height: 1.5px; background: rgba(138, 90, 43, .16); z-index: 4; }
 .progreso i { display: block; height: 100%; background: var(--tinta-lectura); opacity: .45; transition: width var(--paso) linear; }
+
+/* --- Lo que tradujiste, marcado en la página ---
+   Una cinta pegada al borde derecho, a media altura: ahí no compite con la
+   barra de arriba, ni con el folio, ni con la burbuja, y se ve aunque la
+   interfaz esté oculta, que es la mitad del tiempo. */
+.marca-notas {
+  position: absolute; right: 0; top: 36%; z-index: 7;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .1rem;
+  min-width: 2.1rem; min-height: 2.75rem;
+  border: 1px solid rgba(138, 90, 43, .18); border-right: none;
+  border-radius: 7px 0 0 7px; cursor: pointer;
+  background: var(--chrome); backdrop-filter: blur(12px);
+  color: var(--tinta-lectura); font: inherit; font-size: .74rem; font-weight: 700;
+  padding: .3rem .35rem;
+  box-shadow: -1px 1px 4px rgba(46, 40, 34, .12);
+  transition: transform var(--paso) var(--curva);
+}
+.marca-notas:hover, .marca-notas[aria-expanded='true'] { transform: translateX(-2px); }
+/* Un separador de verdad: se lee como marcapáginas y no como un botón suelto. */
+.marca-notas .marca-cinta {
+  width: .55rem; height: .8rem; background: var(--ocre);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 68%, 0 100%);
+}
+.marca-notas .marca-n { font-variant-numeric: tabular-nums; line-height: 1; }
+
+/* Tocar fuera cierra. En un teléfono es lo que la mano espera, y sin esto la
+   única salida es la ✕, que es pequeña y está lejos del pulgar. */
+.notas-telon { position: absolute; inset: 0; z-index: 8; background: transparent; }
+
+.notas {
+  position: absolute; right: .5rem; left: .5rem; top: 22%; z-index: 9;
+  max-width: 26rem; margin-left: auto;
+  max-height: 56%; display: flex; flex-direction: column;
+  background: var(--chrome); backdrop-filter: blur(14px);
+  color: var(--tinta-lectura);
+  border: 1px solid rgba(138, 90, 43, .18); border-radius: var(--r);
+  box-shadow: 0 6px 20px rgba(46, 40, 34, .16);
+}
+.notas-top {
+  display: flex; align-items: center; gap: var(--e2);
+  padding: .5rem .5rem .5rem .75rem; border-bottom: 1px solid rgba(138, 90, 43, .14);
+}
+.notas-tit { flex: 1; min-width: 0; font-size: .8rem; font-weight: 700; }
+.notas-lista { margin: 0; padding: 0; list-style: none; overflow: auto; }
+.nota {
+  padding: .6rem .75rem; border-bottom: 1px solid rgba(138, 90, 43, .1);
+  display: grid; grid-template-columns: 1fr auto; gap: .1rem .6rem;
+}
+.nota:last-child { border-bottom: none; }
+.nota-orig {
+  grid-column: 1; margin: 0; font-size: .78rem; opacity: .6;
+  overflow-wrap: anywhere;
+}
+.nota-trad { grid-column: 1; margin: 0; font-size: .92rem; overflow-wrap: anywhere; }
+.nota .icono { grid-column: 2; grid-row: 1 / 3; align-self: start; }
+.notas-pie {
+  margin: 0; padding: .5rem .75rem; font-size: .72rem; opacity: .5;
+  border-top: 1px solid rgba(138, 90, 43, .14);
+}
 
 /* El número de página, discreto (R53 / P53) */
 .folio {

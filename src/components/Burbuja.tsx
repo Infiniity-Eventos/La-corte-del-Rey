@@ -25,9 +25,11 @@ interface Props {
   onIrAAjustes: () => void
   /** El lector necesita saberlo para apartar lo que estorba mientras escribes. */
   onEnUso: (enUso: boolean) => void
+  /** Para que la página se entere en el momento y ponga su marca. */
+  onGuardada: (palabra: Palabra) => void
 }
 
-export function Burbuja({ clave, libro, pagina, seleccion, onUsarSeleccion, onIrAAjustes, onEnUso }: Props) {
+export function Burbuja({ clave, libro, pagina, seleccion, onUsarSeleccion, onIrAAjustes, onEnUso, onGuardada }: Props) {
   const [texto, setTexto] = useState('')
   const [abierta, setAbierta] = useState(false)
   const [pidiendo, setPidiendo] = useState(false)
@@ -116,6 +118,7 @@ export function Burbuja({ clave, libro, pagina, seleccion, onUsarSeleccion, onIr
     }
     await guardarPalabra(p)
     setGuardada(true)
+    onGuardada(p)
   }
 
   const limpiar = () => {
@@ -196,7 +199,10 @@ export function Burbuja({ clave, libro, pagina, seleccion, onUsarSeleccion, onIr
                     onClick={alVocabulario}
                     disabled={guardada}
                   >
-                    {guardada ? 'En tu vocabulario ✓' : 'Guardar en vocabulario'}
+                    {/* Antes decía «vocabulario». Ahora el efecto que se ve
+                        primero es la marca en la página, y el nombre del botón
+                        tiene que decir lo que va a pasar, no dónde acaba. */}
+                    {guardada ? 'Guardada en la página ✓' : 'Guardar en la página'}
                   </button>
                 </>
               )}

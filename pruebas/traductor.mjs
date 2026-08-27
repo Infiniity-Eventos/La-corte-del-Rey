@@ -201,9 +201,86 @@ await page.click('.guardar-voc')
 await page.waitForTimeout(400)
 paso('se guarda en el vocabulario', (await page.textContent('.guardar-voc')).includes('✓'))
 
+/* --- Y queda marcado en la página donde lo tradujiste --- */
+const paginaDeLaNota = Number((await page.textContent('.folio')).split('/')[0].trim())
+paso('la página se marca en el momento, sin recargar',
+  (await page.locator('.marca-notas').count()) === 1)
+paso('la marca dice cuántas hay', (await page.textContent('.marca-notas .marca-n')) === '1')
+
+await page.click('.marca-notas')
+await page.waitForSelector('.notas', { timeout: 5000 })
+paso('al pulsarla se abre lo traducido aquí', (await page.locator('.nota').count()) === 1)
+paso('con la frase original', (await page.textContent('.nota-orig')) === 'he was over the moon about it')
+paso('y su traducción', (await page.textContent('.nota-trad')) === RESPUESTA.natural)
+paso('dice de qué página es', (await page.textContent('.notas-tit')) === `En la página ${paginaDeLaNota}`)
+
+// La marca vive en el borde derecho a media altura justamente para no pelearse
+// con nada. Se comprueba, porque ya pasó una vez con el aviso de retomar.
+const caja = async sel => await page.locator(sel).first().boundingBox()
+const pisa = (a, b) => !!a && !!b
+  && a.x < b.x + b.width && b.x < a.x + a.width
+  && a.y < b.y + b.height && b.y < a.y + a.height
+const marca = await caja('.marca-notas')
+paso('la marca no se pisa con la burbuja', !pisa(marca, await caja('.zona-burbuja')))
+paso('ni el panel con la burbuja', !pisa(await caja('.notas'), await caja('.zona-burbuja')))
+
+// Se busca un punto que no sea del panel ni de la burbuja, en vez de acertar a
+// ojo: el panel se mueve si cambia su alto y la prueba se rompería sola.
+const cajaNotas = await caja('.notas')
+await page.click('.notas-telon', { position: { x: 40, y: Math.max(20, cajaNotas.y / 2) } })
+await page.waitForTimeout(300)
+paso('tocar fuera cierra el panel', (await page.locator('.notas').count()) === 0)
+await page.click('.marca-notas')
+await page.waitForSelector('.notas', { timeout: 5000 })
+
+/* --- Al cambiar de página, la marca no se queda pegada --- */
+// Se cierra el panel de la traducción y se suelta el campo: con la burbuja en
+// uso, los controles del lector están apartados y no hay dónde escribir la
+// página. Es lo que haría cualquiera antes de seguir leyendo.
+await page.click('.notas .icono')
+await page.click('.panel-top .icono')
+await page.evaluate(() => document.querySelector('.barra-burbuja textarea').blur())
+await page.waitForTimeout(400)
+await page.click('.escena', { position: { x: 200, y: 300 } })
+await page.waitForTimeout(250)
+await page.fill('.salto input', String(paginaDeLaNota + 1))
+await page.press('.salto input', 'Enter')
+await page.waitForTimeout(900)
+paso('y en una página sin nada traducido no hay marca',
+  (await page.locator('.marca-notas').count()) === 0)
+
+/* --- Y al volver, sigue ahí: es lo que se pidió --- */
+await page.fill('.salto input', String(paginaDeLaNota))
+await page.press('.salto input', 'Enter')
+await page.waitForTimeout(900)
+paso('**al volver a la página, la marca sigue ahí**',
+  (await page.locator('.marca-notas').count()) === 1)
+
+/* --- Y sobrevive a cerrar el libro y volver a abrirlo --- */
+await page.click('.chrome.arriba .icono:first-child')
+await page.waitForSelector('.rejilla .libro', { timeout: 10000 })
+await abrirLibro()
+await page.waitForTimeout(600)
+const dondeAbrio = Number((await page.textContent('.folio')).split('/')[0].trim())
+paso('y sobrevive a cerrar el libro',
+  dondeAbrio !== paginaDeLaNota || (await page.locator('.marca-notas').count()) === 1,
+  `reabrió en la página ${dondeAbrio}`)
+if (dondeAbrio !== paginaDeLaNota) {
+  await page.click('.escena', { position: { x: 200, y: 300 } })
+  await page.fill('.salto input', String(paginaDeLaNota))
+  await page.press('.salto input', 'Enter')
+  await page.waitForTimeout(900)
+  paso('al ir a la página de la nota, ahí está',
+    (await page.locator('.marca-notas').count()) === 1)
+} else {
+  paso('al ir a la página de la nota, ahí está', true, 'ya estaba en ella')
+}
+
 /* --- Una palabra suelta trae su ficha (P28) --- */
 await guionar('palabra')
-await page.click('.panel-top .icono')
+// El panel puede estar ya cerrado —la comprobación de la marca lo cierra— así
+// que se cierra solo si sigue abierto, en vez de dar por hecho que está.
+if (await page.locator('.panel-top .icono').count()) await page.click('.panel-top .icono')
 await pedir('unbreakable')
 await page.waitForSelector('.solapas', { timeout: 10000 })
 const p2 = await page.locator('.solapa').allTextContents()

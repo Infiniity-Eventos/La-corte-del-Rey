@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import type { Ajustes, Libro, Tema } from '../lib/tipos'
-import { leerArchivo } from '../lib/almacen'
+import type { Ajustes, Libro, Palabra, Tema } from '../lib/tipos'
+import { borrarPalabra, leerArchivo, listarVocabulario } from '../lib/almacen'
 import { Cuaderno } from '../lib/pdf'
 import { clicDePagina, despertarSonido, toqueCorto } from '../lib/sonido'
 import { Burbuja } from './Burbuja'
@@ -106,6 +106,15 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
   const [seleccion, setSeleccion] = useState('')
   const [lupa, setLupa] = useState<Lupa | null>(null)
   const [acercando, setAcercando] = useState(false)
+  /**
+   * Lo que has traducido y guardado en este libro.
+   *
+   * Se carga entero una vez al abrirlo, no en cada página: son unas decenas de
+   * frases y buscarlas en cada volteo sería trabajo por nada, justo en el
+   * momento en el que la app no puede permitirse ninguno.
+   */
+  const [notas, setNotas] = useState<Palabra[]>([])
+  const [notasAbiertas, setNotasAbiertas] = useState(false)
   const textoRef = useRef<HTMLDivElement>(null)
   const zonaRef = useRef<HTMLDivElement>(null)
   const lectorRef = useRef<HTMLDivElement>(null)
@@ -252,6 +261,25 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
     ro.observe(zona)
     return () => ro.disconnect()
   }, [])
+
+  /* --------------------- lo traducido en la página -------------------- */
+
+  useEffect(() => {
+    let vivo = true
+    void listarVocabulario().then(todas => {
+      if (vivo) setNotas(todas.filter(p => p.libroId === libro.id))
+    })
+    return () => { vivo = false }
+  }, [libro.id])
+
+  // El panel es de esta página. Al cambiarla se cierra solo: dejarlo abierto
+  // enseñaría las notas de una página que ya no estás mirando.
+  useEffect(() => { setNotasAbiertas(false) }, [pagina])
+
+  const quitarNota = async (id: string) => {
+    await borrarPalabra(id)
+    setNotas(ns => ns.filter(n => n.id !== id))
+  }
 
   /* ------------------------ seleccionar texto ------------------------ */
 
@@ -495,6 +523,8 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
     y: Math.round((caja.h - altoArea) / 2),
   }
 
+  const notasAqui = notas.filter(n => n.pagina === pagina)
+
   return (
     <div className="lector" ref={lectorRef} data-tema={ajustes.tema} data-chrome={chrome}>
       <div className="chrome arriba" data-visible={chrome && !traduciendo}>
@@ -555,6 +585,49 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
         )}
       </div>
 
+      {/* La marca de lo traducido. Va pegada al borde derecho de la escena, a
+          media altura: ahí no compite con la barra de arriba, ni con el folio,
+          ni con la burbuja, y se ve aunque la interfaz esté oculta.
+          No se esconde mientras traduces, a propósito: el momento en que quieres
+          verla aparecer es justo el de guardar. */}
+      {notasAqui.length > 0 && (
+        <button
+          className="marca-notas"
+          onClick={() => setNotasAbiertas(v => !v)}
+          aria-expanded={notasAbiertas}
+          aria-label={`${notasAqui.length} traducida${notasAqui.length > 1 ? 's' : ''} en esta página`}
+        >
+          <span className="marca-cinta" aria-hidden="true" />
+          <span className="marca-n">{notasAqui.length}</span>
+        </button>
+      )}
+
+      {notasAbiertas && notasAqui.length > 0 && (
+        <div
+          className="notas-telon"
+          onPointerDown={() => setNotasAbiertas(false)}
+          aria-hidden="true"
+        />
+      )}
+      {notasAbiertas && notasAqui.length > 0 && (
+        <div className="notas" role="dialog" aria-label="Lo que tradujiste en esta página">
+          <div className="notas-top">
+            <span className="notas-tit">En la página {pagina}</span>
+            <button className="icono" onClick={() => setNotasAbiertas(false)} aria-label="Cerrar">✕</button>
+          </div>
+          <ul className="notas-lista">
+            {notasAqui.map(n => (
+              <li key={n.id} className="nota">
+                <p className="nota-orig">{n.texto}</p>
+                <p className="nota-trad">{n.traduccion}</p>
+                <button className="icono peq" onClick={() => void quitarNota(n.id)}>Quitar</button>
+              </li>
+            ))}
+          </ul>
+          <p className="notas-pie">También las tienes todas juntas en tu vocabulario.</p>
+        </div>
+      )}
+
       <div className="folio">{pagina} / {libro.paginas}</div>
       <div className="progreso"><i style={{ width: `${avance}%` }} /></div>
 
@@ -587,6 +660,7 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
           onUsarSeleccion={() => setSeleccion('')}
           onIrAAjustes={onIrAAjustes}
           onEnUso={setTraduciendo}
+          onGuardada={p => setNotas(ns => [...ns, p])}
         />
       </div>
 

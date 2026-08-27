@@ -313,6 +313,27 @@ técnicas que descartan opciones desde el primer día. Implican, como mínimo:
   Google: `apagon/LEEME.md` y `guia/paginas/apagon.html`.
 - **Origen:** P69, y T13.
 
+### D-23 · Lo traducido queda marcado en su página
+- **Decisión:** al guardar una traducción, la página donde la hiciste queda con
+  un **marcapáginas en el borde derecho** con cuántas hay. Se toca y se abre lo
+  que tradujiste ahí: la frase original y su traducción. Se toca fuera y se
+  cierra.
+- **Por qué en el borde derecho y a media altura:** es el único sitio del lector
+  que no se pelea con nada. Arriba está el título, abajo el folio y la burbuja,
+  y en medio la página. Además se ve con la interfaz oculta, que es la mitad del
+  tiempo.
+- **Es por página, no por el punto exacto.** Se pidió un pin «en el pedazo donde
+  estaba», y no se puede prometer: lo que escribes o pegas en la burbuja no tiene
+  posición ninguna, y lo que seleccionas la tiene solo hasta que cambia el zoom o
+  se redibuja la página. Una marca que a veces aparece donde tocaba y a veces no
+  es peor que una que siempre está donde la buscas. La página es la unidad que
+  siempre es verdad.
+- **No hay dos almacenes.** Es el mismo vocabulario de P57 mirado por página. Por
+  eso el botón de la burbuja pasó a decir **«Guardar en la página»**: el efecto
+  que se ve primero es la marca, y el nombre tiene que decir lo que va a pasar,
+  no dónde acaba. El panel recuerda que también están todas juntas.
+- **Origen:** pedido en el uso, 2026-08-27.
+
 ### D-05 · El repositorio se limpia
 - **Decisión:** se borra la app vieja "La corte del Rey" y se empieza limpio.
   El historial de git y la rama `main` la conservan; no se pierde nada.
@@ -644,6 +665,10 @@ construir lo que viene:
   los llevaba. Cuando pasó a componer también el encargo, marcar «Cómic» y
   añadir etiquetas antes de guardar no llegaba al prompt. Una estructura que
   sirve para dos cosas tiene que estar completa para las dos.
+- **Un panel que se abre tocando tiene que cerrarse tocando fuera.** El de las
+  notas salía solo con su ✕, que es pequeña y está lejos del pulgar. Lleva un
+  telón transparente por debajo que lo cierra al tocar la página — pero que **no
+  tapa la burbuja**, porque esa sigue siendo suya mientras el panel está abierto.
 - **Una clase de CSS reutilizada mezcla dos significados.** El error de sesión
   se pintaba con la clase del resultado de «probar la clave» porque se parecían.
   Se ven igual y son cosas distintas, y en cuanto una prueba mira «el aviso rojo»
@@ -769,3 +794,11 @@ construir lo que viene:
   verse entera. Se comprobó rompiéndolo a propósito antes de creérselo. Los
   libros nuevos guardan el nombre del archivo original, que a veces lleva el
   tomo o el año que el título ya no dice. 195 comprobaciones.
+- **2026-08-27** — **Lo traducido se queda en su página** (D-23). Al guardar una
+  traducción, la página se marca con un marcapáginas en el borde derecho; se toca
+  y sale lo que tradujiste ahí, con la frase y su traducción. Sobrevive a cambiar
+  de página, a cerrar el libro y a recargar, porque no es un almacén nuevo: es el
+  vocabulario de siempre mirado por página. El botón de la burbuja pasa a decir
+  «Guardar en la página», que es lo que de verdad hace ahora. 13 comprobaciones
+  más, entre ellas que la marca no se pisa con nada — que ya pasó una vez con el
+  aviso de retomar. 208 comprobaciones.
