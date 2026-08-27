@@ -2,9 +2,11 @@ name: Publicar Vellum
 
 # Cada vez que cambia el código, la app se reconstruye y se publica sola.
 # No hay nada que hacer a mano: es lo que pediste en P2.
+# Solo desde main. Si publicaran varias ramas, la última en terminar
+# machacaría a la otra y nunca sabrías cuál está en el aire.
 on:
   push:
-    branches: [main, claude/book-reader-app-planning-w4ukog]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
