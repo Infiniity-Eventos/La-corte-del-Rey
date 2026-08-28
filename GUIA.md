@@ -314,6 +314,30 @@ técnicas que descartan opciones desde el primer día. Implican, como mínimo:
   Google: `apagon/LEEME.md` y `guia/paginas/apagon.html`.
 - **Origen:** P69, y T13.
 
+### D-35 · Abrir un PDF desde fuera: Compartir en el teléfono, Abrir con en la PC
+- **Decisión:** Vellum se declara como destino de PDF por los dos caminos que
+  existen. En Android sale en el menú de **Compartir** (`share_target`); en el
+  escritorio se registra para **«Abrir con»** los `.pdf` (`file_handlers`).
+- **Por qué dos y no uno: no es un capricho, es lo que permite cada plataforma.**
+  Se comprobó en la documentación antes de escribir nada: la API de «Abrir con»
+  —`file_handlers` con `launchQueue`— **solo funciona en escritorio**. En Android
+  eso lo tienen las apps instaladas de verdad, con su declaración de tipos; una
+  app web no puede. Ahí el camino es Compartir, y es una pulsación, no tres.
+- **Cómo llega el archivo.** Android manda un POST con formulario, y un POST no
+  puede llegar a una app que son archivos estáticos: no hay servidor. Lo recoge
+  el service worker (`public/compartir-sw.js`), lo deja en una caché y abre la
+  app con `?compartidos=N`. El 303 —y no un 302— es lo que evita que recargar
+  vuelva a mandar el archivo.
+- **El recogedor va aparte, cargado con `importScripts`.** Escribir el service
+  worker entero a mano habría puesto en juego la caché sin conexión, que costó
+  dejarla bien. Workbox no toca los POST, así que los dos escuchan sin
+  estorbarse.
+- **El buzón se vacía al leerlo**, o volver a abrir la app importaría lo mismo
+  otra vez y avisaría de repetidos cada vez.
+- **El nombre viaja en una cabecera**, porque no va en el cuerpo: sin eso el
+  libro entraría llamándose «compartido/0».
+- **Origen:** pedido en el uso, 2026-08-27.
+
 ### D-34 · El tutorial de la clave vive dentro de la app
 - **Decisión:** «Cómo sacar la clave, paso a paso» es una pantalla de Vellum, a
   un toque desde Ajustes. La página publicada sigue existiendo para quien la
@@ -878,6 +902,15 @@ construir lo que viene:
   los llevaba. Cuando pasó a componer también el encargo, marcar «Cómic» y
   añadir etiquetas antes de guardar no llegaba al prompt. Una estructura que
   sirve para dos cosas tiene que estar completa para las dos.
+- **«Abrir con» y «Compartir» no son lo mismo, y en el teléfono solo hay uno.**
+  La petición era que Vellum saliera al dar «Abrir PDF». En Android eso está
+  reservado a las apps instaladas de verdad; una app web solo puede aparecer en
+  Compartir. **Se comprobó en la documentación antes de escribir una línea**, en
+  vez de construir la mitad que no existe y descubrirlo en el teléfono.
+- **Un `paso(..., true)` detrás de un `waitForSelector` no comprueba nada.** Si
+  el selector no llega, la prueba revienta entera en vez de decir qué falló; y si
+  llega, la comprobación siempre pasa. Se espera **y** se comprueba, con el fallo
+  contado como fallo.
 - **La documentación que vive fuera de la app no la lee quien la necesita.** El
   paso a paso de la clave estaba en una página publicada y en un desplegable de
   los ajustes. La página hay que mandarla; el desplegable no lo abre quien no
@@ -1149,3 +1182,11 @@ construir lo que viene:
   hacer si algo falla y dónde vive la clave. Se quita el desplegable, que no
   abría quien más lo necesitaba. Los prefijos van en monoespaciada, porque con la
   letra de la casa `AIza` se lee «Alza». 306 comprobaciones.
+- **2026-08-27** — **Un PDF se abre desde fuera** (D-35). En el teléfono, por el
+  menú de Compartir; en la PC, por «Abrir con». Son dos mecanismos distintos
+  porque «Abrir con» para una app web **solo existe en escritorio**, y eso se
+  comprobó en la documentación antes de construir nada. El POST de Android lo
+  recoge el service worker, que va aparte para no tocar la caché sin conexión.
+  15 comprobaciones de la cadena entera —el POST, el buzón, el nombre, la
+  importación al abrir— y se rompió el recogedor a propósito para verlas fallar.
+  321 comprobaciones.

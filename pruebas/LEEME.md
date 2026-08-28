@@ -14,6 +14,7 @@ node pruebas/traductor.mjs    # 79 comprobaciones · el traductor, las notas, el
 node pruebas/comic.mjs        # 29 comprobaciones · tamaños mezclados, zoom, pellizco y teclado
 node pruebas/nube.mjs         # 14 comprobaciones · hito 4, la nube sin cuenta
 node pruebas/atras.mjs        # 18 comprobaciones · el botón de atrás del teléfono
+node pruebas/compartir.mjs    # 15 comprobaciones · abrir un PDF desde fuera de la app
 node pruebas/capturas.mjs     # capturas de cada estado
 
 # Sin navegador: se ejecutan solas

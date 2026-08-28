@@ -15,6 +15,7 @@ import {
   listarVocabulario,
 } from './lib/almacen'
 import { importarPdf } from './lib/importar'
+import { escucharAperturas, recogerCompartidos } from './lib/entrada'
 import { Biblioteca } from './components/Biblioteca'
 import { FichaLibro } from './components/FichaLibro'
 import { Ajustes as PantallaAjustes } from './components/Ajustes'
@@ -201,7 +202,9 @@ export default function App() {
     void guardarAjustes(a)
   }, [])
 
-  const importar = useCallback(async (archivos: FileList) => {
+  // Acepta una lista del selector de archivos o un montón suelto: lo que llega
+  // por «Compartir» y por «Abrir con» entra por aquí, igual que lo que traes tú.
+  const importar = useCallback(async (archivos: FileList | File[]) => {
     setImportando(true)
     let nuevos = 0
     let repetidos = 0
@@ -229,6 +232,18 @@ export default function App() {
     // interrogatorio, y ahí no se abre.
     if (nuevos === 1 && ultimo) setEnFicha(ultimo)
   }, [])
+
+  /**
+   * Un PDF que llega de fuera.
+   *
+   * En el teléfono, por el menú de Compartir: el service worker lo deja en una
+   * caché y aquí se recoge. En la PC, por «Abrir con», que entrega los archivos
+   * por `launchQueue`. Los dos acaban en el mismo sitio.
+   */
+  useEffect(() => {
+    void recogerCompartidos().then(fs => { if (fs.length) void importar(fs) })
+    escucharAperturas(fs => void importar(fs))
+  }, [importar])
 
   // El progreso se guarda solo, sin escribir en disco en cada página (R16).
   const pendiente = useRef<number | null>(null)

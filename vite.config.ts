@@ -107,6 +107,31 @@ export default defineConfig({
           { src: 'icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
           { src: 'favicon.svg', sizes: 'any', type: 'image/svg+xml' },
         ],
+        /**
+         * Recibir un PDF desde fuera, por los dos caminos que existen.
+         *
+         * En el teléfono, `share_target`: Vellum sale en el menú de Compartir.
+         * Los archivos llegan en un POST que recoge el service worker, porque
+         * aquí no hay servidor que lo reciba.
+         *
+         * En el escritorio, `file_handlers`: ahí sí se puede registrar «Abrir
+         * con» para los .pdf. En Android eso no existe para una app web —solo
+         * para las instaladas de verdad— y por eso hacen falta las dos cosas.
+         */
+        share_target: {
+          action: `${base}compartir`,
+          method: 'POST',
+          enctype: 'multipart/form-data',
+          params: {
+            files: [{ name: 'archivos', accept: ['application/pdf', '.pdf'] }],
+          },
+        },
+        file_handlers: [
+          {
+            action: base,
+            accept: { 'application/pdf': ['.pdf'] },
+          },
+        ],
       },
       workbox: {
         // El worker de pdf.js es un .mjs de 1,4 MB. Sin incluir la extensión y
@@ -116,6 +141,10 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         skipWaiting: true,
         clientsClaim: true,
+        // El que recoge los PDF compartidos. Va aparte para no tener que
+        // escribir a mano el service worker entero: la caché sin conexión que
+        // genera el empaquetador costó dejarla bien y no se toca.
+        importScripts: ['compartir-sw.js'],
       },
     }),
   ],
