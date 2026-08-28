@@ -43,6 +43,17 @@ interface Props {
   onPagina: (pagina: number) => void
   onCerrar: () => void
   onIrAAjustes: () => void
+  /**
+   * Los números de al lado, cuando el libro es parte de una serie.
+   *
+   * El lector no sabe qué es una serie ni le hace falta: solo sabe que al
+   * pasarse del final hay sitio a donde ir, y quién lo decide es quien se lo
+   * pasa.
+   */
+  vecinos?: { siguiente: Libro | null; anterior: Libro | null }
+  onSaltar?: (hacia: 'siguiente' | 'anterior') => void
+  /** A dónde se sale. Desde una serie no se vuelve a la estantería, se vuelve a ella. */
+  volverA?: string
 }
 
 /**
@@ -71,7 +82,10 @@ function mismas(
   return igual(a.abajo, b.abajo) && igual(a.arriba, b.arriba)
 }
 
-export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, onIrAAjustes }: Props) {
+export function Lector({
+  libro, ajustes, clave, onAjustes, onPagina, onCerrar, onIrAAjustes, vecinos, onSaltar,
+  volverA = 'Biblioteca',
+}: Props) {
   const escenaRef = useRef<HTMLDivElement>(null)
   const movilRef = useRef<HTMLDivElement>(null)
   const caraRef = useRef<HTMLDivElement>(null)
@@ -124,7 +138,12 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
 
   // El arrastre vive en refs, no en el estado: mover el dedo no puede provocar
   // un renderizado de React por fotograma o se nota el tirón.
-  const gesto = useRef({ activo: false, x0: 0, dx: 0, p: 0, dir: null as Direccion, asentando: false })
+  const gesto = useRef({
+    activo: false, x0: 0, dx: 0, p: 0, dir: null as Direccion, asentando: false,
+    // Contra qué borde se está empujando. Sin esto, el arrastre que se pasa del
+    // final se descartaba en cuanto empezaba y al soltar no quedaba ni rastro.
+    borde: null as Direccion,
+  })
   // Del doble toque solo hace falta recordar cuándo y dónde fue el anterior.
   const ultimoToque = useRef({ t: 0, x: 0, y: 0 })
   const arrastreLupa = useRef({ x: 0, y: 0, ox: 0, oy: 0 })
@@ -411,6 +430,22 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
   )
 
   /**
+   * Pasarse del final —o del principio— cuando hay otro número esperando.
+   *
+   * Aquí no hay volteo: la hoja que giraría es de otro PDF, que todavía no está
+   * abierto, y girar una hoja en blanco se ve peor que no girar nada. Lo que sí
+   * hay es el clic y el toque, que son los que dicen «has pasado página».
+   */
+  const saltar = useCallback((hacia: 'siguiente' | 'anterior') => {
+    const v = hacia === 'siguiente' ? vecinos?.siguiente : vecinos?.anterior
+    if (!v || !onSaltar) return false
+    if (ajustes.sonido) clicDePagina()
+    if (ajustes.vibracion) toqueCorto()
+    onSaltar(hacia)
+    return true
+  }, [vecinos, onSaltar, ajustes.sonido, ajustes.vibracion])
+
+  /**
    * Pasar página con el teclado, con el mismo volteo que con el dedo.
    *
    * No basta con cambiar de página: hay que poner la hoja en su sitio, esperar
@@ -420,14 +455,15 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
   const voltear = useCallback((d: 'siguiente' | 'anterior') => {
     const g = gesto.current
     if (!lista || g.activo || g.asentando || auto.current) return
-    if (d === 'siguiente' && pagina >= libro.paginas) return
-    if (d === 'anterior' && pagina <= 1) return
+    // Se acabó el número: seguir es el siguiente, no quedarse.
+    if (d === 'siguiente' && pagina >= libro.paginas) { saltar('siguiente'); return }
+    if (d === 'anterior' && pagina <= 1) { saltar('anterior'); return }
     setLupa(null)
     g.p = 0
     g.dir = d
     auto.current = d
     setDir(d)
-  }, [lista, pagina, libro.paginas])
+  }, [lista, pagina, libro.paginas, saltar])
 
   useEffect(() => {
     const d = auto.current
@@ -499,6 +535,7 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
     g.dx = 0
     g.p = 0
     g.dir = null
+    g.borde = null
     if (movilRef.current) movilRef.current.style.transition = 'none'
     try {
       e.currentTarget.setPointerCapture(e.pointerId)
@@ -547,9 +584,11 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
     if (!g.dir) {
       if (Math.abs(g.dx) < TOQUE) return
       const quiere: Direccion = g.dx < 0 ? 'siguiente' : 'anterior'
-      // No hay hacia dónde ir: se ignora el gesto en vez de fingir un rebote.
-      if (quiere === 'siguiente' && pagina >= libro.paginas) return
-      if (quiere === 'anterior' && pagina <= 1) return
+      // No hay hacia dónde ir dentro de este número: se apunta contra qué borde
+      // se empuja y se decide al soltar. Si hay otro número, se salta; si no, el
+      // gesto se ignora en vez de fingir un rebote.
+      if (quiere === 'siguiente' && pagina >= libro.paginas) { g.borde = quiere; return }
+      if (quiere === 'anterior' && pagina <= 1) { g.borde = quiere; return }
       g.dir = quiere
       setDir(quiere)
       return
@@ -579,6 +618,15 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
 
     // Sin dirección y sin recorrido: era un toque.
     if (!g.dir) {
+      // Salvo que fuera un arrastre de verdad contra el borde: eso es querer
+      // salir de este número. Se pide el mismo recorrido que para pasar una
+      // página, para que un roce no te cambie de tomo.
+      const ancho = escenaRef.current?.clientWidth || 1
+      if (g.borde && Math.abs(g.dx) > ancho * UMBRAL) {
+        const b = g.borde
+        g.borde = null
+        if (saltar(b)) return
+      }
       if (Math.abs(g.dx) < TOQUE) alTocar(e)
       return
     }
@@ -709,7 +757,7 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
     <div className="lector" ref={lectorRef} data-tema={ajustes.tema} data-chrome={chrome}>
       <div className="chrome arriba" data-visible={chrome && !traduciendo}>
         <div className="fila entre">
-          <button className="icono" onClick={onCerrar}>← Biblioteca</button>
+          <button className="icono volver" onClick={onCerrar}>← {volverA}</button>
           <span className="titulo-lector">{libro.titulo}</span>
           <button className="icono" onClick={siguienteTema}>{NOMBRE_TEMA[ajustes.tema]}</button>
         </div>
@@ -826,6 +874,15 @@ export function Lector({ libro, ajustes, clave, onAjustes, onPagina, onCerrar, o
           aviso flotaba por su cuenta, aterrizaba justo encima de los controles
           del lector. */}
       <div className="zona-burbuja" ref={zonaRef}>
+        {/* En la última página, lo que viene. No es solo un botón: es lo que
+            avisa de que pasar de largo no te saca a la biblioteca, te mete en
+            el siguiente número. */}
+        {pagina >= libro.paginas && vecinos?.siguiente && !traduciendo && (
+          <div className="aviso enPila">
+            <span className="sigue-tit">Sigue: {vecinos.siguiente.titulo}</span>
+            <button onClick={() => saltar('siguiente')}>Abrir</button>
+          </div>
+        )}
         {volverAlInicio && !traduciendo && (
           <div className="aviso enPila">
             <span>Vas por la página {libro.pagina}</span>

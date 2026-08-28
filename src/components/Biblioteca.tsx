@@ -1,6 +1,8 @@
 import { useMemo, useRef, useState } from 'react'
 import type { Libro } from '../lib/tipos'
 import type { Quien } from '../lib/nube'
+import type { Serie } from '../lib/series'
+import { agrupar, clavear, dondeIba } from '../lib/series'
 import { Portada } from './Portada'
 
 interface Props {
@@ -13,6 +15,8 @@ interface Props {
   onImportar: (archivos: FileList) => void
   onAbrir: (libro: Libro) => void
   onEditar: (libro: Libro) => void
+  /** Entrar en una serie. Se pasa la clave, que es lo que sobrevive a recargar. */
+  onSerie: (clave: string) => void
   vocabulario: number
   onAjustes: () => void
   onVocabulario: () => void
@@ -46,7 +50,7 @@ function compilado(): string {
 }
 
 export function Biblioteca({
-  libros, catalogo, onEstrella, importando, onImportar, onAbrir, onEditar, vocabulario,
+  libros, catalogo, onEstrella, importando, onImportar, onAbrir, onEditar, onSerie, vocabulario,
   onAjustes, onVocabulario, onComprobarVersion, comprobando, quien, estadoNube,
   nubeOcupada, onSincronizar,
 }: Props) {
@@ -79,8 +83,14 @@ export function Biblioteca({
       if (filtro && !l.etiquetas.includes(filtro)) return false
       if (!q) return true
       // R27 / P41: por título. Las etiquetas entran también porque son las que
-      // hacen el trabajo que haría el autor, que quitaste en P42.
-      return plano(l.titulo).includes(q) || l.etiquetas.some(e => plano(e).includes(q))
+      // hacen el trabajo que haría el autor, que quitaste en P42. Y la serie,
+      // porque «batman» tiene que encontrar los doce números aunque ninguno se
+      // llame así a secas.
+      return (
+        plano(l.titulo).includes(q) ||
+        plano(l.serie ?? '').includes(q) ||
+        l.etiquetas.some(e => plano(e).includes(q))
+      )
     })
   }, [fuente, busqueda, filtro])
 
@@ -88,7 +98,77 @@ export function Biblioteca({
   // estás buscando: si buscas, quieres una lista, no un destacado.
   const filtrando = busqueda.trim() !== '' || filtro !== null
   const leyendo = filtrando ? undefined : visibles.find(l => l.pagina > 1)
-  const resto = leyendo ? visibles.filter(l => l.id !== leyendo.id) : visibles
+  // Un número suelto que está arriba no se repite en la rejilla. Uno de una
+  // serie sí se queda: lo que la rejilla enseña entonces no es ese libro, es la
+  // serie entera, y quitarle un número la dejaría contando mal.
+  const resto = leyendo && !leyendo.serie ? visibles.filter(l => l.id !== leyendo.id) : visibles
+
+  /**
+   * La rejilla: libros sueltos y series, cada cosa donde estaba.
+   *
+   * Una serie ocupa **un sitio**, el de su primer número. Es la mitad de lo que
+   * pediste: doce tapas casi idénticas en fila dejan de ser doce tapas casi
+   * idénticas en fila.
+   */
+  const entradas = useMemo(() => {
+    const { series } = agrupar(resto)
+    const porClave = new Map(series.map(s => [s.clave, s]))
+    const puestas = new Set<string>()
+    const lista: ({ que: 'libro'; libro: Libro } | { que: 'serie'; serie: Serie })[] = []
+    for (const l of resto) {
+      const nombre = (l.serie ?? '').trim()
+      if (!nombre) {
+        lista.push({ que: 'libro', libro: l })
+        continue
+      }
+      const s = porClave.get(clavear(nombre))
+      if (!s || puestas.has(s.clave)) continue
+      puestas.add(s.clave)
+      lista.push({ que: 'serie', serie: s })
+    }
+    return lista
+  }, [resto])
+
+  /**
+   * La tapa de un libro suelto.
+   *
+   * Es lo de siempre; solo se ha sacado del cuerpo del render porque ahora la
+   * rejilla tiene dos clases de casilla y el `map` de arriba tiene que poder
+   * elegir entre las dos sin volverse ilegible.
+   */
+  const tapaDeLibro = (l: Libro) => (
+    <div key={l.id} className="libro">
+      <button className="libro-abrir" onClick={() => onAbrir(l)} title={l.titulo}>
+        <Portada libro={l} />
+      </button>
+      <button className="mas" onClick={() => onEditar(l)} aria-label={`Ficha de ${l.titulo}`}>⋯</button>
+      {/* De quién es, cuando no es tuyo. Sin esto, un catálogo común se vuelve
+          un cajón de cosas sin dueño. */}
+      {l.de && <span className="sello-prestado" title={`Lo subió ${l.deNombre}`}>{(l.deNombre || '?')[0]}</span>}
+      {/* La estrella va debajo de la portada, no encima: sobre la tapa se comía
+          el título, que es lo que hay que leer para decidir si la marcas. Y solo
+          cuando hay catálogo: sin otra persona, todo lo tuyo está en tu
+          estantería y ya está. */}
+      <span className="libro-pie">
+        {hayCasa && (
+          <button
+            className="estrella"
+            aria-pressed={l.estrella !== false}
+            onClick={() => onEstrella(l, l.estrella === false)}
+            aria-label={l.estrella !== false
+              ? `Quitar ${l.titulo} de mi estantería`
+              : `Poner ${l.titulo} en mi estantería`}
+            title={l.estrella !== false ? 'En tu estantería' : 'Ponerlo en tu estantería'}
+          >
+            {l.estrella !== false ? '★' : '☆'}
+          </button>
+        )}
+        <span className="libro-sub mono">
+          {l.paginas} pág.{l.pagina > 1 ? ` · ${porcentaje(l)} %` : ''}
+        </span>
+      </span>
+    </div>
+  )
 
   return (
     <div className="biblio">
@@ -189,7 +269,11 @@ export function Biblioteca({
               <button className="seguir-abrir" onClick={() => onAbrir(leyendo)}>
                 <Portada libro={leyendo} grande />
                 <span className="seguir-cuerpo">
-                  <span className="seguir-eti mono">Seguir leyendo</span>
+                  {/* De qué serie es, si es de alguna: en un cómic el título
+                      del número no dice qué estás leyendo. */}
+                  <span className="seguir-eti mono">
+                    {leyendo.serie ? `${leyendo.serie} · seguir leyendo` : 'Seguir leyendo'}
+                  </span>
                   <span className="seguir-tit display">{leyendo.titulo}</span>
                   <span className="seguir-sub mono">
                     página {leyendo.pagina} de {leyendo.paginas} · {porcentaje(leyendo)} %
@@ -219,39 +303,11 @@ export function Biblioteca({
             </p>
           ) : (
             <div className="rejilla">
-              {resto.map(l => (
-                <div key={l.id} className="libro">
-                  <button className="libro-abrir" onClick={() => onAbrir(l)} title={l.titulo}>
-                    <Portada libro={l} />
-                  </button>
-                  <button className="mas" onClick={() => onEditar(l)} aria-label={`Ficha de ${l.titulo}`}>⋯</button>
-                  {/* De quién es, cuando no es tuyo. Sin esto, un catálogo
-                      común se vuelve un cajón de cosas sin dueño. */}
-                  {l.de && <span className="sello-prestado" title={`Lo subió ${l.deNombre}`}>{(l.deNombre || '?')[0]}</span>}
-                  {/* La estrella va debajo de la portada, no encima: sobre la
-                      tapa se comía el título, que es lo que hay que leer para
-                      decidir si la marcas. Y solo cuando hay catálogo: sin otra
-                      persona, todo lo tuyo está en tu estantería y ya está. */}
-                  <span className="libro-pie">
-                    {hayCasa && (
-                      <button
-                        className="estrella"
-                        aria-pressed={l.estrella !== false}
-                        onClick={() => onEstrella(l, l.estrella === false)}
-                        aria-label={l.estrella !== false
-                          ? `Quitar ${l.titulo} de mi estantería`
-                          : `Poner ${l.titulo} en mi estantería`}
-                        title={l.estrella !== false ? 'En tu estantería' : 'Ponerlo en tu estantería'}
-                      >
-                        {l.estrella !== false ? '★' : '☆'}
-                      </button>
-                    )}
-                    <span className="libro-sub mono">
-                      {l.paginas} pág.{l.pagina > 1 ? ` · ${porcentaje(l)} %` : ''}
-                    </span>
-                  </span>
-                </div>
-              ))}
+              {entradas.map(e =>
+                e.que === 'serie'
+                  ? <SerieTapa key={`s:${e.serie.clave}`} serie={e.serie} onEntrar={onSerie} />
+                  : tapaDeLibro(e.libro),
+              )}
               {!filtrando && vista === 'mia' && (
                 <div className="libro">
                   <button
@@ -275,6 +331,33 @@ export function Biblioteca({
       <button className="version mono" onClick={onComprobarVersion} disabled={comprobando}>
         {comprobando ? 'Comprobando…' : `Vellum ${__VERSION__} · ${compilado()}`}
       </button>
+    </div>
+  )
+}
+
+/**
+ * La casilla de una serie en la estantería.
+ *
+ * Ocupa lo mismo que un libro y se ve distinta a propósito: lleva un montón de
+ * hojas detrás y el número de tomos en la esquina. La tapa que enseña no es la
+ * del primero, es la del número por el que vas — que es el que reconoces.
+ */
+function SerieTapa({ serie, onEntrar }: { serie: Serie; onEntrar: (clave: string) => void }) {
+  const sigue = dondeIba(serie)
+  const tapa = sigue?.libro ?? serie.numeros[0]
+  if (!tapa) return null
+
+  return (
+    <div className="libro pila">
+      <button className="libro-abrir" onClick={() => onEntrar(serie.clave)} title={serie.nombre}>
+        <Portada libro={tapa} />
+      </button>
+      <span className="sello-serie" title={`${serie.numeros.length} números`}>
+        {serie.numeros.length}
+      </span>
+      <span className="libro-pie">
+        <span className="libro-sub mono">{serie.nombre}</span>
+      </span>
     </div>
   )
 }

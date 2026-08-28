@@ -16,7 +16,9 @@ import {
 } from './lib/almacen'
 import { importarPdf } from './lib/importar'
 import { escucharAperturas, recogerCompartidos } from './lib/entrada'
+import { agrupar, anadirA, mover, nombresDeSerie, vecino } from './lib/series'
 import { Biblioteca } from './components/Biblioteca'
+import { Serie } from './components/Serie'
 import { FichaLibro } from './components/FichaLibro'
 import { Ajustes as PantallaAjustes } from './components/Ajustes'
 import { Vocabulario } from './components/Vocabulario'
@@ -39,6 +41,8 @@ export default function App() {
   const [ajustes, setAjustes] = useState<Ajustes>(AJUSTES_POR_DEFECTO)
   const [abierto, setAbierto] = useState<Libro | null>(null)
   const [enFicha, setEnFicha] = useState<Libro | null>(null)
+  /** En qué serie estás metido, por su clave. */
+  const [enSerie, setEnSerie] = useState<string | null>(null)
   const [clave, setClave] = useState('')
   const [vocabulario, setVocabulario] = useState<Palabra[]>([])
   const [pantalla, setPantalla] = useState<'biblioteca' | 'ajustes' | 'vocabulario' | 'tutorial'>('biblioteca')
@@ -335,6 +339,7 @@ export default function App() {
   // encima, y solo al final salir de la app.
   useAtras(!!enFicha, () => setEnFicha(null))
   useAtras(!!abierto, () => { void cerrar() })
+  useAtras(!!enSerie, () => setEnSerie(null))
   useAtras(pantalla !== 'biblioteca', () => setPantalla('biblioteca'))
 
   const guardarFicha = useCallback(async (libro: Libro) => {
@@ -351,6 +356,63 @@ export default function App() {
     setNota(`«${libro.titulo}» ya no está en la estantería`)
   }, [])
 
+  /**
+   * Las series, sacadas del catálogo entero y no solo de tu estantería.
+   *
+   * Una serie que se corta porque el número siete no lleva estrella no es una
+   * serie: leer los doce seguidos es justo lo que se viene a hacer aquí.
+   */
+  const { series, sueltos } = useMemo(() => agrupar(catalogo), [catalogo])
+  const laSerie = useMemo(() => series.find(s => s.clave === enSerie) ?? null, [series, enSerie])
+  const seriesConocidas = useMemo(() => nombresDeSerie(catalogo), [catalogo])
+
+  /**
+   * Los números de al lado del que estás leyendo.
+   *
+   * Es lo único que el lector necesita saber de las series: que hay algo
+   * después y algo antes.
+   */
+  const vecinos = useMemo(() => {
+    if (!abierto?.serie) return undefined
+    const suya = series.find(s => s.numeros.some(n => n.id === abierto.id))
+    if (!suya) return undefined
+    return {
+      siguiente: vecino(suya.numeros, abierto, 'siguiente'),
+      anterior: vecino(suya.numeros, abierto, 'anterior'),
+    }
+  }, [abierto, series])
+
+  /**
+   * Pasar al número de al lado sin salir del lector.
+   *
+   * Hacia adelante, el siguiente se abre por donde lo dejaste —o por el
+   * principio, si no lo habías tocado—. Hacia atrás, el anterior se abre por el
+   * **final**: vienes de su primera página, y lo que hay antes de la primera
+   * página del cuatro es la última del tres.
+   */
+  const saltarDeNumero = useCallback(async (hacia: 'siguiente' | 'anterior') => {
+    const v = hacia === 'siguiente' ? vecinos?.siguiente : vecinos?.anterior
+    if (!v) return
+    await guardarAhora()
+    const pagina = hacia === 'siguiente' ? Math.max(1, v.pagina) : v.paginas
+    await abrir({ ...v, pagina })
+  }, [vecinos, guardarAhora])
+
+  /** Cambiar el orden de un número. Se guardan todos: el orden es de la serie. */
+  const moverEnSerie = useCallback(async (libro: Libro, hacia: 'arriba' | 'abajo') => {
+    if (!laSerie) return
+    const ordenados = mover(laSerie.numeros, libro.id, hacia)
+    for (const l of ordenados) await actualizarLibro(l)
+    await refrescar()
+  }, [laSerie, refrescar])
+
+  const anadirASerie = useCallback(async (libro: Libro) => {
+    if (!laSerie) return
+    await actualizarLibro(anadirA(laSerie, libro))
+    await refrescar()
+    setNota(`«${libro.titulo}» entra en ${laSerie.nombre}`)
+  }, [laSerie, refrescar])
+
   const etiquetasConocidas = useMemo(() => {
     const todas = new Set<string>()
     for (const l of libros) for (const e of l.etiquetas) todas.add(e)
@@ -364,7 +426,13 @@ export default function App() {
     return (
       <Suspense fallback={<div className="lector" data-tema={ajustes.tema} />}>
         <Lector
+          // Al saltar de número cambia el libro entero: la página, el PDF y las
+          // notas. Sin llave, el lector se quedaría con lo del anterior.
+          key={abierto.id}
           libro={abierto}
+          vecinos={vecinos}
+          onSaltar={h => void saltarDeNumero(h)}
+          volverA={enSerie ? 'La serie' : 'Biblioteca'}
           ajustes={ajustes}
           clave={clave}
           onAjustes={cambiarAjustes}
@@ -415,6 +483,17 @@ export default function App() {
 
   return (
     <>
+      {laSerie ? (
+        <Serie
+          serie={laSerie}
+          sueltos={sueltos}
+          onAbrir={l => void abrir(l)}
+          onEditar={setEnFicha}
+          onMover={(l, h) => void moverEnSerie(l, h)}
+          onAnadir={l => void anadirASerie(l)}
+          onCerrar={() => setEnSerie(null)}
+        />
+      ) : (
       <Biblioteca
         libros={libros}
         catalogo={catalogo}
@@ -423,6 +502,7 @@ export default function App() {
         onImportar={importar}
         onAbrir={l => void abrir(l)}
         onEditar={setEnFicha}
+        onSerie={setEnSerie}
         vocabulario={vocabulario.length}
         onAjustes={() => setPantalla('ajustes')}
         onVocabulario={() => setPantalla('vocabulario')}
@@ -433,6 +513,7 @@ export default function App() {
         nubeOcupada={nubeOcupada}
         onSincronizar={() => quien && void sincronizar(quien)}
       />
+      )}
       {pidePermiso && (
         <div className="telon" onPointerDown={e => { if (e.target === e.currentTarget) setPidePermiso(null) }}>
           <div className="ficha" role="dialog" aria-label="Descargar por datos">
@@ -468,6 +549,7 @@ export default function App() {
           key={enFicha.id}
           libro={enFicha}
           etiquetasConocidas={etiquetasConocidas}
+          seriesConocidas={seriesConocidas}
           miUid={quien?.uid ?? null}
           onGuardar={guardarFicha}
           onBorrar={quitar}

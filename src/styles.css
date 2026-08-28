@@ -293,6 +293,74 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; justif
 .portada-regla { position: relative; width: 1.4rem; height: 1px; background: var(--ocre); margin-bottom: .4rem; }
 .portada.grande { width: 5.2rem; flex: none; }
 
+/* ------------------------------------------------------------------ */
+/* Series                                                              */
+/* ------------------------------------------------------------------ */
+
+/* Una serie ocupa lo mismo que un libro y se ve distinta de un vistazo: lleva
+   hojas detrás. Son dos capas dibujadas por CSS, sin imágenes y sin nada que
+   descargar; en una rejilla de miniaturas es lo único que hace falta para que
+   «esto son doce» se entienda sin leer. */
+.libro.pila .libro-abrir { position: relative; }
+.libro.pila .libro-abrir::before,
+.libro.pila .libro-abrir::after {
+  content: ''; position: absolute; inset: 0; z-index: 0;
+  border: 1px solid var(--linea); border-radius: 4px; background: var(--vitela);
+}
+.libro.pila .libro-abrir::before { transform: translate(3px, 3px); opacity: .75; }
+.libro.pila .libro-abrir::after { transform: translate(6px, 6px); opacity: .45; }
+/* La tapa va delante y con fondo propio: sin lo uno se pintarían encima las
+   hojas de detrás, y sin lo otro se verían a través del hueco que deja el
+   degradado de la portada. */
+.libro.pila .portada { position: relative; z-index: 1; background: var(--vitela); }
+
+/* Cuántos números, en la esquina. Del mismo tamaño que el sello de prestado,
+   que vive justo enfrente. */
+.sello-serie, .sello-numero {
+  position: absolute; top: .3rem; right: .3rem; z-index: 2;
+  min-width: 1.35rem; height: 1.35rem; padding: 0 .3rem; border-radius: 999px;
+  display: grid; place-items: center; line-height: 1;
+  font-family: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, monospace;
+  font-size: .68rem; font-weight: 600;
+  background: var(--ocre); color: var(--vitela-alta); border: 1px solid var(--ocre);
+}
+/* El puesto dentro de la serie va a la izquierda: a la derecha están los tres
+   puntos, y dos cosas en la misma esquina se tocan sin querer. */
+.sello-numero { right: auto; left: .3rem; background: var(--vitela-alta); color: var(--tinta-2); border-color: var(--linea); }
+
+.serie-tit { margin-bottom: .2rem; }
+
+/* Subir y bajar. Pequeñas y sin relleno: se usan tres veces en la vida de una
+   serie y el resto del tiempo tienen que desaparecer. */
+.flechas { display: flex; flex: none; gap: .1rem; }
+.flecha {
+  width: 1.35rem; height: 1.35rem; border-radius: 4px; padding: 0; line-height: 1;
+  display: grid; place-items: center; font-size: .8rem;
+  background: transparent; border: 1px solid transparent; color: var(--tinta-3);
+  transition: color var(--paso) var(--curva), border-color var(--paso) var(--curva);
+}
+.flecha:hover { color: var(--ocre); border-color: rgba(138, 90, 43, .3); }
+.flecha[disabled] { opacity: .25; cursor: default; }
+
+.serie-anadir { margin-top: var(--e4); }
+.serie-anadir .fila { margin-bottom: var(--e2); }
+.sueltos { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .25rem; }
+.suelto {
+  display: flex; width: 100%; align-items: center; gap: var(--e2); text-align: left;
+  background: var(--vitela); border: 1px solid var(--linea); border-radius: var(--r);
+  padding: .5rem .75rem; color: inherit; font: inherit; font-size: .88rem;
+  transition: border-color var(--paso) var(--curva);
+}
+.suelto:hover { border-color: var(--ocre); }
+.suelto-tit { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.suelto-mas { flex: none; color: var(--ocre); font-size: 1.1rem; line-height: 1; }
+
+.serie-nota { margin: var(--e4) 0 0; font-size: .8rem; color: var(--tinta-3); }
+
+/* En la última página: qué viene después. El título se recorta antes que
+   empujar el botón fuera de la pantalla. */
+.sigue-tit { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 /* El hueco para traer un PDF. Sin el degradado de las portadas: es un sitio
    donde poner algo, no un libro. */
 .portada.hueca { border-style: dashed; display: grid; place-items: center; }

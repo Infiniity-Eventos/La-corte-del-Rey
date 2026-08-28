@@ -314,6 +314,40 @@ técnicas que descartan opciones desde el primer día. Implican, como mínimo:
   Google: `apagon/LEEME.md` y `guia/paginas/apagon.html`.
 - **Origen:** P69, y T13.
 
+### D-36 · Las series: doce números que se leen como uno
+- **Decisión:** un libro puede llevar el nombre de una **serie**. Todos los que
+  lleven el mismo se juntan en una sola casilla de la estantería; dentro están
+  los números con sus portadas, un **Seguir leyendo** arriba, y flechas para
+  acomodar el orden. Al terminar un número, el siguiente se abre solo.
+- **Una serie no es una entidad, es un campo.** No hay documento de serie que
+  pueda quedarse huérfano, ni identificador que sincronizar aparte: son doce
+  libros con la misma palabra en `serie`. Borrar el último número borra la serie
+  sin dejar nada detrás, y la nube la lleva sin saber que existe el concepto.
+- **El orden: primero el título comparado como los humanos**, con `numeric`, que
+  con «#1, #2, #10» acierta solo — ordenar por texto pone el 10 antes que el 2.
+  En cuanto mueves algo con las flechas se escribe `orden` en **todos** los
+  números, no solo en los dos que se cruzan: a medias, unos con orden y otros
+  sin él, mover el tercero lo mandaba al final sin que nada lo explicara.
+- **Seguir leyendo no es «el último que abrí».** Si ese está terminado, seguir es
+  empezar el siguiente; si no has empezado ninguno, es el primero. Sin esa
+  distinción el botón te devuelve a la última página de lo que ya leíste, que es
+  justo lo contrario de lo que dice.
+- **Pasarse del final abre el siguiente, y volver desde la primera página
+  devuelve al final del anterior.** Es reversible a propósito: eso es lo que
+  permite que un gesto decidido cambie de tomo sin miedo a un roce. Ahí no hay
+  volteo de hoja — la que giraría es de otro PDF sin abrir, y girar una hoja en
+  blanco se ve peor que no girar nada—, pero sí el clic y el toque.
+- **El nombre que se enseña es el del primer número**, no el del primero que se
+  encuentre: la estantería está ordenada por lo último que abriste, y sin eso la
+  serie cambiaba de mayúsculas sola según qué tomo tocaras último. Se agrupa
+  ignorando tildes, mayúsculas y espacios de más, porque nadie escribe el mismo
+  nombre igual tres veces.
+- **Una serie de un solo número sigue siendo una serie.** Si apareciera solo al
+  llegar el segundo, el primero cambiaría de sitio él solo y parecería perdido.
+- **Las series salen del catálogo entero, no solo de tu estantería:** una serie
+  que se corta porque el número siete no lleva estrella no es una serie.
+- **Origen:** pedido en el uso, 2026-08-28 — los Batman Absolute.
+
 ### D-35 · Abrir un PDF desde fuera: Compartir en el teléfono, Abrir con en la PC
 - **Decisión:** Vellum se declara como destino de PDF por los dos caminos que
   existen. En Android sale en el menú de **Compartir** (`share_target`); en el
@@ -716,6 +750,7 @@ El orden lo fijó P80: **leer antes que nada**.
 | **4 · Nube** | Sesión con Google, Firestore, subida de PDF con la regla de datos móviles, corte de facturación | **hecho** · 28 comprobaciones en `pruebas/` |
 | **5 · Portadas** | Buscar portada en Google Imágenes y subir la imagen (D-31; la versión generada se revocó) | **hecho** · 12 comprobaciones en `pruebas/` |
 | **6 · La casa** | Catálogo común, estrella por perfil, clave de Gemini por perfil | **hecho** · 22 comprobaciones · falta montar `casa/miembros` a mano |
+| **8 · Series** | Enlazar los números de una obra, seguir leyendo, orden a mano, saltar de tomo sin parar | **hecho** · 73 comprobaciones en `pruebas/` |
 | 7 · El apagón | Corte de facturación en 1 dólar | **escrito y probado**, sin montar (D-22) |
 
 Las respuestas están en `guia/respuestas/`. El prompt del icono, en `guia/prompts/`.
@@ -1190,3 +1225,14 @@ construir lo que viene:
   15 comprobaciones de la cadena entera —el POST, el buzón, el nombre, la
   importación al abrir— y se rompió el recogedor a propósito para verlas fallar.
   321 comprobaciones.
+- **2026-08-28** — **Las series** (D-36). Los números de una obra dejan de ser
+  doce libros sueltos: llevan el nombre de la serie, ocupan **una** casilla en la
+  estantería y dentro tienen sus portadas, el orden que tú decidas con las
+  flechas y un «Seguir leyendo» arriba que sabe distinguir «lo último que abrí»
+  de «lo último que terminé». Pasarse del final de un número abre el siguiente, y
+  volver desde su primera página devuelve al final del anterior — reversible a
+  propósito, que es lo que permite que el gesto no dé miedo. La serie no es una
+  entidad nueva en ningún sitio: es un campo, y por eso la nube la lleva sin
+  enterarse. 35 comprobaciones de la decisión sin navegador —el orden se equivoca
+  en silencio— y 38 de la pantalla; se rompieron el salto y el guardado del orden
+  a propósito para verlas fallar. **394 comprobaciones.**

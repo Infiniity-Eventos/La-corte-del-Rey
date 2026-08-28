@@ -46,6 +46,24 @@ export interface Libro {
    * Lo que traes tú nace marcado: si lo subiste, es porque lo querías.
    */
   estrella?: boolean
+  /**
+   * A qué serie pertenece, si pertenece a alguna.
+   *
+   * Es solo el nombre escrito: no hay documento de serie en ninguna parte. Doce
+   * números de «Batman Absolute» son doce libros con la misma palabra aquí, y
+   * eso basta para juntarlos en la estantería, para leerlos seguidos y para que
+   * la nube los lleve sin saber que existe el concepto.
+   */
+  serie?: string
+  /**
+   * Qué puesto ocupa dentro de su serie.
+   *
+   * Solo aparece cuando has movido algo con las flechas. Mientras no lo hayas
+   * hecho, el orden sale del título comparado como los humanos, que con
+   * «#1, #2, #10» acierta solo.
+   */
+  orden?: number
+
   /** Si llegó del estante: de quién es. Vacío en los tuyos. */
   de?: string
   /** Y cómo se llama quien lo puso, que es lo que se enseña. */

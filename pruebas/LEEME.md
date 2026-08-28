@@ -1,20 +1,22 @@
 # Pruebas
 
 No hay marco de pruebas ni configuración: son guiones sueltos. Casi todos abren
-Chromium y usan la app como la usarías tú; tres —la fusión entre aparatos, el
-corte de facturación y el encargo de las portadas— corren solas en Node, porque
-lo que prueban es una decisión y no necesita navegador.
+Chromium y usan la app como la usarías tú; unas cuantas —la fusión entre
+aparatos, el corte de facturación, el catálogo, el kana, el orden de una serie—
+corren solas en Node, porque lo que prueban es una decisión y no necesita
+navegador.
 
 ```bash
 npm run build
 npx vite preview --port 4173 --host 127.0.0.1 &
 node pruebas/lectura.mjs      # 43 comprobaciones · leer, las flechas y los dos modos de pasar página
-node pruebas/biblioteca.mjs   # 47 comprobaciones · la estantería y crear portada
+node pruebas/biblioteca.mjs   # 48 comprobaciones · la estantería y crear portada
 node pruebas/traductor.mjs    # 79 comprobaciones · el traductor, las notas, el japonés y el tutorial
 node pruebas/comic.mjs        # 29 comprobaciones · tamaños mezclados, zoom, pellizco y teclado
 node pruebas/nube.mjs         # 14 comprobaciones · hito 4, la nube sin cuenta
 node pruebas/atras.mjs        # 18 comprobaciones · el botón de atrás del teléfono
 node pruebas/compartir.mjs    # 15 comprobaciones · abrir un PDF desde fuera de la app
+node pruebas/serie.mjs        # 38 comprobaciones · las series: la tapa, el orden y leer sin parar
 node pruebas/capturas.mjs     # capturas de cada estado
 
 # Sin navegador: se ejecutan solas
@@ -23,6 +25,7 @@ node pruebas/apagon.mjs       # 14 comprobaciones · el corte de facturación
 node pruebas/portadas.mjs     #  9 comprobaciones · la búsqueda de portada
 node pruebas/estante.mjs      # 19 comprobaciones · el catálogo de la casa
 node pruebas/kana.mjs         # 19 comprobaciones · el teclado japonés
+node pruebas/series.mjs       # 35 comprobaciones · el orden de una serie y dónde ibas
 
 # Contra la app publicada
 node pruebas/en-vivo.mjs      # 15 comprobaciones sobre la app en su dirección real
@@ -265,6 +268,33 @@ estantería son los marcados**— tocando la marca directamente en la base de
 datos: quitarla saca el libro de la vista sin borrarlo de ningún sitio, y
 devolverla lo trae de vuelta. La parte visual se revisó a mano, con capturas.
 
+## Qué comprueban `series.mjs` y `serie.mjs`
+
+Dos capas de lo mismo. `series.mjs` es la decisión, sin navegador: **el orden se
+equivoca en silencio**, sin dar ningún error, y lo único que se ve es que el 10
+sale antes que el 2 o que «seguir leyendo» te manda al capítulo que no era.
+`serie.mjs` es lo que se ve: la tapa de la serie, el orden que se toca y la
+lectura que no para.
+
+| Comprueba | Requisito |
+|---|---|
+| Los números de la misma serie se juntan, aunque el nombre esté escrito distinto | D-36 |
+| **El 2 va antes que el 10** | D-36 |
+| Un orden puesto a mano manda sobre el título, y se escribe entero | D-36 |
+| **Y aguanta cerrar la app** | D-36 |
+| Sin empezar nada, seguir leyendo abre el primero | D-36 |
+| **Terminado uno, seguir leyendo es empezar el siguiente** | D-36 |
+| Con dos a medias, manda el último que abriste | D-36 |
+| Los tres números ocupan un solo sitio en la estantería | D-36 |
+| Buscar por el nombre de la serie los encuentra | D-36 |
+| **Pasarse del final abre el siguiente número** | D-36 |
+| Y volver desde la primera página devuelve al final del anterior | D-36 |
+| En el último no hay a dónde seguir, y no te echa a la biblioteca | D-36 |
+| Un libro suelto se mete en la serie, y sale de ella vaciando el campo | D-36 |
+
+Lo que **no** cubre: arrastrar para ordenar, que no existe — se ordena con
+flechas, a propósito (D-36).
+
 ## Qué comprueba `en-vivo.mjs`
 
 Es la única que puede fallar por motivos que no están en el código: una ruta
@@ -304,6 +334,10 @@ Se dice aquí para que nadie las lea como una garantía que no son:
   pueda leer sin girar el aparato es otra cosa, y eso no lo mide una prueba.
 - **Sin internet.** El service worker está configurado, pero comprobar que la
   app abre sin red pide un escenario aparte.
+- **Una serie de verdad, de doce números escaneados.** Se prueba con tres tomos
+  de dos páginas. Lo que eso no dice es cuánto tarda en abrirse el siguiente
+  número cuando pesa 80 MB: el salto es instantáneo aquí y en un cómic real hay
+  un momento de «Abriendo» que solo se mide con uno.
 - **Gemini de verdad.** La API está simulada. Lo que no se puede probar así es
   si el modelo devuelve buenas traducciones: eso hay que verlo con una clave
   real y libros reales.

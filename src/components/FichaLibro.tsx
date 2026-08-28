@@ -13,6 +13,8 @@ import { Portada } from './Portada'
 interface Props {
   libro: Libro
   etiquetasConocidas: string[]
+  /** Las series que ya existen, para no tener que escribir el nombre igual doce veces. */
+  seriesConocidas: string[]
   /** Quién eres ahora mismo. Sin sesión no hay estante que compartir. */
   miUid: string | null
   onGuardar: (libro: Libro) => void
@@ -31,10 +33,11 @@ function tamano(bytes: number): string {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`
 }
 
-export function FichaLibro({ libro, etiquetasConocidas, miUid, onGuardar, onBorrar, onCerrar }: Props) {
+export function FichaLibro({ libro, etiquetasConocidas, seriesConocidas, miUid, onGuardar, onBorrar, onCerrar }: Props) {
   const [titulo, setTitulo] = useState(libro.titulo)
   const [tipo, setTipo] = useState(libro.tipo)
   const [etiquetas, setEtiquetas] = useState<string[]>(libro.etiquetas)
+  const [serie, setSerie] = useState(libro.serie ?? '')
   const [portada, setPortada] = useState<Blob | undefined>(libro.portada)
   const [nueva, setNueva] = useState('')
   const [confirmando, setConfirmando] = useState(false)
@@ -61,12 +64,17 @@ export function FichaLibro({ libro, etiquetasConocidas, miUid, onGuardar, onBorr
   }
 
   const guardar = () => {
+    const nombre = serie.trim()
     onGuardar({
       ...libro,
       titulo: titulo.trim() || libro.titulo,
       tipo,
       etiquetas,
       portada,
+      serie: nombre || undefined,
+      // Sacarlo de la serie le quita también el puesto: si vuelve algún día,
+      // vuelve al final, no al hueco que dejó hace meses.
+      orden: nombre ? libro.orden : undefined,
     })
   }
 
@@ -168,6 +176,30 @@ export function FichaLibro({ libro, etiquetasConocidas, miUid, onGuardar, onBorr
               </button>
             ))}
           </div>
+        </div>
+
+        {/* La serie es solo un nombre escrito, y por eso funciona: doce números
+            con la misma palabra aquí se leen como un cómic entero. La lista de
+            debajo evita el error que lo rompería todo — escribirlo distinto en
+            el número siete. */}
+        <div className="campo">
+          <span className="campo-eti">Serie</span>
+          <input
+            list="series-conocidas"
+            value={serie}
+            onChange={e => setSerie(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') guardar() }}
+            placeholder="Batman Absolute, por ejemplo. Vacío si va suelto"
+          />
+          <datalist id="series-conocidas">
+            {seriesConocidas.map(s => <option key={s} value={s} />)}
+          </datalist>
+          {serie.trim() && (
+            <p className="ficha-pista">
+              Se junta con los demás números en la estantería. El orden se cambia
+              dentro de la serie, con las flechas.
+            </p>
+          )}
         </div>
 
         <div className="campo">
