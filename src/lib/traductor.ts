@@ -62,12 +62,22 @@ function puntuar(id: string): number {
 }
 
 /** Los modelos que la clave puede usar para generar texto, de mejor a peor. */
-export async function descubrirModelos(clave: string): Promise<string[]> {
+export async function descubrirModelos(clave: string, senal?: AbortSignal): Promise<string[]> {
+  const espera = new Espera(senal, ESPERAS.modelos)
   let r: Response
   try {
-    r = await fetch(`${RAIZ}?pageSize=200`, { headers: { 'x-goog-api-key': clave } })
-  } catch {
+    r = await fetch(`${RAIZ}?pageSize=200`, {
+      headers: { 'x-goog-api-key': clave },
+      signal: espera.control.signal,
+    })
+  } catch (e) {
+    // Esta es la primera llamada con una clave nueva, y es justo donde una red
+    // mala deja la app pensando para siempre.
+    if (espera.caducado) throw espera.suFallo()
+    if (senal?.aborted) throw e
     throw new ErrorTraductor({ tipo: 'sin-red' })
+  } finally {
+    espera.parar()
   }
   if (!r.ok) throw new ErrorTraductor(interpretar(r.status, await r.text().catch(() => '')))
 
@@ -85,11 +95,82 @@ export type Fallo =
   | { tipo: 'cuota'; vuelve: string }
   | { tipo: 'sin-red' }
   | { tipo: 'ocupado' }
+  /** Se acabó la paciencia: nadie contestó, o dejó de contestar a medias. */
+  | { tipo: 'tardo'; donde: 'llamando' | 'a-medias' }
   | { tipo: 'raro'; detalle: string }
 
 export class ErrorTraductor extends Error {
   constructor(readonly fallo: Fallo) {
     super(fallo.tipo)
+  }
+}
+
+/**
+ * Cuánto se espera antes de dar algo por colgado.
+ *
+ * No es una elección estética: **una petición sin reloj puede no terminar
+ * nunca**. Un móvil que cambia de antena, un proxy que se queda con la conexión
+ * abierta sin mandar nada — `fetch` no falla, simplemente no vuelve, y la app se
+ * queda diciendo «Traduciendo…» hasta que alguien la cierra. Pasó de verdad:
+ * cinco minutos mirando una pantalla que no iba a cambiar.
+ *
+ * Los números salen de lo que tarda esto cuando va bien: la primera respuesta
+ * llega en un par de segundos y los trozos se pisan unos a otros. Veinte
+ * segundos sin nada no es lentitud, es que no viene.
+ */
+export const ESPERAS = {
+  /** Desde que se pide hasta que Google contesta. */
+  respuesta: 20_000,
+  /** Entre dos trozos, con la respuesta ya empezada. */
+  trozo: 25_000,
+  /** Tope de la petición entera, aunque vaya goteando. */
+  total: 120_000,
+  /** Preguntar qué modelos tiene la clave. Es una respuesta corta. */
+  modelos: 20_000,
+}
+
+/**
+ * Un reloj que corta lo que se queda colgado.
+ *
+ * Cada paso rearma el reloj: mientras llegue algo, se sigue esperando. Lo que
+ * no se tolera es el silencio. Se distingue entre cortar por tiempo y cortar
+ * porque quien lee cerró el panel, porque son dos cosas distintas y solo una
+ * de ellas hay que contarla.
+ */
+class Espera {
+  readonly control = new AbortController()
+  /** Si el corte lo dio el reloj y no la persona. */
+  caducado = false
+  private paso: ReturnType<typeof setTimeout> | undefined
+  private tope: ReturnType<typeof setTimeout>
+  private donde: 'llamando' | 'a-medias' = 'llamando'
+
+  constructor(senal?: AbortSignal, total = ESPERAS.total) {
+    if (senal?.aborted) this.control.abort()
+    else senal?.addEventListener('abort', () => this.control.abort(), { once: true })
+    this.tope = setTimeout(() => this.rendirse(), total)
+  }
+
+  private rendirse() {
+    this.caducado = true
+    this.control.abort()
+  }
+
+  /** Vuelve a empezar la cuenta: acaba de pasar algo. */
+  marcar(ms: number, donde: 'llamando' | 'a-medias' = this.donde) {
+    this.donde = donde
+    clearTimeout(this.paso)
+    this.paso = setTimeout(() => this.rendirse(), ms)
+  }
+
+  parar() {
+    clearTimeout(this.paso)
+    clearTimeout(this.tope)
+  }
+
+  /** El error que toca contar, según quién cortó. */
+  suFallo(): ErrorTraductor {
+    return new ErrorTraductor({ tipo: 'tardo', donde: this.donde })
   }
 }
 
@@ -239,12 +320,17 @@ export async function traducir(opciones: Opciones): Promise<Traduccion> {
 
 async function pedirTraduccion(MODELO: string, { clave, texto, idioma = 'ingles', alAsomar, senal }: Opciones): Promise<Traduccion> {
 
+  // El reloj empieza aquí y se rearma con cada trozo que llega: se tolera que
+  // vaya lento, no que deje de venir.
+  const espera = new Espera(senal)
+  espera.marcar(ESPERAS.respuesta, 'llamando')
+
   let respuesta: Response
   try {
     respuesta = await fetch(`${RAIZ}/${MODELO}:streamGenerateContent?alt=sse`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-goog-api-key': clave },
-      signal: senal,
+      signal: espera.control.signal,
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: instruccion(idioma) }] },
         contents: [{ role: 'user', parts: [{ text: texto }] }],
@@ -257,49 +343,68 @@ async function pedirTraduccion(MODELO: string, { clave, texto, idioma = 'ingles'
       }),
     })
   } catch (e) {
+    espera.parar()
+    if (espera.caducado) throw espera.suFallo()
     if (senal?.aborted) throw e
     throw new ErrorTraductor({ tipo: 'sin-red' })
   }
 
   if (!respuesta.ok) {
+    espera.parar()
     throw new ErrorTraductor(interpretar(respuesta.status, await respuesta.text().catch(() => '')))
   }
 
   const lector = respuesta.body?.getReader()
-  if (!lector) throw new ErrorTraductor({ tipo: 'raro', detalle: 'sin cuerpo' })
+  if (!lector) {
+    espera.parar()
+    throw new ErrorTraductor({ tipo: 'raro', detalle: 'sin cuerpo' })
+  }
 
   const decodificador = new TextDecoder()
   let pendiente = ''
   let completo = ''
   let ultimoAsomo = ''
 
-  while (true) {
-    const { done, value } = await lector.read()
-    if (done) break
-    pendiente += decodificador.decode(value, { stream: true })
+  try {
+    while (true) {
+      // Cada vuelta rearma la cuenta. Una respuesta larga puede tardar; lo que no
+      // puede es quedarse callada.
+      espera.marcar(ESPERAS.trozo, 'a-medias')
+      const { done, value } = await lector.read()
+      if (done) break
+      pendiente += decodificador.decode(value, { stream: true })
 
-    const lineas = pendiente.split('\n')
-    pendiente = lineas.pop() ?? ''
-    for (const linea of lineas) {
-      if (!linea.startsWith('data:')) continue
-      const carga = linea.slice(5).trim()
-      if (!carga || carga === '[DONE]') continue
-      try {
-        const trozo = JSON.parse(carga)
-        const t = trozo?.candidates?.[0]?.content?.parts?.[0]?.text
-        if (typeof t === 'string') completo += t
-      } catch {
-        // Un trozo partido a la mitad: llegará entero en la siguiente vuelta.
+      const lineas = pendiente.split('\n')
+      pendiente = lineas.pop() ?? ''
+      for (const linea of lineas) {
+        if (!linea.startsWith('data:')) continue
+        const carga = linea.slice(5).trim()
+        if (!carga || carga === '[DONE]') continue
+        try {
+          const trozo = JSON.parse(carga)
+          const t = trozo?.candidates?.[0]?.content?.parts?.[0]?.text
+          if (typeof t === 'string') completo += t
+        } catch {
+          // Un trozo partido a la mitad: llegará entero en la siguiente vuelta.
+        }
+      }
+
+      if (alAsomar) {
+        const asomo = naturalAMedias(completo)
+        if (asomo && asomo !== ultimoAsomo) {
+          ultimoAsomo = asomo
+          alAsomar(asomo)
+        }
       }
     }
-
-    if (alAsomar) {
-      const asomo = naturalAMedias(completo)
-      if (asomo && asomo !== ultimoAsomo) {
-        ultimoAsomo = asomo
-        alAsomar(asomo)
-      }
-    }
+  } catch (e) {
+    // Cortar el stream a medias hace que `read()` lance. Quién cortó decide qué
+    // se cuenta: el reloj, quien cerró el panel, o la red que se cayó.
+    if (espera.caducado) throw espera.suFallo()
+    if (senal?.aborted) throw e
+    throw new ErrorTraductor({ tipo: 'sin-red' })
+  } finally {
+    espera.parar()
   }
 
   try {
@@ -352,6 +457,25 @@ export function explicar(f: Fallo): { titulo: string; detalle: string } {
       return { titulo: 'Sin conexión', detalle: 'Leer sigue funcionando; traducir necesita internet.' }
     case 'ocupado':
       return { titulo: 'Gemini está saturado', detalle: 'No es cosa tuya. Inténtalo en un momento.' }
+    case 'tardo':
+      // Se dice dónde se cortó porque son dos averías distintas: no llegar a
+      // conectar suele ser la red de aquí; quedarse a medias, la de allá.
+      return f.donde === 'llamando'
+        ? {
+            titulo: 'No hubo respuesta',
+            // El número sale de la constante y no escrito a mano: un mensaje
+            // que dice «20 segundos» cuando el reloj espera treinta es una
+            // mentira pequeña que nadie vuelve a revisar.
+            detalle:
+              `Se esperaron ${Math.round(ESPERAS.respuesta / 1000)} segundos y Google no contestó. ` +
+              'Casi siempre es la conexión: prueba otra vez, y si sigue igual, con wifi.',
+          }
+        : {
+            titulo: 'La traducción se quedó a medias',
+            detalle:
+              'Empezó a llegar y dejó de venir, casi siempre porque se cayó la conexión. ' +
+              'Vuelve a darle a Traducir.',
+          }
     default:
       return f.detalle === '404'
         ? {

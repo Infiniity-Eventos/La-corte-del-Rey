@@ -729,6 +729,43 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; justif
 }
 .panel-natural.esperando { opacity: .4; font-style: italic; font-weight: 400; }
 
+/* Cuánto lleva esperando, y la salida.
+   Un número que sube es toda la diferencia entre «está trabajando» y «se
+   rompió». Sin él, «Traduciendo…» quieto son cinco minutos de duda. */
+.panel-espera {
+  display: flex; align-items: center; gap: var(--e2);
+  margin: 0 0 var(--e3); font-size: .8rem;
+}
+.espera-reloj {
+  flex: none; padding: .12rem .45rem; border-radius: 999px;
+  border: 1px solid rgba(138, 90, 43, .28); opacity: .75;
+  font-variant-numeric: tabular-nums;
+}
+.espera-dice { flex: 1; min-width: 0; opacity: .6; }
+
+/* La cola: lo que se está traduciendo por detrás y lo que ya está.
+   Son tiras finas y no paneles a propósito: una traducción que tarda no puede
+   tapar la página que estás leyendo mientras llega. */
+.aviso-cola {
+  display: flex; align-items: center; gap: var(--e2);
+  margin-bottom: .4rem; padding: .4rem .5rem .4rem .7rem;
+  border-radius: var(--r); font-size: .8rem;
+  background: var(--vitela-alta); border: 1px solid var(--linea);
+  box-shadow: var(--sombra);
+  animation: sube-panel 180ms var(--curva);
+}
+.aviso-cola-txt {
+  flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.aviso-cola-txt .mono { opacity: .6; }
+.aviso-cola .icono { flex: none; }
+.aviso-cola[data-fallo='true'] { border-color: var(--ocre); }
+.aviso-cola.trabajando { opacity: .85; }
+.cola-cuenta {
+  flex: none; font-size: .68rem; padding: .05rem .32rem; border-radius: 999px;
+  background: rgba(138, 90, 43, .16); margin-left: .3rem;
+}
+
 .solapas { display: flex; gap: .3rem; flex-wrap: wrap; margin-bottom: .55rem; }
 .solapa {
   font-family: ui-monospace, Menlo, monospace; font-size: .64rem; letter-spacing: .08em;

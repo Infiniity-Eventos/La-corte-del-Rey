@@ -11,7 +11,8 @@ npm run build
 npx vite preview --port 4173 --host 127.0.0.1 &
 node pruebas/lectura.mjs      # 43 comprobaciones · leer, las flechas y los dos modos de pasar página
 node pruebas/biblioteca.mjs   # 48 comprobaciones · la estantería y crear portada
-node pruebas/traductor.mjs    # 79 comprobaciones · el traductor, las notas, el japonés y el tutorial
+node pruebas/traductor.mjs    # 90 comprobaciones · el traductor, las notas, el japonés y el tutorial
+node pruebas/cola.mjs         # 21 comprobaciones · mandar varias traducciones y seguir leyendo
 node pruebas/comic.mjs        # 29 comprobaciones · tamaños mezclados, zoom, pellizco y teclado
 node pruebas/nube.mjs         # 14 comprobaciones · hito 4, la nube sin cuenta
 node pruebas/atras.mjs        # 18 comprobaciones · el botón de atrás del teléfono
@@ -26,6 +27,7 @@ node pruebas/portadas.mjs     #  9 comprobaciones · la búsqueda de portada
 node pruebas/estante.mjs      # 19 comprobaciones · el catálogo de la casa
 node pruebas/kana.mjs         # 19 comprobaciones · el teclado japonés
 node pruebas/series.mjs       # 35 comprobaciones · el orden de una serie y dónde ibas
+node pruebas/reloj.mjs        # 14 comprobaciones · que ninguna espera pueda ser eterna
 
 # Contra la app publicada
 node pruebas/en-vivo.mjs      # 15 comprobaciones sobre la app en su dirección real
@@ -267,6 +269,44 @@ comprueba, en `biblioteca.mjs` y sin cuenta, es la regla que hay debajo —**tu
 estantería son los marcados**— tocando la marca directamente en la base de
 datos: quitarla saca el libro de la vista sin borrarlo de ningún sitio, y
 devolverla lo trae de vuelta. La parte visual se revisó a mano, con capturas.
+
+## Qué comprueban `reloj.mjs` y `cola.mjs`
+
+Los dos salen de la misma avería, vista usando la app: una traducción tardó
+cinco minutos sin decir si iba o si se había roto.
+
+`reloj.mjs` corre sin navegador, con un `fetch` que **nunca contesta**. Es la
+única forma de probar esto: con buena red no pasa nunca, y `fetch` no falla
+cuando la red se queda a medias — simplemente no vuelve.
+
+| Comprueba | Requisito |
+|---|---|
+| **Una respuesta que no llega se corta sola** | D-37 |
+| Y pronto, no cuando se acabe la paciencia de quien lee | D-37 |
+| **Una que empieza y se calla también se corta** | D-37 |
+| Y se distingue una avería de la otra | D-37 |
+| Que gotee no es que esté rota: lenta pero viva no se corta | D-37 |
+| Cortar a mano no se cuenta como «tardó» | D-37 |
+| Preguntar qué modelos hay tampoco se queda colgado | D-37 |
+| El mensaje dice el mismo número que espera el reloj | D-37 |
+
+`cola.mjs` frena a Google a mano: no contesta hasta que la prueba lo dice. Sin
+eso, «la segunda espera a la primera» sería cuestión de suerte.
+
+| Comprueba | Requisito |
+|---|---|
+| Se puede mandar otra sin esperar a la primera | D-38 |
+| **Pero solo una habla con Google a la vez** | D-38 |
+| Cerrar el panel no cancela lo que va por detrás | D-38 |
+| **Y se sigue leyendo mientras traduce** | D-38 |
+| Lo que termina avisa sin abrirse encima de la página | D-38 |
+| Al terminar una, arranca la siguiente sola | D-38 |
+| **Cada una se guarda en la página desde la que se pidió** | D-38 |
+| Lo que falló no se pierde ni pisa el campo | D-38 |
+
+Lo que **no** cubren: una red de verdad a medio caer. Lo que se prueba es cómo
+reacciona la app a un silencio, no que el silencio se parezca al de un 4G en un
+ascensor.
 
 ## Qué comprueban `series.mjs` y `serie.mjs`
 

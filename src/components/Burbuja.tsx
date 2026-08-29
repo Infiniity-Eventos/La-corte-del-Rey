@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Libro, Palabra } from '../lib/tipos'
 import { ErrorTraductor, explicar, traducir } from '../lib/traductor'
-import type { Traduccion } from '../lib/traductor'
+import type { Fallo, Traduccion } from '../lib/traductor'
 import { borrarPalabra, guardarTraduccion } from '../lib/almacen'
 import { useAtras } from '../lib/atras'
 import { Kana } from './Kana'
@@ -15,9 +15,35 @@ import type { Ajustes } from '../lib/tipos'
  * en P23 dijiste que lo primero que se salva es que nada se sienta lento. La
  * traducción natural aparece en cuanto asoma, en grande, y el resto llega
  * detrás y se queda en pestañas (P54, opción B).
+ *
+ * Y desde D-38 esto es **una cola, no una espera**. Traducir tarda lo que tarda
+ * —a veces medio minuto—, y quedarse mirando media pantalla tapada hasta que
+ * llegue rompe justo lo que la app existe para no romper: la lectura. Ahora
+ * mandas, sigues leyendo, mandas otra, y la app avisa cuando cada una está.
  */
 
 type Solapa = 'literal' | 'contexto' | 'palabra' | 'aviso'
+
+/**
+ * Una traducción encargada.
+ *
+ * Guarda la página **en la que la pediste**, no en la que estés cuando llegue:
+ * con una cola en marcha se pasan páginas mientras se traduce, y la marca tiene
+ * que quedar donde estaba la frase.
+ */
+interface Encargo {
+  id: string
+  texto: string
+  pagina: number
+  estado: 'esperando' | 'traduciendo' | 'lista' | 'fallo'
+  /** Lo que va asomando mientras llega. */
+  natural: string
+  resultado: Traduccion | null
+  fallo: { tipo: Fallo['tipo']; titulo: string; detalle: string } | null
+  guardada: Palabra | null
+  /** Cuándo empezó a traducirse. Es lo que cuenta el reloj. */
+  empezado: number
+}
 
 interface Props {
   ajustes: Ajustes
@@ -39,25 +65,38 @@ interface Props {
 export function Burbuja({ ajustes, clave, libro, pagina, seleccion, onUsarSeleccion, onIrAAjustes, onEnUso, onGuardada, onQuitada }: Props) {
   const [texto, setTexto] = useState('')
   const [abierta, setAbierta] = useState(false)
-  const [pidiendo, setPidiendo] = useState(false)
-  const [natural, setNatural] = useState('')
-  const [resultado, setResultado] = useState<Traduccion | null>(null)
-  const [fallo, setFallo] = useState<{ titulo: string; detalle: string } | null>(null)
+  /** Todo lo pedido y todavía no visto: lo que espera, lo que va y lo que ya está. */
+  const [cola, setCola] = useState<Encargo[]>([])
+  /** Cuál se está mirando en el panel grande. */
+  const [viendo, setViendo] = useState<string | null>(null)
   const [solapa, setSolapa] = useState<Solapa>('contexto')
   /**
-   * La frase queda guardada sola, sin botón.
+   * Cuántos segundos lleva la que se está traduciendo.
    *
-   * Aquí se recuerda cuál, para poder decirlo y para poder deshacerlo: guardar
-   * sin avisar y sin salida sería peor que no guardar.
+   * Está a la vista a propósito. «Traduciendo…» quieto no dice si va o si se
+   * rompió, y esa duda es lo que hace mirar una pantalla cinco minutos. Un
+   * número que sube dice «sigue vivo».
    */
-  const [guardada, setGuardada] = useState<Palabra | null>(null)
-  const [consultado, setConsultado] = useState('')
+  const [segundos, setSegundos] = useState(0)
   // El teclado de kana. Solo existe leyendo en japonés, y se abre a mano: el
   // del teléfono sigue siendo el bueno para todo lo demás.
   const [kana, setKana] = useState(false)
   const [katakana, setKatakana] = useState(false)
   const campo = useRef<HTMLTextAreaElement>(null)
-  const corte = useRef<AbortController | null>(null)
+  /** Un corte por encargo: cancelar uno no puede tumbar la cola entera. */
+  const cortes = useRef(new Map<string, AbortController>())
+
+  const cambiar = useCallback((id: string, parche: Partial<Encargo>) => {
+    setCola(c => c.map(e => (e.id === id ? { ...e, ...parche } : e)))
+  }, [])
+
+  const enCurso = cola.find(e => e.estado === 'traduciendo') ?? null
+  /** Si lo que miras tiene a otra por delante. Sola, no espera a nadie. */
+  const haciendoCola = !!enCurso && enCurso.id !== viendo
+  const enEspera = cola.filter(e => e.estado === 'esperando').length
+  const mirando = cola.find(e => e.id === viendo) ?? null
+  // Lo que ya está y todavía no has abierto. Es el aviso, y no interrumpe.
+  const avisos = cola.filter(e => e.id !== viendo && (e.estado === 'lista' || e.estado === 'fallo'))
 
   // Una selección sobre la página entra directa en la burbuja (R31 / P56).
   useEffect(() => {
@@ -68,7 +107,24 @@ export function Burbuja({ ajustes, clave, libro, pagina, seleccion, onUsarSelecc
     campo.current?.focus()
   }, [seleccion, onUsarSeleccion])
 
-  useEffect(() => () => corte.current?.abort(), [])
+  // Al cerrar el libro se cortan todas: nada sigue hablando con Google cuando
+  // ya no hay a dónde entregarlo.
+  const todos = cortes.current
+  useEffect(() => () => { for (const c of todos.values()) c.abort() }, [todos])
+
+  useEffect(() => {
+    if (!enCurso) {
+      setSegundos(0)
+      return
+    }
+    const arranque = enCurso.empezado
+    const contar = () => setSegundos(Math.round((Date.now() - arranque) / 1000))
+    contar()
+    // Medio segundo: el número tiene que moverse pronto para que se lea como un
+    // reloj y no como un cartel.
+    const t = window.setInterval(contar, 500)
+    return () => window.clearInterval(t)
+  }, [enCurso])
 
   /**
    * Un textarea de una línea corta el texto en cuanto se pasa. Se estira con lo
@@ -81,89 +137,123 @@ export function Burbuja({ ajustes, clave, libro, pagina, seleccion, onUsarSelecc
     el.style.height = `${el.scrollHeight}px`
   }, [texto])
 
-  const hayPanelAbierto = pidiendo || !!natural || !!resultado || !!fallo
   useEffect(() => {
-    onEnUso(abierta || hayPanelAbierto)
-  }, [abierta, hayPanelAbierto, onEnUso])
+    onEnUso(abierta || !!viendo)
+  }, [abierta, viendo, onEnUso])
 
-  const pedir = async () => {
-    const t = texto.trim()
-    if (!t || pidiendo) return
-
-    corte.current?.abort()
+  const trabajar = useCallback(async (encargo: Encargo) => {
     const control = new AbortController()
-    corte.current = control
-
-    setPidiendo(true)
-    setResultado(null)
-    setNatural('')
-    setFallo(null)
-    setGuardada(null)
-    setConsultado(t)
-    // El campo se vacía al mandar: lo normal es traducir varias frases seguidas
-    // y tener que borrar la anterior a mano cada vez estorba. Lo que mandaste
-    // sigue a la vista arriba del panel, así que no se pierde de vista.
-    setTexto('')
-    // Una copia local: para cuando llegue la respuesta, el estado puede haber
-    // cambiado, y lo que se guarda tiene que ser lo que se preguntó.
-    const consultadoAhora = t
-    setSolapa('contexto')
+    cortes.current.set(encargo.id, control)
+    cambiar(encargo.id, { estado: 'traduciendo', empezado: Date.now() })
 
     try {
       const r = await traducir({
         clave,
-        texto: t,
+        texto: encargo.texto,
         idioma: ajustes.idioma,
         senal: control.signal,
-        alAsomar: setNatural,
+        alAsomar: n => cambiar(encargo.id, { natural: n }),
       })
       if (control.signal.aborted) return
-      setResultado(r)
-      setNatural(r.natural)
-      setSolapa(r.palabra ? 'palabra' : r.aviso ? 'aviso' : 'contexto')
+      cambiar(encargo.id, { estado: 'lista', resultado: r, natural: r.natural })
 
       // Se guarda sola, en cuanto la traducción está entera. No se guarda lo
       // que va llegando a medias: media traducción en el vocabulario no vale
       // para nada y habría que corregirla después.
       const p = await guardarTraduccion({
-        texto: consultadoAhora,
+        texto: encargo.texto,
         traduccion: r.natural,
-        frase: consultadoAhora,
+        frase: encargo.texto,
         libroId: libro.id,
         libroTitulo: libro.titulo,
-        pagina,
+        pagina: encargo.pagina,
       })
       if (control.signal.aborted) return
-      setGuardada(p)
+      cambiar(encargo.id, { guardada: p })
       onGuardada(p)
     } catch (e) {
       if (control.signal.aborted) return
-      setFallo(explicar(e instanceof ErrorTraductor ? e.fallo : { tipo: 'raro', detalle: 'inesperado' }))
-      // Si falló, lo escrito vuelve al campo: reintentar no puede obligarte a
-      // teclearlo otra vez.
-      setTexto(t)
+      const f: Fallo = e instanceof ErrorTraductor ? e.fallo : { tipo: 'raro', detalle: 'inesperado' }
+      cambiar(encargo.id, { estado: 'fallo', fallo: { tipo: f.tipo, ...explicar(f) } })
     } finally {
-      if (!control.signal.aborted) setPidiendo(false)
+      cortes.current.delete(encargo.id)
     }
-  }
+  }, [cambiar, clave, ajustes.idioma, libro.id, libro.titulo, onGuardada])
 
-  const quitar = async () => {
-    if (!guardada) return
-    await borrarPalabra(guardada.id)
-    onQuitada(guardada.id)
-    setGuardada(null)
-  }
+  /**
+   * La cola, de una en una.
+   *
+   * De una en una y no todas a la vez, que es lo que pediste y además lo
+   * correcto: el nivel gratuito de Gemini limita las peticiones **por minuto**,
+   * y mandarle cuatro de golpe es la forma más rápida de que te conteste que no
+   * a todas.
+   */
+  useEffect(() => {
+    if (cola.some(e => e.estado === 'traduciendo')) return
+    const siguiente = cola.find(e => e.estado === 'esperando')
+    if (siguiente) void trabajar(siguiente)
+  }, [cola, trabajar])
 
-  const limpiar = () => {
-    corte.current?.abort()
-    setKana(false)
+  const encargar = () => {
+    const t = texto.trim()
+    if (!t) return
+    const encargo: Encargo = {
+      id: crypto.randomUUID(),
+      texto: t,
+      pagina,
+      estado: 'esperando',
+      natural: '',
+      resultado: null,
+      fallo: null,
+      guardada: null,
+      empezado: 0,
+    }
+    setCola(c => [...c, encargo])
+    setViendo(encargo.id)
+    setSolapa('contexto')
+    // El campo se vacía al mandar: lo normal es traducir varias frases seguidas
+    // y tener que borrar la anterior a mano cada vez estorba. Lo que mandaste
+    // sigue a la vista arriba del panel, así que no se pierde de vista.
     setTexto('')
+  }
+
+  /** Sacar un encargo de la cola, cortándolo si estaba en marcha. */
+  const soltar = useCallback((id: string, devolverTexto = false) => {
+    cortes.current.get(id)?.abort()
+    cortes.current.delete(id)
+    setCola(c => {
+      const e = c.find(x => x.id === id)
+      // Lo escrito vuelve al campo solo si el campo está libre: con una cola en
+      // marcha puedes estar escribiendo la siguiente, y pisarla sería peor que
+      // perder lo cancelado.
+      if (e && devolverTexto) setTexto(t => (t.trim() ? t : e.texto))
+      return c.filter(x => x.id !== id)
+    })
+    setViendo(v => (v === id ? null : v))
+  }, [])
+
+  const quitar = async (encargo: Encargo) => {
+    if (!encargo.guardada) return
+    await borrarPalabra(encargo.guardada.id)
+    onQuitada(encargo.guardada.id)
+    cambiar(encargo.id, { guardada: null })
+  }
+
+  /** Volver a encargar lo que falló, sin escribirlo otra vez. */
+  const reintentar = (encargo: Encargo) => {
+    cambiar(encargo.id, { estado: 'esperando', fallo: null, natural: '', empezado: 0 })
+  }
+
+  const cerrarPanel = () => {
+    setKana(false)
     setAbierta(false)
-    setResultado(null)
-    setNatural('')
-    setFallo(null)
-    setPidiendo(false)
-    setConsultado('')
+    if (viendo) {
+      const e = cola.find(x => x.id === viendo)
+      // Cerrar una que sigue traduciéndose no la mata: se va a la cola y avisa
+      // cuando esté. Cerrar una ya vista sí la retira, que ya la leíste.
+      if (e && (e.estado === 'lista' || e.estado === 'fallo')) soltar(e.id)
+      else setViendo(null)
+    }
   }
 
   /**
@@ -174,8 +264,9 @@ export function Burbuja({ ajustes, clave, libro, pagina, seleccion, onUsarSelecc
    * teclado, el segundo cierra la traducción y el tercero sale del libro, que
    * es el orden en el que las cosas están puestas encima.
    */
-  useAtras(hayPanelAbierto, limpiar)
+  useAtras(!!viendo, cerrarPanel)
 
+  const resultado = mirando?.resultado ?? null
   const solapas: { id: Solapa; nombre: string }[] = [
     ...(resultado?.palabra ? [{ id: 'palabra' as const, nombre: 'La palabra' }] : []),
     ...(resultado?.aviso ? [{ id: 'aviso' as const, nombre: 'Ojo' }] : []),
@@ -183,28 +274,93 @@ export function Burbuja({ ajustes, clave, libro, pagina, seleccion, onUsarSelecc
     { id: 'literal', nombre: 'Literal' },
   ]
 
+  // La pestaña que se abre sola depende del resultado, y el resultado llega
+  // después. Se elige aquí, cuando cambia lo que se está mirando.
+  useEffect(() => {
+    if (!resultado) return
+    setSolapa(resultado.palabra ? 'palabra' : resultado.aviso ? 'aviso' : 'contexto')
+  }, [resultado])
+
   return (
     <div className={`burbuja${abierta ? ' abierta' : ''}`}>
-      {hayPanelAbierto && (
+      {/* Lo que ya está y no has abierto. Avisa sin interrumpir: en mitad de una
+          página, abrirse solo sería exactamente lo que rompe la lectura. */}
+      {avisos.map(e => (
+        <div key={e.id} className="aviso-cola" data-fallo={e.estado === 'fallo'}>
+          <span className="aviso-cola-txt">
+            {e.estado === 'fallo' ? 'No salió: ' : 'Ya está: '}
+            <span className="mono">{e.texto}</span>
+          </span>
+          <button className="icono peq" onClick={() => { setViendo(e.id); setAbierta(false) }}>Ver</button>
+          <button className="icono peq" onClick={() => soltar(e.id)} aria-label="Descartar el aviso">×</button>
+        </div>
+      ))}
+
+      {/* Traduciendo por detrás, con el panel cerrado. Es la prueba de que
+          sigue vivo mientras lees. */}
+      {enCurso && !viendo && (
+        <div className="aviso-cola trabajando">
+          <span className="aviso-cola-txt">
+            Traduciendo <span className="mono">{enCurso.texto}</span>
+          </span>
+          <span className="mono espera-reloj">{segundos} s</span>
+          {enEspera > 0 && <span className="mono cola-cuenta">+{enEspera}</span>}
+          <button className="icono peq" onClick={() => setViendo(enCurso.id)}>Ver</button>
+        </div>
+      )}
+
+      {mirando && (
         <div className="panel">
           <div className="panel-top">
-            <span className="panel-src mono">{consultado}</span>
-            <button className="icono" onClick={limpiar} aria-label="Cerrar la traducción">×</button>
+            <span className="panel-src mono">{mirando.texto}</span>
+            <button className="icono" onClick={cerrarPanel} aria-label="Cerrar la traducción">×</button>
           </div>
 
-          {fallo ? (
+          {mirando.fallo ? (
             <div className="panel-fallo">
-              <p className="fallo-tit">{fallo.titulo}</p>
-              <p className="fallo-det">{fallo.detalle}</p>
-              {(fallo.titulo.includes('clave') || fallo.titulo.includes('vale')) && (
+              <p className="fallo-tit">{mirando.fallo.titulo}</p>
+              <p className="fallo-det">{mirando.fallo.detalle}</p>
+              {(mirando.fallo.tipo === 'sin-clave' || mirando.fallo.tipo === 'clave-mala') && (
                 <button className="btn peq" onClick={onIrAAjustes}>Ir a los ajustes</button>
+              )}
+              {/* Lo que falló por la red o por el reloj se reintenta de un
+                  toque: el texto sigue guardado en el encargo. */}
+              {(mirando.fallo.tipo === 'tardo' || mirando.fallo.tipo === 'sin-red' || mirando.fallo.tipo === 'ocupado') && (
+                <button className="btn peq" onClick={() => reintentar(mirando)}>Reintentar</button>
               )}
             </div>
           ) : (
             <>
-              <p className={`panel-natural${pidiendo && !natural ? ' esperando' : ''}`}>
-                {natural || 'Traduciendo…'}
+              <p className={`panel-natural${!mirando.natural ? ' esperando' : ''}`}>
+                {/* «En cola» solo si de verdad hay otra por delante. Sola,
+                    arranca en el mismo instante, y decir que espera sería
+                    mentir durante un fotograma. */}
+                {mirando.natural || (mirando.estado === 'esperando' && haciendoCola ? 'En cola…' : 'Traduciendo…')}
               </p>
+
+              {/* A partir de tres segundos: cuánto lleva y la salida. Antes no,
+                  que la mayoría acaban antes y un contador parpadeando es
+                  ruido. */}
+              {mirando.estado === 'traduciendo' && segundos >= 3 && (
+                <p className="panel-espera">
+                  <span className="mono espera-reloj">{segundos} s</span>
+                  <span className="espera-dice">
+                    {mirando.natural
+                      ? 'Sigue llegando.'
+                      : segundos < 10
+                        ? 'Sigue en camino.'
+                        : 'Está tardando más de lo normal.'}
+                  </span>
+                  <button className="icono peq" onClick={() => soltar(mirando.id, true)}>Cancelar</button>
+                </p>
+              )}
+
+              {mirando.estado === 'esperando' && haciendoCola && (
+                <p className="panel-espera">
+                  <span className="espera-dice">Va después de la que está en marcha.</span>
+                  <button className="icono peq" onClick={() => soltar(mirando.id, true)}>Cancelar</button>
+                </p>
+              )}
 
               {resultado && (
                 <>
@@ -241,10 +397,10 @@ export function Burbuja({ ajustes, clave, libro, pagina, seleccion, onUsarSelecc
                   {/* Ya no hay botón de guardar: se guarda sola. Pero se dice
                       que pasó y se deja la salida, porque guardar en silencio y
                       sin poder deshacerlo sería peor que no guardar. */}
-                  {guardada ? (
+                  {mirando.guardada ? (
                     <p className="guardada">
-                      <span className="guardar-voc">Guardada en la página {guardada.pagina}</span>
-                      <button className="icono peq" onClick={() => void quitar()}>Quitar</button>
+                      <span className="guardar-voc">Guardada en la página {mirando.guardada.pagina}</span>
+                      <button className="icono peq" onClick={() => void quitar(mirando)}>Quitar</button>
                     </p>
                   ) : (
                     <p className="guardada"><span className="guardar-voc tenue">Guardando…</span></p>
@@ -297,17 +453,16 @@ export function Burbuja({ ajustes, clave, libro, pagina, seleccion, onUsarSelecc
           onKeyDown={e => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault()
-              void pedir()
+              encargar()
             }
           }}
           aria-label="Texto para traducir"
         />
-        <button
-          className="btn peq"
-          onClick={() => void pedir()}
-          disabled={!texto.trim() || pidiendo}
-        >
-          {pidiendo ? '…' : 'Traducir'}
+        {/* Nunca se bloquea: mandar otra mientras una va es justo lo que hace
+            que traducir no pare la lectura. */}
+        <button className="btn peq" onClick={encargar} disabled={!texto.trim()}>
+          Traducir
+          {enCurso && <span className="mono cola-cuenta">{enEspera + 1}</span>}
         </button>
       </div>
     </div>

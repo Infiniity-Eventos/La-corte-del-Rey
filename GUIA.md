@@ -314,6 +314,49 @@ técnicas que descartan opciones desde el primer día. Implican, como mínimo:
   Google: `apagon/LEEME.md` y `guia/paginas/apagon.html`.
 - **Origen:** P69, y T13.
 
+### D-38 · Traducir es una cola, no una espera
+- **Decisión:** mandas a traducir y **sigues leyendo**. La app lo hace por
+  detrás, avisa cuando está, y mientras tanto puedes mandar más: cada una espera
+  a la anterior. Cerrar el panel no cancela nada.
+- **Por qué:** traducir tarda lo que tarda —a veces medio minuto— y hasta ahora
+  ese medio minuto era medio minuto parado, con el panel encima de la página. La
+  app existe para no romper la lectura, y era ella quien la rompía.
+- **De una en una, no todas a la vez.** Es lo pedido y además lo correcto: el
+  nivel gratuito de Gemini limita las peticiones **por minuto**, y mandarle
+  cuatro de golpe es la forma más rápida de que diga que no a todas.
+- **Lo que termina avisa, no se abre solo.** Una tira fina abajo dice «Ya está:
+  …» con un botón para verla. Abrirse encima de la página a mitad de una viñeta
+  es exactamente lo que se venía a evitar.
+- **Cada encargo recuerda la página desde la que se pidió**, no aquella en la
+  que estés cuando llegue. Con una cola en marcha se pasan páginas, y la marca
+  tiene que quedar donde estaba la frase.
+- **Al fallar, el texto ya no vuelve al campo.** Antes sí; con una cola, eso
+  pisaría lo que estés escribiendo. Se queda en su encargo, con un botón de
+  Reintentar que lo vuelve a poner en la cola.
+- **Origen:** pedido en el uso, 2026-08-28.
+
+### D-37 · Toda espera tiene reloj y salida
+- **Decisión:** ninguna llamada a Gemini puede esperar para siempre. Veinte
+  segundos sin respuesta, o veinticinco sin recibir un trozo más, y se corta con
+  un mensaje que dice qué pasó. Mientras espera, la pantalla enseña **cuántos
+  segundos lleva** y un botón para dejarlo.
+- **Por qué: `fetch` no falla, simplemente no vuelve.** Un móvil que cambia de
+  antena, un proxy que se queda la conexión abierta sin mandar nada. Sin reloj,
+  la app se queda diciendo «Traduciendo…» hasta que alguien la cierra. Pasó de
+  verdad: cinco minutos mirando una pantalla que no iba a cambiar.
+- **El reloj se rearma con cada trozo.** Se tolera que vaya lento; lo que no se
+  tolera es el silencio. Y hay un tope de dos minutos para la petición entera,
+  por si va goteando eternamente.
+- **Se distingue no llegar a conectar de cortarse a medias**, porque son dos
+  averías distintas y se cuentan distinto: la primera suele ser la red de aquí;
+  la segunda, la de allá.
+- **El número del mensaje sale de la constante**, no escrito a mano: un texto
+  que dice «20 segundos» cuando el reloj espera treinta es una mentira pequeña
+  que nadie vuelve a revisar.
+- **Cortar a mano no es una avería** y no se cuenta como tal.
+- **Origen:** pedido en el uso, 2026-08-28 — «llevo 5 min traduciendo y no sé si
+  está cargando o se rompió».
+
 ### D-36 · Las series: doce números que se leen como uno
 - **Decisión:** un libro puede llevar el nombre de una **serie**. Todos los que
   lleven el mismo se juntan en una sola casilla de la estantería; dentro están
@@ -1236,3 +1279,15 @@ construir lo que viene:
   enterarse. 35 comprobaciones de la decisión sin navegador —el orden se equivoca
   en silencio— y 38 de la pantalla; se rompieron el salto y el guardado del orden
   a propósito para verlas fallar. **394 comprobaciones.**
+- **2026-08-28** — **El traductor deja de poder colgarse** (D-37) y **pasa a ser
+  una cola** (D-38). Lo primero es un reloj: `fetch` no falla cuando la red se
+  queda a medias, simplemente no vuelve, y la app se quedaba en «Traduciendo…»
+  para siempre. Ahora se corta a los veinte segundos, se dice cuál de las dos
+  averías fue, y mientras espera se ve el contador y un botón para dejarlo. Lo
+  segundo es lo que pedías al mirar ese contador: que traducir no pare la
+  lectura. Mandas, sigues leyendo, mandas otra; van de una en una, avisan al
+  terminar sin abrirse encima de la página, y cada una recuerda la página desde
+  la que se pidió. 14 comprobaciones del reloj sin navegador —con un `fetch`
+  mudo, que es la avería que a mano nunca se ve— y 21 de la cola con Google
+  frenado a mano, para que «la segunda espera a la primera» no dependa de la
+  suerte. **440 comprobaciones.**

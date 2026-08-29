@@ -85,6 +85,15 @@ await ctx.addInitScript(({ RESPUESTA, PALABRA }) => {
     if (guion === 'clave-mala') return jsonError('API key not valid')
     if (guion === 'ocupado') return jsonError('overloaded')
     if (guion === 'sin-red') throw new TypeError('Failed to fetch')
+    // Una respuesta que nunca llega. Es la avería que no se ve probando a mano
+    // —con buena red no pasa— y la que dejaba «Traduciendo…» cinco minutos.
+    if (guion === 'mudo') {
+      return new Promise((_res, rej) => {
+        const s = opciones?.signal
+        if (s?.aborted) return rej(new DOMException('abortado', 'AbortError'))
+        s?.addEventListener('abort', () => rej(new DOMException('abortado', 'AbortError')), { once: true })
+      })
+    }
 
     const json = JSON.stringify(guion === 'palabra' ? PALABRA : RESPUESTA)
     // Se parte como lo haría el modelo, con una pausa larga tras el primero:
@@ -433,8 +442,13 @@ paso('avisa cuando se acaba la cuota',
   (await page.textContent('.fallo-tit')) === 'Se acabaron las traducciones de hoy')
 const cuando = await page.textContent('.fallo-det')
 paso('y dice cuándo vuelve', /Vuelven el .+/.test(cuando), cuando.slice(0, 60) + '…')
-paso('cuando falla, lo escrito vuelve al campo',
-  (await page.inputValue('.barra-burbuja textarea')) === 'another sentence',
+// Antes, al fallar, lo escrito volvía al campo. Con la cola eso pisaría lo que
+// estés escribiendo mientras otra traduce, así que el texto se queda en su
+// encargo y se reintenta desde ahí.
+paso('lo que falló no se pierde: sigue en su panel',
+  (await page.textContent('.panel-src')) === 'another sentence')
+paso('y no pisa el campo, que puede estar escribiendo la siguiente',
+  (await page.inputValue('.barra-burbuja textarea')) === '',
   `«${await page.inputValue('.barra-burbuja textarea')}»`)
 
 /* --- Clave mala --- */
@@ -459,10 +473,45 @@ await pedir('sin internet')
 await page.waitForSelector('.panel-fallo', { timeout: 8000 })
 paso('sin red lo dice y recuerda que leer sigue',
   (await page.textContent('.fallo-det')).includes('Leer sigue funcionando'))
+
+/* --- Lo que falla por la red se reintenta de un toque --- */
+paso('y ofrece reintentar', (await page.locator('.panel-fallo .btn:has-text("Reintentar")').count()) === 1,
+  'lo escrito ya volvió al campo: reintentar es un toque')
+await guionar('normal')
+await page.click('.panel-fallo .btn:has-text("Reintentar")')
+await page.waitForSelector('.solapas', { timeout: 12000 })
+paso('**y reintentar traduce lo mismo, sin volver a escribirlo**',
+  (await page.textContent('.panel-src')) === 'sin internet')
+
+/* --- Una espera que no termina: se ve cuánto lleva y se puede cortar --- */
+await page.click('.panel-top .icono')
+await guionar('mudo')
+await pedir('he was over the moon about it')
+await page.waitForSelector('.panel-natural.esperando', { timeout: 8000 })
+paso('mientras espera lo dice', (await page.textContent('.panel-natural')) === 'Traduciendo…')
+paso('y al principio no hay contador: casi todas acaban antes',
+  (await page.locator('.panel-espera').count()) === 0)
+
+await page.waitForSelector('.panel-espera', { timeout: 12000 })
+const reloj = (await page.textContent('.espera-reloj')).trim()
+paso('**a los pocos segundos se ve cuánto lleva esperando**', /^\d+ s$/.test(reloj), `dice «${reloj}»`)
+await page.waitForTimeout(2200)
+const reloj2 = (await page.textContent('.espera-reloj')).trim()
+paso('y el número sube, que es lo que dice «sigue vivo»', reloj2 !== reloj, `${reloj} → ${reloj2}`)
+paso('con la salida al lado', (await page.locator('.panel-espera .icono:has-text("Cancelar")').count()) === 1)
+
+await page.click('.panel-espera .icono:has-text("Cancelar")')
+await page.waitForTimeout(400)
+paso('**cancelar cierra la espera**', (await page.locator('.panel').count()) === 0)
+paso('y devuelve lo escrito al campo, sin teclearlo otra vez',
+  (await page.inputValue('.barra-burbuja textarea')) === 'he was over the moon about it')
+paso('cancelar no deja ningún error en pantalla', (await page.locator('.panel-fallo').count()) === 0,
+  'lo que decides tú no es una avería')
 await guionar('normal')
 
 /* --- Nada se amontona mientras escribes --- */
-await page.click('.panel-top .icono')
+// El panel ya está cerrado: lo cerró «Cancelar» ahí arriba.
+await page.fill('.barra-burbuja textarea', '')
 await page.click('.escena', { position: { x: 200, y: 240 } })
 await page.waitForTimeout(320)
 paso('con la interfaz abierta se ven los controles',
