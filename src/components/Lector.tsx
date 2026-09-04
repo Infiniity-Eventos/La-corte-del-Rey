@@ -223,7 +223,7 @@ export function Lector({
     ;(async () => {
       const blob = await leerArchivo(libro.archivo)
       if (!blob || !vivo) return
-      cuaderno = await abrirCuaderno(await blob.arrayBuffer(), libro.formato ?? 'pdf')
+      cuaderno = await abrirCuaderno(blob, libro.formato ?? 'pdf')
       if (!vivo) {
         cuaderno.cerrar()
         return

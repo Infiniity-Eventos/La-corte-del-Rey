@@ -149,21 +149,23 @@ export function formatoDe(nombre: string): Formato {
  * pdf.js pesa medio megabyte: quien solo lee cómics no tiene por qué
  * descargarlo, y al revés igual.
  */
-export async function abrirCuaderno(datos: ArrayBuffer, formato: Formato): Promise<Cuaderno> {
+export async function abrirCuaderno(archivo: Blob, formato: Formato): Promise<Cuaderno> {
   if (formato === 'cbz') {
     const { CuadernoCbz } = await import('./cbz')
-    return CuadernoCbz.abrir(datos)
+    return CuadernoCbz.abrir(archivo)
   }
   const { CuadernoPdf } = await import('./pdf')
-  return CuadernoPdf.abrir(datos)
+  // pdf.js sí necesita el documento entero en memoria. Un PDF de novela son
+  // unos megas; el que pesa de verdad es el cómic, y ese ya no pasa por aquí.
+  return CuadernoPdf.abrir(await archivo.arrayBuffer())
 }
 
 /** Cuántas páginas tiene, sin quedarse el archivo abierto. */
-export async function contarPaginas(datos: ArrayBuffer, formato: Formato): Promise<number> {
+export async function contarPaginas(archivo: Blob, formato: Formato): Promise<number> {
   if (formato === 'cbz') {
     const { contarPaginasCbz } = await import('./cbz')
-    return contarPaginasCbz(datos)
+    return contarPaginasCbz(archivo)
   }
   const { CuadernoPdf } = await import('./pdf')
-  return CuadernoPdf.contarPaginas(datos)
+  return CuadernoPdf.contarPaginas(await archivo.arrayBuffer())
 }

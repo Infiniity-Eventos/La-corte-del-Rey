@@ -56,6 +56,12 @@ with zipfile.ZipFile(os.path.join(d, 'comentado.zip'), 'w', zipfile.ZIP_DEFLATED
     z.writestr('uno.pdf', b'%PDF-1.4 comentado' + b' x' * 300)
     z.comment = b'A' * 2000
 
+# Uno grande en relación con su tabla: cinco ficheros de dos megas que no se
+# dejan comprimir. Sirve para medir cuánto se lee de verdad al abrirlo.
+with zipfile.ZipFile(os.path.join(d, 'gordo.zip'), 'w', zipfile.ZIP_STORED) as z:
+    for i in range(5):
+        z.writestr('tomo%d.pdf' % i, b'%PDF-1.4 ' + os.urandom(2 * 1024 * 1024))
+
 # Con más ficheros de los que caben en el final normal: el número de entradas
 # no entra en dos bytes y el zip escribe además el final de 64 bits.
 with zipfile.ZipFile(os.path.join(d, 'muchos.zip'), 'w', zipfile.ZIP_STORED) as z:
@@ -91,19 +97,18 @@ const guionPy = join(dir, 'hacer-zips.py')
 writeFileSync(guionPy, guion)
 execSync(`python3 ${guionPy} ${dir}`, { stdio: 'pipe' })
 
-const abrir = n => {
-  const b = readFileSync(join(dir, n))
-  return b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength)
-}
-const texto = u8 => new TextDecoder().decode(u8)
+// Todo trabaja sobre Blobs, como en la app: es lo que permite abrir un zip de
+// dos gigas sin traérselo a memoria.
+const abrir = n => new Blob([readFileSync(join(dir, n))])
+const texto = b => b.text()
 
 /* --- Reconocerlo --- */
 const normal = abrir('normal.zip')
-paso('un zip se reconoce por sus dos primeras letras', pareceZip(normal))
-paso('y un PDF no', !pareceZip(new TextEncoder().encode('%PDF-1.4 hola').buffer))
+paso('un zip se reconoce por sus dos primeras letras', await pareceZip(normal))
+paso('y un PDF no', !(await pareceZip(new Blob(['%PDF-1.4 hola']))))
 
 /* --- La lista --- */
-const todo = listar(normal)
+const todo = await listar(normal)
 const nombres = todo.map(e => e.nombre)
 paso('se listan todos los ficheros', nombres.length === 6, nombres.join(' · '))
 paso('con su ruta dentro del zip', nombres.includes('Batman Absolute/01.pdf'))
@@ -122,45 +127,86 @@ paso('y una carpeta con punto no cuenta como extensión', extension('v1.5/tomo')
 /* --- Sacarlo --- */
 const uno = todo.find(e => e.nombre === 'Batman Absolute/01.pdf')
 paso('un fichero comprimido se saca entero',
-  texto(await sacar(normal, uno)).startsWith('%PDF-1.4 uno'))
-paso('y con su tamaño de verdad', (await sacar(normal, uno)).length === uno.tamano,
-  `${(await sacar(normal, uno)).length} de ${uno.tamano}`)
+  (await texto(await sacar(normal, uno))).startsWith('%PDF-1.4 uno'))
+paso('y con su tamaño de verdad', (await sacar(normal, uno)).size === uno.tamano,
+  `${(await sacar(normal, uno)).size} de ${uno.tamano}`)
 
 const conTilde = todo.find(e => e.nombre.startsWith('Cr'))
-paso('también los de nombre raro', texto(await sacar(normal, conTilde)).includes('con tilde'))
+paso('también los de nombre raro', (await texto(await sacar(normal, conTilde))).includes('con tilde'))
 
 const crudo = abrir('crudo.zip')
+const guardadoTalCual = (await listar(crudo))[0]
 paso('**y los que van sin comprimir**',
-  texto(await sacar(crudo, listar(crudo)[0])).includes('sin comprimir'),
+  (await texto(await sacar(crudo, guardadoTalCual))).includes('sin comprimir'),
   'un zip hecho por el teléfono suele guardar los PDF tal cual')
+// Esto es lo que hace posible un zip de dos gigas: sacar algo guardado tal cual
+// no copia bytes, solo apunta a un trozo del archivo.
+const sinCopiar = await sacar(crudo, guardadoTalCual)
+paso('**y sacarlos no copia el archivo, solo lo apunta**',
+  sinCopiar.size === guardadoTalCual.tamano && sinCopiar instanceof Blob,
+  'con copia, un tomo de 300 MB dentro de una colección no cabe en memoria')
+
+/* --- Y sin traerse el archivo a memoria --- */
+/**
+ * Un Blob que apunta cuántos bytes se leen de verdad.
+ *
+ * Es la comprobación que faltaba el día que un zip de 2,5 GB dio «no se pudo
+ * leer el archivo»: lo que fallaba no era el zip, era pedirle al navegador esa
+ * cantidad de memoria de golpe. Aquí se mide, en vez de suponerlo.
+ */
+const espiar = blob => {
+  const cuenta = { bytes: 0 }
+  const envolver = b => ({
+    size: b.size,
+    slice: (a, c) => envolver(b.slice(a, c)),
+    arrayBuffer: async () => { cuenta.bytes += b.size; return b.arrayBuffer() },
+    stream: () => { cuenta.bytes += b.size; return b.stream() },
+    text: () => b.text(),
+  })
+  return [envolver(blob), cuenta]
+}
+
+const [ojo, cuenta] = espiar(abrir('gordo.zip'))
+const gordo = await listar(ojo)
+paso('**abrir un zip no lo lee entero**', cuenta.bytes < ojo.size / 20,
+  `leídos ${cuenta.bytes} de ${ojo.size} bytes`)
+paso('y aun así se listan todos sus ficheros', gordo.length === 5)
+
+const antesDeSacar = cuenta.bytes
+const sacado = await sacar(ojo, gordo[2])
+// Lee su cabecera —treinta bytes— y nada más: el contenido se apunta.
+paso('**y sacar uno guardado tal cual no lee su contenido**',
+  cuenta.bytes - antesDeSacar < 1024,
+  `${cuenta.bytes - antesDeSacar} bytes para sacar uno de ${gordo[2].tamano}`)
+paso('aunque sale con su tamaño entero', sacado.size === gordo[2].tamano)
 
 /* --- Los casos que rompen --- */
-const cerrado = listar(abrir('cerrado.zip'))[0]
+const cerrado = (await listar(abrir('cerrado.zip')))[0]
 paso('un zip con contraseña se detecta', cerrado.cerrado)
 let e = null
 try { await sacar(abrir('cerrado.zip'), cerrado) } catch (x) { e = x }
 paso('y se dice con palabras', e instanceof ErrorZip && /contraseña/.test(e.message), e?.message)
 
 const comentado = abrir('comentado.zip')
-paso('**un comentario largo al final no despista**', listar(comentado).length === 1,
+paso('**un comentario largo al final no despista**', (await listar(comentado)).length === 1,
   'el final del zip hay que buscarlo hacia atrás, no está en el último byte')
 paso('y lo de dentro sigue saliendo',
-  texto(await sacar(comentado, listar(comentado)[0])).includes('comentado'))
+  (await texto(await sacar(comentado, (await listar(comentado))[0]))).includes('comentado'))
 
 const muchos = abrir('muchos.zip')
-const m = listar(muchos)
+const m = await listar(muchos)
 paso('**con más de 65.535 ficheros se leen todos**', m.length === 65537, `${m.length} entrada(s)`,)
 paso('incluido el último, que es el que se perdería',
-  texto(await sacar(muchos, m[m.length - 1])).includes('el ultimo'))
+  (await texto(await sacar(muchos, m[m.length - 1]))).includes('el ultimo'))
 
 const desbordado = abrir('desbordado.zip')
-const dz = listar(desbordado)
+const dz = await listar(desbordado)
 paso('**y un zip de más de 4 GB también**', dz.length === 1 && dz[0].tamano === 19,
   `tamaño leído: ${dz[0]?.tamano}`)
-paso('sacando bien lo de dentro', texto(await sacar(desbordado, dz[0])).includes('desbordado'))
+paso('sacando bien lo de dentro', (await texto(await sacar(desbordado, dz[0]))).includes('desbordado'))
 
 let roto = null
-try { listar(new TextEncoder().encode('esto no es un zip ni de lejos').buffer) } catch (x) { roto = x }
+try { await listar(new Blob(['esto no es un zip ni de lejos'])) } catch (x) { roto = x }
 paso('lo que no es un zip se dice, no se revienta', roto instanceof ErrorZip, roto?.message)
 
 console.log(rojos ? `\n${rojos} fallo(s)` : '\nTodo en orden.')

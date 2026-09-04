@@ -137,6 +137,20 @@ paso('un zip con un PDF y un CBZ mete los dos', mezcla.includes('2 libros'), mez
 paso('sin carpeta dentro, la serie se llama como el zip',
   (await page.locator('.libro.pila:has-text("Mezcla")').count()) === 1)
 
+/* --- Como llegan de verdad: .cbr y .cbz mezclados --- */
+const mixto = await traer('Mixto.zip')
+paso('**un .cbr que por dentro es un zip entra igual**', mixto.includes('2 libros añadidos'), mixto,)
+paso('y del que sí es RAR se dice que falta', mixto.includes('1 va en RAR'), mixto)
+await page.click('.libro.pila:has-text("Rick y Morty") .libro-abrir')
+await page.waitForSelector('.serie-tit', { timeout: 8000 })
+const rym = (await page.locator(`${LIBROS} .portada-tit`).allTextContents()).map(t => t.trim())
+paso('los dos que entraron quedan en su serie y en orden',
+  rym.length === 2 && /v02/i.test(rym[0]) && /v03/i.test(rym[1]), rym.join(' · '))
+paso('y sin arrastrar la extensión en el título', !rym.some(t => /\.(cbr|cbz)/i.test(t)),
+  rym.join(' · '))
+await page.click('.biblio-top .icono.volver')
+await page.waitForSelector('.rejilla .libro')
+
 /* --- Lo que no lleva nada --- */
 const vacio = await traer('Vacio.zip')
 paso('**un zip sin nada dentro lo dice con palabras**',

@@ -3,6 +3,7 @@ import { anadirLibro, buscarPorHash, pedirPermanencia } from './almacen'
 import { contarPaginas, formatoDe } from './cuaderno'
 import type { Formato } from './cuaderno'
 import { ErrorZip, esBasura, extension, listar, pareceZip, sacar } from './zip'
+import type { Entrada } from './zip'
 
 /**
  * Traer libros de fuera.
@@ -13,12 +14,40 @@ import { ErrorZip, esBasura, extension, listar, pareceZip, sacar } from './zip'
  * las carpetas de macOS— se ignora sin decir nada, porque no es un problema.
  */
 
-/** SHA-256 del archivo entero: es lo que reconoce un repetido (R24 / P37). */
-async function huella(datos: ArrayBuffer): Promise<string> {
+async function sha256(datos: BufferSource): Promise<string> {
   const d = await crypto.subtle.digest('SHA-256', datos)
   return Array.from(new Uint8Array(d))
     .map(b => b.toString(16).padStart(2, '0'))
     .join('')
+}
+
+/** Hasta aquí se resume el archivo entero. Un tomo de cómic pasa de largo. */
+const CABE_ENTERO = 64 * 1024 * 1024
+
+/**
+ * La huella que reconoce un repetido (R24 / P37).
+ *
+ * Con un archivo normal es el SHA-256 de todo, como siempre. Con uno grande no
+ * puede serlo: resumir trescientos megas obliga a tenerlos en memoria, y eso en
+ * un teléfono es justo lo que hace que la importación falle sin explicación.
+ * Ahí se resume **el principio, el final y el tamaño**, que para archivos de
+ * verdad distingue igual de bien.
+ *
+ * Va con marca delante para que las dos formas no se mezclen nunca: un archivo
+ * grande resumido de la forma corta jamás puede parecerse a uno pequeño
+ * resumido entero.
+ */
+async function huella(archivo: Blob): Promise<string> {
+  if (archivo.size <= CABE_ENTERO) return sha256(await archivo.arrayBuffer())
+  const punta = 4 * 1024 * 1024
+  const [a, b] = await Promise.all([
+    archivo.slice(0, punta).arrayBuffer(),
+    archivo.slice(archivo.size - punta).arrayBuffer(),
+  ])
+  const junto = new Uint8Array(a.byteLength + b.byteLength)
+  junto.set(new Uint8Array(a), 0)
+  junto.set(new Uint8Array(b), a.byteLength)
+  return `r${archivo.size}:${await sha256(junto)}`
 }
 
 /**
@@ -28,10 +57,10 @@ async function huella(datos: ArrayBuffer): Promise<string> {
  */
 export function tituloDesdeNombre(nombre: string): string {
   const limpio = nombre
-    .replace(/\.(pdf|cbz|zip)$/i, '')
+    .replace(/\.(pdf|cbz|cbr|zip)$/i, '')
     .replace(/[_+]+/g, ' ')
     .replace(/\s*[-–]\s*/g, ' — ')
-    .replace(/\b(pdf|cbz|ebook|epub|scan|escaneado|www?\.[^\s]+|z-?lib(rary)?)\b/gi, '')
+    .replace(/\b(pdf|cbz|cbr|ebook|epub|scan|escaneado|www?\.[^\s]+|z-?lib(rary)?)\b/gi, '')
     .replace(/\s{2,}/g, ' ')
     .trim()
   if (!limpio) return 'Sin título'
@@ -42,14 +71,16 @@ export function tituloDesdeNombre(nombre: string): string {
 const SIRVE = /^(pdf|cbz)$/
 const ES_CAJA = /^zip$/
 /**
- * El CBR no entra, y hay que decirlo aparte.
+ * El CBR: se mira por dentro antes de rendirse.
  *
- * Un CBR es lo mismo que un CBZ pero comprimido con RAR, que es un formato
- * cerrado y no viene en ningún navegador. Sin este aviso, un `.cbr` acabaría en
- * pdf.js dando un error que no explica nada.
+ * Un CBR debería ser un cómic comprimido con RAR, que es un formato cerrado y
+ * no viene en ningún navegador. Pero **una buena parte de los `.cbr` que
+ * circulan son zips con el nombre cambiado**: alguien recomprimió el tomo y le
+ * dejó la extensión de antes. Esos se abren perfectamente, así que se comprueba
+ * el contenido y solo se rechaza lo que de verdad es RAR.
  */
 const ES_RAR = /^cbr$/
-const AVISO_RAR = 'los CBR van en RAR, que no se puede abrir aquí. Convertido a CBZ entra sin problema'
+const AVISO_RAR = 'va comprimido en RAR de verdad, y eso no lo abre ningún navegador. Convertido a CBZ entra sin problema'
 
 /**
  * La carpeta que comparten todos, si comparten alguna.
@@ -84,20 +115,20 @@ export interface Marcha {
  * y qué puesto ocupa. Sale de la carpeta en la que venía.
  */
 async function meter(
-  datos: ArrayBuffer,
+  archivo: Blob,
   nombre: string,
   extras: Partial<Libro> = {},
 ): Promise<Resultado> {
   try {
-    const hash = await huella(datos)
+    const hash = await huella(archivo)
     // R24 / P37: avisar y no duplicar.
     const ya = await buscarPorHash(hash)
     if (ya) return { estado: 'repetido', libro: ya }
 
-    const formato: Formato = formatoDe(nombre)
-    // pdf.js se queda con el búfer que le pasas, así que va una copia; el CBZ
-    // solo lo lee, y copiar trescientos megas para nada sí se nota.
-    const paginas = await contarPaginas(formato === 'pdf' ? datos.slice(0) : datos, formato)
+    // El formato lo puede saber quien llama mejor que el nombre: un `.cbr` que
+    // por dentro es un zip es un cómic, se llame como se llame.
+    const formato: Formato = extras.formato ?? formatoDe(nombre)
+    const paginas = await contarPaginas(archivo, formato)
     if (paginas === 0) throw new Error('no tiene ninguna página')
 
     const ahora = Date.now()
@@ -111,7 +142,7 @@ async function meter(
       formato,
       etiquetas: [],
       paginas,
-      bytes: datos.byteLength,
+      bytes: archivo.size,
       archivo: `${id}.${formato}`,
       nombreOriginal: nombre,
       // Lo que traes tú nace en tu estantería: si lo subiste, lo querías.
@@ -122,11 +153,16 @@ async function meter(
       ...extras,
     }
 
-    await anadirLibro(libro, new Blob([datos]))
+    await anadirLibro(libro, archivo)
     void pedirPermanencia()
     return { estado: 'anadido', libro }
   } catch (e) {
-    const motivo = e instanceof Error ? e.message : 'no se pudo leer el archivo'
+    // Traer una colección entera es justo cuando se acaba el sitio, y el
+    // mensaje del navegador para eso no lo entiende nadie.
+    const sinSitio = e instanceof DOMException && /quota|space/i.test(`${e.name} ${e.message}`)
+    const motivo = sinSitio
+      ? 'se acabó el espacio en este aparato'
+      : e instanceof Error ? e.message : 'no se pudo leer el archivo'
     return { estado: 'error', nombre, motivo }
   }
 }
@@ -141,8 +177,8 @@ async function meter(
  * Se busca en el primer kilobyte y no en el byte cero: hay PDF con basura
  * delante, y pdf.js los abre igual.
  */
-function parecePdf(datos: ArrayBuffer): boolean {
-  const cabeza = new Uint8Array(datos, 0, Math.min(1024, datos.byteLength))
+async function parecePdf(archivo: Blob): Promise<boolean> {
+  const cabeza = new Uint8Array(await archivo.slice(0, 1024).arrayBuffer())
   for (let i = 0; i + 4 <= cabeza.length; i++) {
     if (cabeza[i] === 0x25 && cabeza[i + 1] === 0x50 && cabeza[i + 2] === 0x44 && cabeza[i + 3] === 0x46) return true
   }
@@ -160,7 +196,7 @@ const FONDO = 3
  * primer momento.
  */
 async function abrirCaja(
-  datos: ArrayBuffer,
+  archivo: Blob,
   nombreCaja: string,
   avisar: ((m: Marcha) => void) | undefined,
   contador: { hecho: number; total: number },
@@ -168,7 +204,7 @@ async function abrirCaja(
 ): Promise<Resultado[]> {
   let dentro
   try {
-    dentro = listar(datos)
+    dentro = await listar(archivo)
   } catch (e) {
     return [{ estado: 'error', nombre: nombreCaja, motivo: e instanceof ErrorZip ? e.message : 'no se pudo abrir' }]
   }
@@ -176,14 +212,28 @@ async function abrirCaja(
   const utiles = dentro
     .filter(e => !esBasura(e.nombre) && e.tamano > 0)
     .filter(e => SIRVE.test(extension(e.nombre)) || (fondo > 0 && ES_CAJA.test(extension(e.nombre))))
-    .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es', { numeric: true, sensitivity: 'base' }))
+
+  // Los que dicen ser RAR se miran uno a uno: los que por dentro son zip entran
+  // como cómics, y solo se cuentan los que de verdad no se pueden abrir.
+  const dudosos = dentro.filter(e => !esBasura(e.nombre) && e.tamano > 0 && ES_RAR.test(extension(e.nombre)))
+  const rescatados: Entrada[] = []
+  let rares = 0
+  for (const e of dudosos) {
+    try {
+      if (await pareceZip(await sacar(archivo, e))) rescatados.push(e)
+      else rares++
+    } catch {
+      rares++
+    }
+  }
+  utiles.push(...rescatados)
+  utiles.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es', { numeric: true, sensitivity: 'base' }))
 
   if (utiles.length === 0) {
-    const hayRar = dentro.some(e => ES_RAR.test(extension(e.nombre)))
     return [{
       estado: 'error',
       nombre: nombreCaja,
-      motivo: hayRar ? AVISO_RAR : 'no hay ningún PDF ni CBZ dentro',
+      motivo: rares > 0 ? AVISO_RAR : 'no hay ningún PDF ni CBZ dentro',
     }]
   }
 
@@ -197,16 +247,27 @@ async function abrirCaja(
   contador.total += utiles.length - 1
   const salida: Resultado[] = []
   let puesto = 0
+  if (rares > 0) {
+    salida.push({
+      estado: 'error',
+      nombre: nombreCaja,
+      motivo: `${rares} ${rares === 1 ? 'va' : 'van'} en RAR (.cbr) y no se ${rares === 1 ? 'puede' : 'pueden'} abrir aquí`,
+    })
+  }
 
   for (const entrada of utiles) {
     avisar?.({ hecho: contador.hecho, total: contador.total, nombre: entrada.nombre.split('/').pop() ?? entrada.nombre })
     try {
-      const bytes = await sacar(datos, entrada)
-      const trozo = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer
+      // Un `sacar` de algo guardado tal cual no copia nada: es un trozo del
+      // archivo. Así se saca un tomo de 300 MB de un zip de dos gigas.
+      const dentroDe = await sacar(archivo, entrada)
       if (ES_CAJA.test(extension(entrada.nombre))) {
-        salida.push(...(await abrirCaja(trozo, entrada.nombre, avisar, contador, fondo - 1)))
+        salida.push(...(await abrirCaja(dentroDe, entrada.nombre, avisar, contador, fondo - 1)))
       } else {
-        salida.push(await meter(trozo, entrada.nombre, serie ? { serie, orden: puesto++ } : {}))
+        // Un `.cbr` que llega hasta aquí ya se ha comprobado que es un zip.
+        const suyo: Partial<Libro> = ES_RAR.test(extension(entrada.nombre)) ? { formato: 'cbz' } : {}
+        if (serie) { suyo.serie = serie; suyo.orden = puesto++ }
+        salida.push(await meter(dentroDe, entrada.nombre, suyo))
       }
     } catch (e) {
       salida.push({
@@ -225,26 +286,29 @@ async function abrirCaja(
  * devuelve una lista porque un solo archivo puede traer doce libros.
  */
 export async function importar(archivo: File, avisar?: (m: Marcha) => void): Promise<Resultado[]> {
-  let datos: ArrayBuffer
-  try {
-    datos = await archivo.arrayBuffer()
-  } catch {
-    return [{ estado: 'error', nombre: archivo.name, motivo: 'no se pudo leer el archivo' }]
+  const ext = extension(archivo.name)
+  if (ES_RAR.test(ext)) {
+    if (!(await pareceZip(archivo))) {
+      return [{ estado: 'error', nombre: archivo.name, motivo: AVISO_RAR }]
+    }
+    return [await meter(archivo, archivo.name, { formato: 'cbz' })]
   }
 
-  const ext = extension(archivo.name)
-  if (ES_RAR.test(ext)) return [{ estado: 'error', nombre: archivo.name, motivo: AVISO_RAR }]
+  // Nunca se lee el archivo entero: aquí se miran cuatro bytes. Traerse a
+  // memoria un zip de dos gigas para ver si es un zip era exactamente el fallo
+  // que decía «no se pudo leer el archivo» sin decir por qué.
+  //
   // Un `.cbz` también es un zip, y aquí es donde se decide que uno es un cómic
   // y el otro una caja con cómics. Un zip sin extensión reconocible se mira por
   // dentro: alguien que comparte por WhatsApp pierde el nombre a menudo.
-  const esCaja = ES_CAJA.test(ext) || (!SIRVE.test(ext) && pareceZip(datos))
+  const esCaja = ES_CAJA.test(ext) || (!SIRVE.test(ext) && (await pareceZip(archivo)))
 
   const contador = { hecho: 0, total: 1 }
-  if (esCaja) return abrirCaja(datos, archivo.name, avisar, contador, FONDO)
+  if (esCaja) return abrirCaja(archivo, archivo.name, avisar, contador, FONDO)
 
   // Un `.cbz` no lleva `%PDF` dentro y aquí es de los buenos, así que la
   // comprobación solo vale para lo que ni siquiera dice ser un libro.
-  if (!SIRVE.test(ext) && !parecePdf(datos)) {
+  if (!SIRVE.test(ext) && !(await parecePdf(archivo))) {
     return [{
       estado: 'error',
       nombre: archivo.name,
@@ -253,5 +317,5 @@ export async function importar(archivo: File, avisar?: (m: Marcha) => void): Pro
   }
 
   avisar?.({ hecho: 0, total: 1, nombre: archivo.name })
-  return [await meter(datos, archivo.name)]
+  return [await meter(archivo, archivo.name)]
 }

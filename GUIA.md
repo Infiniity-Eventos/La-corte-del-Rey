@@ -334,6 +334,22 @@ técnicas que descartan opciones desde el primer día. Implican, como mínimo:
   (`DecompressionStream`), y lo demás es leer una tabla: doscientas líneas
   propias pesan menos que cualquier librería de zip, y aquí el tamaño del
   paquete es una regla (R19).
+- **Nada se trae a memoria: se trabaja sobre el archivo por trozos.** Una
+  colección de cómics son **dos gigas y medio**, y pedirle al navegador esa
+  cantidad de memoria de golpe falla — el mensaje era «no se pudo leer el
+  archivo» y no había forma de saber por qué. Ahora se leen los 64 KB del final
+  para la tabla y, de cada tomo, **solo su trozo**: un fichero guardado tal cual
+  —que es como van los cómics dentro de una colección, porque ya venían
+  comprimidos— no se copia, se apunta. Se comprueba midiéndolo: abrir un zip lee
+  menos del 5 % del archivo, y sacar un tomo de él lee treinta bytes.
+- **Los archivos grandes se reconocen por su principio, su final y su tamaño.**
+  El SHA-256 de todo obliga a tenerlo todo en memoria, que es justo lo que no
+  puede pasar. Por encima de 64 MB se resume solo eso, con una marca delante
+  para que las dos formas nunca se confundan.
+- **Un `.cbr` se mira por dentro antes de rechazarlo.** Debería ser RAR —cerrado,
+  y ningún navegador lo abre— pero buena parte de los que circulan son zips con
+  la extensión de antes, y esos entran perfectamente. Solo se rechaza lo que de
+  verdad es RAR, y diciendo cuántos son.
 - **Se lee el directorio del final, no las cabeceras de cada fichero.** No es un
   detalle: los zip creados «al vuelo» dejan el tamaño a cero en cada cabecera y
   solo lo escriben en esa tabla. Leyendo lo primero, media colección saldría

@@ -52,6 +52,20 @@ with zipfile.ZipFile(os.path.join(d, 'Mezcla.zip'), 'w', zipfile.ZIP_DEFLATED) a
         c.writestr('2.png', png(50, 70, (160, 90, 10)))
     z.writestr('dos.cbz', otro.getvalue())
 
+# Como llegan las colecciones de verdad: .cbr y .cbz mezclados, y con uno de
+# los .cbr que en realidad es un zip con la extensión de antes.
+def comic(colores):
+    b = io.BytesIO()
+    with zipfile.ZipFile(b, 'w', zipfile.ZIP_DEFLATED) as c:
+        for i, col in enumerate(colores, start=1):
+            c.writestr('%02d.png' % i, png(50, 70, col))
+    return b.getvalue()
+
+with zipfile.ZipFile(os.path.join(d, 'Mixto.zip'), 'w', zipfile.ZIP_STORED) as z:
+    z.writestr('Rick y Morty/v01 (2015).cbr', b'Rar!\x1a\x07\x00' + os.urandom(500))
+    z.writestr('Rick y Morty/v02 (2016).cbr', comic([(10, 90, 160), (160, 90, 10)]))
+    z.writestr('Rick y Morty/v03 (2017).cbz', comic([(20, 140, 60), (140, 60, 20), (60, 20, 140)]))
+
 # Uno que no trae nada que sirva.
 with zipfile.ZipFile(os.path.join(d, 'Vacio.zip'), 'w') as z:
     z.writestr('leeme.txt', b'aqui no hay libros')

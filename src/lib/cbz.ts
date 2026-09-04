@@ -25,41 +25,49 @@ const IMAGENES = /^(jpe?g|png|webp|gif|avif|bmp)$/
  * ordenan los números de una serie (D-36), y falla en el mismo sitio si se
  * olvida.
  */
-export function paginasDe(datos: ArrayBuffer): Entrada[] {
-  return listar(datos)
+export async function paginasDe(archivo: Blob): Promise<Entrada[]> {
+  const dentro = await listar(archivo)
+  return dentro
     .filter(e => !esBasura(e.nombre) && IMAGENES.test(extension(e.nombre)) && e.tamano > 0)
     .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es', { numeric: true, sensitivity: 'base' }))
 }
 
-export function contarPaginasCbz(datos: ArrayBuffer): number {
-  return paginasDe(datos).length
+export async function contarPaginasCbz(archivo: Blob): Promise<number> {
+  return (await paginasDe(archivo)).length
 }
 
+/**
+ * Un cómic abierto.
+ *
+ * Se queda con el archivo, no con su contenido: las páginas se sacan de una en
+ * una según hacen falta. Un tomo de 300 MB en memoria es medio teléfono, y son
+ * doscientas imágenes de las que solo se miran tres a la vez.
+ */
 export class CuadernoCbz extends CuadernoBase {
   readonly paginas: number
-  private datos: ArrayBuffer
+  private archivo: Blob
   private hojas: Entrada[]
 
-  private constructor(datos: ArrayBuffer, hojas: Entrada[]) {
+  private constructor(archivo: Blob, hojas: Entrada[]) {
     super()
-    this.datos = datos
+    this.archivo = archivo
     this.hojas = hojas
     this.paginas = hojas.length
   }
 
-  static abrir(datos: ArrayBuffer): CuadernoCbz {
-    const hojas = paginasDe(datos)
+  static async abrir(archivo: Blob): Promise<CuadernoCbz> {
+    const hojas = await paginasDe(archivo)
     if (hojas.length === 0) throw new Error('el cómic no tiene ninguna imagen dentro')
-    return new CuadernoCbz(datos, hojas)
+    return new CuadernoCbz(archivo, hojas)
   }
 
   protected async pintar(n: number): Promise<Hoja> {
     const entrada = this.hojas[n - 1]
-    const bytes = await sacar(this.datos, entrada)
+    const bytes = await sacar(this.archivo, entrada)
     // `createImageBitmap` descodifica fuera del hilo de la interfaz. Con
     // `<img>` y una URL, una página de cómic de 4000 píxeles congelaba el
     // volteo justo mientras el dedo estaba arrastrando.
-    const imagen = await createImageBitmap(new Blob([bytes as BufferSource]))
+    const imagen = await createImageBitmap(bytes)
     try {
       const { escala, dpr } = this.encajar(imagen.width, imagen.height)
       const ancho = imagen.width * escala

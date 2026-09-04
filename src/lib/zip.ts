@@ -1,9 +1,15 @@
 /**
- * Abrir un zip, sin librerías.
+ * Abrir un zip, sin librerías y **sin traérselo a memoria**.
  *
- * Hacen falta dos cosas y son la misma: un `.cbz` **es** un zip con las páginas
+ * Hacen falta dos cosas y son la misma: un `.cbz` es un zip con las páginas
  * dentro, y un zip de descargas trae los tomos dentro. Con esto se resuelven
  * las dos.
+ *
+ * Todo trabaja sobre un `Blob` y lee solo los trozos que necesita. No es una
+ * optimización: una colección de cómics son **dos gigas y medio**, y pedirle al
+ * navegador esa cantidad de memoria de golpe falla — el error que salía era «no
+ * se pudo leer el archivo», y no había forma de saber que ese era el motivo.
+ * Un `Blob.slice()` no copia nada; solo apunta a un trozo del archivo.
  *
  * No se añade una dependencia porque no hace falta: descomprimir ya viene en el
  * navegador desde 2022 —`DecompressionStream`— y lo demás es leer una tabla.
@@ -38,11 +44,21 @@ const FIRMA_LOCALIZADOR_64 = 0x07064b50
 const FIRMA_CENTRAL = 0x02014b50
 const FIRMA_LOCAL = 0x04034b50
 
+/** El final de un zip cabe siempre en los últimos 64 KB: 22 bytes y un comentario. */
+const COLA = 22 + 0xffff
+
+/** Un trozo del archivo, leído de verdad. Lo de fuera se recorta solo. */
+async function trozo(archivo: Blob, desde: number, hasta: number): Promise<DataView> {
+  const a = Math.max(0, desde)
+  const b = Math.min(archivo.size, hasta)
+  return new DataView(await archivo.slice(a, b).arrayBuffer())
+}
+
 /** Los dos primeros bytes de todo zip. También los de un `.cbz` y un `.epub`. */
-export function pareceZip(datos: ArrayBuffer): boolean {
-  if (datos.byteLength < 4) return false
-  const b = new Uint8Array(datos, 0, 4)
-  return b[0] === 0x50 && b[1] === 0x4b
+export async function pareceZip(archivo: Blob): Promise<boolean> {
+  if (archivo.size < 4) return false
+  const v = await trozo(archivo, 0, 4)
+  return v.getUint8(0) === 0x50 && v.getUint8(1) === 0x4b
 }
 
 /**
@@ -63,36 +79,10 @@ function nombreDe(bytes: Uint8Array, banderas: number): string {
 
 /** Busca el final del zip hacia atrás: detrás puede haber un comentario. */
 function buscarFinal(v: DataView): number {
-  const desde = Math.max(0, v.byteLength - 22 - 0xffff)
-  for (let i = v.byteLength - 22; i >= desde; i--) {
+  for (let i = v.byteLength - 22; i >= 0; i--) {
     if (v.getUint32(i, true) === FIRMA_FINAL) return i
   }
   return -1
-}
-
-/**
- * Dónde empieza la tabla y cuántas entradas tiene.
- *
- * Con más de 65.535 ficheros o más de 4 GB, esos números no caben en el final
- * normal y el zip escribe otro final, más grande, justo antes. Un tomo suelto
- * nunca llega ahí; una colección entera, sí.
- */
-function situarCentral(v: DataView): { inicio: number; cuantas: number } {
-  const fin = buscarFinal(v)
-  if (fin < 0) throw new ErrorZip('no parece un zip')
-
-  let cuantas = v.getUint16(fin + 10, true)
-  let inicio = v.getUint32(fin + 16, true)
-
-  const loc = fin - 20
-  if (loc >= 0 && v.getUint32(loc, true) === FIRMA_LOCALIZADOR_64) {
-    const donde = Number(v.getBigUint64(loc + 8, true))
-    if (donde >= 0 && donde + 56 <= v.byteLength && v.getUint32(donde, true) === FIRMA_FINAL_64) {
-      cuantas = Number(v.getBigUint64(donde + 32, true))
-      inicio = Number(v.getBigUint64(donde + 48, true))
-    }
-  }
-  return { inicio, cuantas }
 }
 
 /**
@@ -125,13 +115,46 @@ function leerExtra64(
   }
 }
 
+/**
+ * Dónde empieza la tabla del final, cuánto ocupa y cuántas entradas tiene.
+ *
+ * Con más de 65.535 ficheros o más de 4 GB, esos números no caben en el final
+ * normal y el zip escribe otro final, más grande, justo antes. Un tomo suelto
+ * nunca llega ahí; una colección entera, sí.
+ */
+async function situarCentral(
+  archivo: Blob,
+): Promise<{ inicio: number; largo: number; cuantas: number }> {
+  const desdeCola = Math.max(0, archivo.size - COLA)
+  const cola = await trozo(archivo, desdeCola, archivo.size)
+  const fin = buscarFinal(cola)
+  if (fin < 0) throw new ErrorZip('no parece un zip')
+
+  let cuantas = cola.getUint16(fin + 10, true)
+  let largo = cola.getUint32(fin + 12, true)
+  let inicio = cola.getUint32(fin + 16, true)
+
+  const loc = fin - 20
+  if (loc >= 0 && cola.getUint32(loc, true) === FIRMA_LOCALIZADOR_64) {
+    const donde = Number(cola.getBigUint64(loc + 8, true))
+    const grande = await trozo(archivo, donde, donde + 56)
+    if (grande.byteLength >= 56 && grande.getUint32(0, true) === FIRMA_FINAL_64) {
+      cuantas = Number(grande.getBigUint64(32, true))
+      largo = Number(grande.getBigUint64(40, true))
+      inicio = Number(grande.getBigUint64(48, true))
+    }
+  }
+  return { inicio, largo, cuantas }
+}
+
 /** Todo lo que hay dentro, sin descomprimir nada todavía. */
-export function listar(datos: ArrayBuffer): Entrada[] {
-  const v = new DataView(datos)
-  const { inicio, cuantas } = situarCentral(v)
+export async function listar(archivo: Blob): Promise<Entrada[]> {
+  const { inicio, largo, cuantas } = await situarCentral(archivo)
+  // Solo la tabla: unos pocos megas incluso con sesenta mil ficheros dentro.
+  const v = await trozo(archivo, inicio, inicio + largo)
 
   const entradas: Entrada[] = []
-  let i = inicio
+  let i = 0
   for (let n = 0; n < cuantas; n++) {
     if (i + 46 > v.byteLength || v.getUint32(i, true) !== FIRMA_CENTRAL) break
     const banderas = v.getUint16(i + 8, true)
@@ -149,9 +172,9 @@ export function listar(datos: ArrayBuffer): Entrada[] {
       leerExtra64(v, i + 46 + largoNombre, largoExtra, campos)
     }
 
-    const nombre = nombreDe(new Uint8Array(datos, i + 46, largoNombre), banderas)
+    const crudo = new Uint8Array(v.buffer, v.byteOffset + i + 46, largoNombre)
     entradas.push({
-      nombre,
+      nombre: nombreDe(crudo, banderas),
       metodo,
       comprimido: campos.comprimido,
       tamano: campos.tamano,
@@ -165,43 +188,38 @@ export function listar(datos: ArrayBuffer): Entrada[] {
   return entradas
 }
 
-/** Saca un fichero del zip, ya descomprimido. */
-export async function sacar(datos: ArrayBuffer, e: Entrada): Promise<Uint8Array> {
+/**
+ * Un fichero del zip, como Blob.
+ *
+ * Cuando va guardado tal cual —y **así es como van los cómics dentro de una
+ * colección**, porque ya venían comprimidos— esto no copia ni un byte: devuelve
+ * un trozo del archivo original. Es lo que permite sacar un tomo de 300 MB de
+ * un zip de dos gigas sin gastar memoria.
+ */
+export async function sacar(archivo: Blob, e: Entrada): Promise<Blob> {
   if (e.cerrado) throw new ErrorZip('el zip pide contraseña')
   if (e.metodo !== 0 && e.metodo !== 8) throw new ErrorZip(`compresión desconocida (${e.metodo})`)
 
-  const v = new DataView(datos)
-  if (e.offset + 30 > v.byteLength || v.getUint32(e.offset, true) !== FIRMA_LOCAL) {
+  const cab = await trozo(archivo, e.offset, e.offset + 30)
+  if (cab.byteLength < 30 || cab.getUint32(0, true) !== FIRMA_LOCAL) {
     throw new ErrorZip('el zip está roto')
   }
   // El nombre y el extra de aquí pueden medir distinto que los de la tabla del
   // final: hay que leerlos otra vez para saber dónde empiezan los datos.
-  const largoNombre = v.getUint16(e.offset + 26, true)
-  const largoExtra = v.getUint16(e.offset + 28, true)
+  const largoNombre = cab.getUint16(26, true)
+  const largoExtra = cab.getUint16(28, true)
   const desde = e.offset + 30 + largoNombre + largoExtra
 
-  const crudo = new Uint8Array(datos, desde, Math.min(e.comprimido, datos.byteLength - desde))
-  if (e.metodo === 0) return crudo.slice()
+  const crudo = archivo.slice(desde, desde + e.comprimido)
+  if (e.metodo === 0) return crudo
 
   const Descomprimir = (globalThis as { DecompressionStream?: typeof DecompressionStream }).DecompressionStream
   if (!Descomprimir) throw new ErrorZip('este navegador no sabe descomprimir')
 
   // `deflate-raw` y no `deflate`: dentro de un zip los datos van sin la
   // envoltura zlib, así que el otro modo falla con «incorrect header check».
-  const flujo = new Blob([crudo]).stream().pipeThrough(new Descomprimir('deflate-raw'))
-  const trozos: Uint8Array[] = []
-  let total = 0
-  const lector = flujo.getReader()
-  for (;;) {
-    const { done, value } = await lector.read()
-    if (done) break
-    trozos.push(value)
-    total += value.length
-  }
-  const salida = new Uint8Array(total)
-  let p = 0
-  for (const t of trozos) { salida.set(t, p); p += t.length }
-  return salida
+  const flujo = crudo.stream().pipeThrough(new Descomprimir('deflate-raw'))
+  return new Response(flujo).blob()
 }
 
 /** Las carpetas y la morralla que meten los sistemas al comprimir. */
