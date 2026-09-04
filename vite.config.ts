@@ -124,14 +124,21 @@ export default defineConfig({
           method: 'POST',
           enctype: 'multipart/form-data',
           params: {
-            // Los tres que se saben abrir. El zip va con sus dos nombres
-            // porque Android usa uno u otro según de dónde venga el archivo.
+            /*
+             * Los tres que se saben abrir, con todos los nombres que les da
+             * Android. Un mismo zip llega como `application/zip`, como
+             * `application/x-zip-compressed` o como `application/octet-stream`
+             * según de qué app venga, y si su nombre no está en esta lista
+             * Vellum no aparece en el menú de Compartir. Es preferible salir de
+             * más —y explicar lo que no se puede abrir— a no salir cuando toca.
+             */
             files: [{
               name: 'archivos',
               accept: [
                 'application/pdf', '.pdf',
-                'application/vnd.comicbook+zip', '.cbz',
+                'application/vnd.comicbook+zip', 'application/x-cbz', '.cbz',
                 'application/zip', 'application/x-zip-compressed', '.zip',
+                'application/octet-stream',
               ],
             }],
           },

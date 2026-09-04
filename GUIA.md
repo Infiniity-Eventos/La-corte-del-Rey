@@ -346,6 +346,13 @@ técnicas que descartan opciones desde el primer día. Implican, como mínimo:
   comparten dentro y, si no la hay, del nombre del zip; el orden, del orden en
   que venían. Una colección descargada ya viene ordenada: lo único que hay que
   hacer es no perderlo. Se puede deshacer vaciando el campo Serie en la ficha.
+- **El selector de archivos no filtra por tipo, y es a propósito.** Filtrar por
+  extensión funciona en el ordenador y no en Android: allí el selector solo
+  entiende los tipos que el sistema reconoce, y ni `.cbz` ni `.zip` están en esa
+  lista. Con filtro puesto, al abrirlo **solo se veían los PDF** y los zips no
+  aparecían por ningún lado. Enseñar de más y explicar lo que no sirve es mejor
+  que esconder lo que sí: quien elige una foto por error recibe una frase que lo
+  dice, en vez del error crudo de pdf.js.
 - **El CBR no entra y se dice por qué:** va comprimido en RAR, que es cerrado y
   no viene en ningún navegador. Sin ese aviso acabaría en pdf.js dando un error
   que no explica nada.

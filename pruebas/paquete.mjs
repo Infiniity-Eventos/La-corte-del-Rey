@@ -59,6 +59,11 @@ await page.goto('http://127.0.0.1:4173/', { waitUntil: 'networkidle' })
 await page.waitForSelector('.vacio')
 paso('la estantería vacía invita a traer también cómics',
   (await page.textContent('.vacio p')).includes('CBZ'))
+// El selector no puede filtrar por tipo: en Android eso esconde los zip, que es
+// justo lo que había que poder elegir.
+paso('**el selector de archivos no filtra por tipo**',
+  (await page.getAttribute('input[type=file]', 'accept')) === null,
+  'con filtro, en el teléfono solo se veían los PDF')
 
 /* --- Un CBZ suelto --- */
 await traer('Tomo_solo.cbz')
@@ -139,6 +144,11 @@ paso('**un zip sin nada dentro lo dice con palabras**',
 
 const conRar = await traer('Solo_rar.zip')
 paso('y con un CBR dentro explica por qué no puede', conRar.includes('RAR'), conRar)
+
+// Se ve todo en el selector, así que elegir una foto por error es fácil.
+const foto = await traer('portada.png')
+paso('**una foto no se cuela como libro, y se dice en una frase**',
+  foto.includes('no es un PDF ni un cómic'), foto)
 
 paso('sin errores en la consola', errores.length === 0, errores.join(' · '))
 

@@ -17,7 +17,7 @@ node pruebas/comic.mjs        # 29 comprobaciones · tamaños mezclados, zoom, p
 node pruebas/nube.mjs         # 14 comprobaciones · hito 4, la nube sin cuenta
 node pruebas/atras.mjs        # 18 comprobaciones · el botón de atrás del teléfono
 node pruebas/compartir.mjs    # 15 comprobaciones · abrir un PDF desde fuera de la app
-node pruebas/paquete.mjs      # 23 comprobaciones · cómics en CBZ y zips con colecciones dentro
+node pruebas/paquete.mjs      # 25 comprobaciones · cómics en CBZ y zips con colecciones dentro
 node pruebas/serie.mjs        # 38 comprobaciones · las series: la tapa, el orden y leer sin parar
 node pruebas/capturas.mjs     # capturas de cada estado
 
@@ -314,6 +314,8 @@ lea y que una colección entre entera.
 | El mismo zip dos veces no duplica nada | R24 |
 | Un zip sin nada que sirva lo dice con palabras | R8 |
 | Y con un CBR dentro explica por qué no puede | D-39 |
+| **El selector no filtra por tipo**, que en Android escondía los zip | D-39 |
+| Una foto elegida por error no se cuela, y se dice en una frase | R8 |
 
 Lo que **no** cubren: un cómic real de 300 MB. Los de prueba son imágenes de
 cuarenta píxeles, así que lo que no se mide aquí es cuánto tarda en descomprimir

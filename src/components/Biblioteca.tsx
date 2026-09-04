@@ -196,10 +196,21 @@ export function Biblioteca({
         </div>
       </div>
 
+      {/*
+        Sin filtro de tipos, a propósito.
+
+        Filtrar por extensión funciona en el ordenador y **no funciona en
+        Android**: allí el selector solo entiende los tipos que el sistema
+        reconoce, y ni `.cbz` ni `.zip` están en esa lista. El resultado era que
+        al abrir el selector solo se veían los PDF y los zips no aparecían por
+        ningún lado, aunque la app supiera abrirlos perfectamente.
+
+        Enseñar de más y explicar lo que no sirve es mejor que esconder lo que
+        sí. Quien elige una foto por error recibe una frase que lo dice.
+      */}
       <input
         ref={input}
         type="file"
-        accept="application/pdf,.pdf,.cbz,.zip,application/zip,application/vnd.comicbook+zip"
         multiple
         hidden
         onChange={e => {

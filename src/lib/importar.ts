@@ -131,6 +131,24 @@ async function meter(
   }
 }
 
+/**
+ * Si el archivo empieza por `%PDF`.
+ *
+ * Se mira el principio y no la extensión porque el selector de archivos del
+ * teléfono ya no filtra nada: ahí se ve todo, y con todo se puede elegir una
+ * foto por error. Vale más una frase que lo diga que el error crudo de pdf.js.
+ *
+ * Se busca en el primer kilobyte y no en el byte cero: hay PDF con basura
+ * delante, y pdf.js los abre igual.
+ */
+function parecePdf(datos: ArrayBuffer): boolean {
+  const cabeza = new Uint8Array(datos, 0, Math.min(1024, datos.byteLength))
+  for (let i = 0; i + 4 <= cabeza.length; i++) {
+    if (cabeza[i] === 0x25 && cabeza[i + 1] === 0x50 && cabeza[i + 2] === 0x44 && cabeza[i + 3] === 0x46) return true
+  }
+  return false
+}
+
 /** Cuántas cajas dentro de cajas se abren. Más que esto ya es alguien jugando. */
 const FONDO = 3
 
@@ -223,6 +241,16 @@ export async function importar(archivo: File, avisar?: (m: Marcha) => void): Pro
 
   const contador = { hecho: 0, total: 1 }
   if (esCaja) return abrirCaja(datos, archivo.name, avisar, contador, FONDO)
+
+  // Un `.cbz` no lleva `%PDF` dentro y aquí es de los buenos, así que la
+  // comprobación solo vale para lo que ni siquiera dice ser un libro.
+  if (!SIRVE.test(ext) && !parecePdf(datos)) {
+    return [{
+      estado: 'error',
+      nombre: archivo.name,
+      motivo: 'no es un PDF ni un cómic. Entran PDF, CBZ y zips con eso dentro',
+    }]
+  }
 
   avisar?.({ hecho: 0, total: 1, nombre: archivo.name })
   return [await meter(datos, archivo.name)]
