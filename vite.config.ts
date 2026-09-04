@@ -115,21 +115,35 @@ export default defineConfig({
          * aquí no hay servidor que lo reciba.
          *
          * En el escritorio, `file_handlers`: ahí sí se puede registrar «Abrir
-         * con» para los .pdf. En Android eso no existe para una app web —solo
-         * para las instaladas de verdad— y por eso hacen falta las dos cosas.
+         * con» para los .pdf, .cbz y .zip. En Android eso no existe para una app
+         * web —solo para las instaladas de verdad— y por eso hacen falta las dos
+         * cosas.
          */
         share_target: {
           action: `${base}compartir`,
           method: 'POST',
           enctype: 'multipart/form-data',
           params: {
-            files: [{ name: 'archivos', accept: ['application/pdf', '.pdf'] }],
+            // Los tres que se saben abrir. El zip va con sus dos nombres
+            // porque Android usa uno u otro según de dónde venga el archivo.
+            files: [{
+              name: 'archivos',
+              accept: [
+                'application/pdf', '.pdf',
+                'application/vnd.comicbook+zip', '.cbz',
+                'application/zip', 'application/x-zip-compressed', '.zip',
+              ],
+            }],
           },
         },
         file_handlers: [
           {
             action: base,
-            accept: { 'application/pdf': ['.pdf'] },
+            accept: {
+              'application/pdf': ['.pdf'],
+              'application/vnd.comicbook+zip': ['.cbz'],
+              'application/zip': ['.zip'],
+            },
           },
         ],
       },

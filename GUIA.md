@@ -77,8 +77,9 @@ descartan.
 | R51 | Lo que sobra alrededor de la página toma el color del fondo, no blanco | petición del 27 de agosto |
 
 **No entra:** lectura en voz alta (P16), OCR de cómics (P8), traducción de
-página completa (P8), subrayados ni notas manuales (P15), EPUB / CBZ / MOBI en
-la versión 1 (P4), colecciones y carpetas (P38), campo de autor (P42),
+página completa (P8), subrayados ni notas manuales (P15), ~~EPUB / CBZ / MOBI en
+la versión 1 (P4)~~ —el CBZ entró en D-39; EPUB y MOBI siguen fuera—, ~~colecciones
+y carpetas (P38)~~ —las series entraron en D-36—, campo de autor (P42),
 agrupación por estado de lectura (P38), barra de progreso arrastrable con
 miniaturas (P52: solo salto por número).
 
@@ -118,6 +119,9 @@ técnicas que descartan opciones desde el primer día. Implican, como mínimo:
 ### D-02 · Formatos: solo PDF en la versión 1
 - **Decisión:** solo PDF, con pdf.js. La arquitectura separa "el formato" del
   resto para poder añadir EPUB o CBZ después sin rehacer nada.
+- **Superada en su primera mitad por D-39**, que añadió el CBZ. La segunda mitad
+  se cumplió: el sitio donde encajarlo estaba previsto y el lector no cambió.
+  EPUB sigue fuera.
 - **Origen:** P4.
 
 ### D-03 · Los archivos viven en el almacén propio de la app
@@ -313,6 +317,41 @@ técnicas que descartan opciones desde el primer día. Implican, como mínimo:
 - **Montarlo es cosa de una vez y hay que hacerlo a mano** en la consola de
   Google: `apagon/LEEME.md` y `guia/paginas/apagon.html`.
 - **Origen:** P69, y T13.
+
+### D-39 · Entran cómics en CBZ, y zips con lo que sea dentro
+- **Decisión:** Vellum abre **PDF y CBZ**, y acepta un **zip**: lo abre, mira lo
+  que trae y mete todos los PDF y CBZ que encuentre, cada uno como su libro.
+- **Esto revoca la mitad de D-02** («solo PDF en la versión 1»), que ya decía
+  cómo hacerlo: «la arquitectura separa el formato del resto para poder añadir
+  CBZ después sin rehacer nada». Ese sitio existía y era `Cuaderno`; ahora es una
+  interfaz con dos implementaciones y **el lector no ha cambiado una línea**.
+- **Un CBZ no es un formato: es un zip con las páginas dentro**, una imagen por
+  página, sin índice ni metadatos. El orden lo pone el nombre de los ficheros, y
+  por eso se comparan como los compararía una persona: sin eso, «10.jpg» va
+  antes que «2.jpg» y el tomo se lee desordenado sin que nada avise. Es el mismo
+  criterio que ordena los números de una serie (D-36).
+- **El zip se lee a mano, sin librería.** Descomprimir ya viene en el navegador
+  (`DecompressionStream`), y lo demás es leer una tabla: doscientas líneas
+  propias pesan menos que cualquier librería de zip, y aquí el tamaño del
+  paquete es una regla (R19).
+- **Se lee el directorio del final, no las cabeceras de cada fichero.** No es un
+  detalle: los zip creados «al vuelo» dejan el tamaño a cero en cada cabecera y
+  solo lo escriben en esa tabla. Leyendo lo primero, media colección saldría
+  vacía. Por lo mismo se soporta el formato de 64 bits: por encima de 65.535
+  ficheros o de 4 GB, las cuentas se escriben en otro sitio.
+- **La basura de macOS se tira.** Un zip hecho en un Mac trae una carpeta
+  `__MACOSX` con un `._Tomo1.pdf` por cada fichero real. Sin filtrarla, cada
+  tomo entraría dos veces y uno de ellos en blanco.
+- **Un zip de varios crea una serie.** El nombre sale de la carpeta que
+  comparten dentro y, si no la hay, del nombre del zip; el orden, del orden en
+  que venían. Una colección descargada ya viene ordenada: lo único que hay que
+  hacer es no perderlo. Se puede deshacer vaciando el campo Serie en la ficha.
+- **El CBR no entra y se dice por qué:** va comprimido en RAR, que es cerrado y
+  no viene en ningún navegador. Sin ese aviso acabaría en pdf.js dando un error
+  que no explica nada.
+- **Cada formato se descarga cuando se abre uno.** pdf.js pesa medio megabyte:
+  quien solo lee cómics ya no lo baja.
+- **Origen:** pedido en el uso, 2026-09-04.
 
 ### D-38 · Traducir es una cola, no una espera
 - **Decisión:** mandas a traducir y **sigues leyendo**. La app lo hace por
@@ -794,6 +833,7 @@ El orden lo fijó P80: **leer antes que nada**.
 | **5 · Portadas** | Buscar portada en Google Imágenes y subir la imagen (D-31; la versión generada se revocó) | **hecho** · 12 comprobaciones en `pruebas/` |
 | **6 · La casa** | Catálogo común, estrella por perfil, clave de Gemini por perfil | **hecho** · 22 comprobaciones · falta montar `casa/miembros` a mano |
 | **8 · Series** | Enlazar los números de una obra, seguir leyendo, orden a mano, saltar de tomo sin parar | **hecho** · 73 comprobaciones en `pruebas/` |
+| **9 · CBZ y zips** | Leer cómics en CBZ y traer colecciones enteras comprimidas | **hecho** · 46 comprobaciones en `pruebas/` |
 | 7 · El apagón | Corte de facturación en 1 dólar | **escrito y probado**, sin montar (D-22) |
 
 Las respuestas están en `guia/respuestas/`. El prompt del icono, en `guia/prompts/`.

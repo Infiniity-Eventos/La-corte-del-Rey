@@ -14,7 +14,8 @@ import {
   listarLibros,
   listarVocabulario,
 } from './lib/almacen'
-import { importarPdf } from './lib/importar'
+import { importar as traerDeFuera } from './lib/importar'
+import type { Marcha } from './lib/importar'
 import { escucharAperturas, recogerCompartidos } from './lib/entrada'
 import { agrupar, anadirA, mover, nombresDeSerie, vecino } from './lib/series'
 import { Biblioteca } from './components/Biblioteca'
@@ -145,6 +146,8 @@ export default function App() {
     else setNota(`Estás en la última versión · ${__VERSION__}`)
   }, [])
   const [importando, setImportando] = useState(false)
+  /** Por dónde va lo que se está trayendo. Un zip pueden ser veinte libros. */
+  const [marcha, setMarcha] = useState<Marcha | null>(null)
   const [nota, setNota] = useState<string | null>(null)
   const [arrancando, setArrancando] = useState(true)
 
@@ -210,24 +213,33 @@ export default function App() {
   // por «Compartir» y por «Abrir con» entra por aquí, igual que lo que traes tú.
   const importar = useCallback(async (archivos: FileList | File[]) => {
     setImportando(true)
+    setMarcha(null)
     let nuevos = 0
     let repetidos = 0
     let fallos = 0
     let ultimo: Libro | null = null
+    let motivo = ''
     for (const archivo of Array.from(archivos)) {
-      const r = await importarPdf(archivo)
-      if (r.estado === 'anadido') { nuevos++; ultimo = r.libro }
-      else if (r.estado === 'repetido') repetidos++
-      else fallos++
+      // Un archivo puede traer muchos libros: un zip de una colección entera es
+      // una sola cosa que eliges y veinte que entran.
+      for (const r of await traerDeFuera(archivo, setMarcha)) {
+        if (r.estado === 'anadido') { nuevos++; ultimo = r.libro }
+        else if (r.estado === 'repetido') repetidos++
+        else { fallos++; motivo = r.motivo }
+      }
     }
     await refrescar()
     setImportando(false)
+    setMarcha(null)
 
     const partes: string[] = []
     if (nuevos) partes.push(`${nuevos} ${nuevos === 1 ? 'libro añadido' : 'libros añadidos'}`)
     // R24 / P37: avisar y no duplicar.
     if (repetidos) partes.push(`${repetidos} ya ${repetidos === 1 ? 'estaba' : 'estaban'} en la estantería`)
-    if (fallos) partes.push(`${fallos} no se ${fallos === 1 ? 'pudo abrir' : 'pudieron abrir'}`)
+    // Con un solo fallo se dice por qué: «no hay ningún PDF ni CBZ dentro» es
+    // una respuesta; «1 no se pudo abrir» deja a cualquiera adivinando.
+    if (fallos === 1) partes.push(`1 no se pudo abrir: ${motivo}`)
+    else if (fallos) partes.push(`${fallos} no se pudieron abrir`)
     setNota(partes.join(' · ') || null)
 
     // El título sale del nombre del archivo, que casi siempre es un desastre.
@@ -560,7 +572,17 @@ export default function App() {
         <div className="importando">
           <div>
             <h2 className="display">Guardando</h2>
-            <p>Se está copiando el PDF a este aparato.</p>
+            {marcha && marcha.total > 1 ? (
+              <>
+                <p className="mono">{Math.min(marcha.hecho + 1, marcha.total)} de {marcha.total}</p>
+                <p className="marcha-nombre">{marcha.nombre}</p>
+                <span className="barra">
+                  <i style={{ width: `${(marcha.hecho / marcha.total) * 100}%` }} />
+                </span>
+              </>
+            ) : (
+              <p>Se está copiando a este aparato.</p>
+            )}
           </div>
         </div>
       )}

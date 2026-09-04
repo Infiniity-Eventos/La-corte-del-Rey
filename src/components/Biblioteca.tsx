@@ -199,7 +199,7 @@ export function Biblioteca({
       <input
         ref={input}
         type="file"
-        accept="application/pdf,.pdf"
+        accept="application/pdf,.pdf,.cbz,.zip,application/zip,application/vnd.comicbook+zip"
         multiple
         hidden
         onChange={e => {
@@ -223,11 +223,12 @@ export function Biblioteca({
         <div className="vacio">
           <h2 className="display">La estantería está vacía</h2>
           <p>
-            Trae un PDF y se queda en este aparato. No se sube a ningún sitio ni hace falta
-            cuenta para leerlo.
+            Trae un PDF o un cómic en CBZ y se queda en este aparato. Si traes un zip,
+            entra todo lo que lleve dentro. No se sube a ningún sitio ni hace falta cuenta
+            para leerlo.
           </p>
           <button className="btn" onClick={() => input.current?.click()} disabled={importando}>
-            Traer un PDF
+            Traer un libro
           </button>
         </div>
       ) : (
@@ -317,7 +318,9 @@ export function Biblioteca({
                   >
                     <span className="portada hueca"><span aria-hidden="true">+</span></span>
                   </button>
-                  <span className="libro-sub mono">Traer un PDF</span>
+                  {/* Ya no es solo un PDF: entra un cómic en CBZ y un zip con
+                      lo que sea dentro. */}
+                  <span className="libro-sub mono">Traer un libro</span>
                 </div>
               )}
             </div>

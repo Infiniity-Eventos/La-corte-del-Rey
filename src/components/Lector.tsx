@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { Ajustes, Libro, Palabra, Tema } from '../lib/tipos'
 import { borrarPalabra, leerArchivo, listarVocabulario } from '../lib/almacen'
-import { Cuaderno } from '../lib/pdf'
+import { abrirCuaderno } from '../lib/cuaderno'
+import type { Cuaderno } from '../lib/cuaderno'
 import { clicDePagina, despertarSonido, toqueCorto } from '../lib/sonido'
 import { useAtras } from '../lib/atras'
 import { Burbuja } from './Burbuja'
@@ -222,7 +223,7 @@ export function Lector({
     ;(async () => {
       const blob = await leerArchivo(libro.archivo)
       if (!blob || !vivo) return
-      cuaderno = await Cuaderno.abrir(await blob.arrayBuffer())
+      cuaderno = await abrirCuaderno(await blob.arrayBuffer(), libro.formato ?? 'pdf')
       if (!vivo) {
         cuaderno.cerrar()
         return
@@ -235,7 +236,7 @@ export function Lector({
       cuaderno?.cerrar()
       cuadernoRef.current = null
     }
-  }, [libro.archivo])
+  }, [libro.archivo, libro.formato])
 
   /* ---------------------------- dibujar ------------------------------ */
 

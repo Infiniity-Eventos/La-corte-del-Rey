@@ -1,3 +1,5 @@
+import type { Formato } from './cuaderno'
+
 /** Un libro, tal como lo define D-17: título a mano, etiquetas, tipo, progreso. */
 export interface Libro {
   id: string
@@ -9,6 +11,14 @@ export interface Libro {
   paginas: number
   bytes: number
   archivo: string
+  /**
+   * Qué hay dentro del archivo.
+   *
+   * Los libros traídos antes de que existieran los cómics en CBZ no lo llevan,
+   * y por eso se lee siempre con `?? 'pdf'`: no hay que tocar nada de lo que ya
+   * está guardado para que siga abriéndose igual.
+   */
+  formato?: Formato
   /**
    * Cómo se llamaba el archivo al traerlo.
    *

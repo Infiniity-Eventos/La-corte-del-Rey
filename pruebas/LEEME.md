@@ -17,6 +17,7 @@ node pruebas/comic.mjs        # 29 comprobaciones · tamaños mezclados, zoom, p
 node pruebas/nube.mjs         # 14 comprobaciones · hito 4, la nube sin cuenta
 node pruebas/atras.mjs        # 18 comprobaciones · el botón de atrás del teléfono
 node pruebas/compartir.mjs    # 15 comprobaciones · abrir un PDF desde fuera de la app
+node pruebas/paquete.mjs      # 23 comprobaciones · cómics en CBZ y zips con colecciones dentro
 node pruebas/serie.mjs        # 38 comprobaciones · las series: la tapa, el orden y leer sin parar
 node pruebas/capturas.mjs     # capturas de cada estado
 
@@ -28,6 +29,7 @@ node pruebas/estante.mjs      # 19 comprobaciones · el catálogo de la casa
 node pruebas/kana.mjs         # 19 comprobaciones · el teclado japonés
 node pruebas/series.mjs       # 35 comprobaciones · el orden de una serie y dónde ibas
 node pruebas/reloj.mjs        # 14 comprobaciones · que ninguna espera pueda ser eterna
+node pruebas/zip.mjs          # 23 comprobaciones · el lector de zip, byte a byte
 
 # Contra la app publicada
 node pruebas/en-vivo.mjs      # 15 comprobaciones sobre la app en su dirección real
@@ -41,10 +43,18 @@ compilación que falla no borra la anterior: el servidor sigue sirviendo el
 paquete de antes y las pruebas pasan contra él, verdes sin haber probado nada.
 Eso lo corta `pruebas/fresco.mjs`.
 
-Los PDF de prueba se generan con `gen_pdf.py`. Cada uno lleva su nombre escrito
-dentro: si no, dos archivos con el mismo número de páginas salen byte a byte
-idénticos y Vellum los toma por repetidos — cosa que, dicho sea de paso,
-demuestra que la detección de repetidos funciona.
+Los archivos de prueba se generan aquí mismo:
+
+```bash
+python3 pruebas/gen_pdf.py 6 /tmp/Cronica_de_una_prueba.pdf
+python3 pruebas/hacer-paquetes.py /tmp     # los CBZ y los zips
+```
+
+`gen_pdf.py` escribe el PDF byte a byte y `hacer-paquetes.py` los PNG también,
+sin ninguna librería. Cada PDF lleva su nombre escrito dentro: si no, dos
+archivos con el mismo número de páginas salen byte a byte idénticos y Vellum los
+toma por repetidos — cosa que, dicho sea de paso, demuestra que la detección de
+repetidos funciona.
 
 ## Qué comprueba `lectura.mjs`
 
@@ -269,6 +279,45 @@ comprueba, en `biblioteca.mjs` y sin cuenta, es la regla que hay debajo —**tu
 estantería son los marcados**— tocando la marca directamente en la base de
 datos: quitarla saca el libro de la vista sin borrarlo de ningún sitio, y
 devolverla lo trae de vuelta. La parte visual se revisó a mano, con capturas.
+
+## Qué comprueban `zip.mjs` y `paquete.mjs`
+
+`zip.mjs` corre sin navegador y prueba el lector de zip contra archivos que
+**hace otro programa** —el `zipfile` de Python—, no nosotros: si los
+escribiéramos con el mismo entendimiento del formato que tenemos al leerlos, un
+malentendido pasaría desapercibido. Equivocarse aquí no da un error bonito; da
+un PDF vacío o medio tomo.
+
+| Comprueba | Requisito |
+|---|---|
+| Se listan los ficheros con su ruta y su tamaño de verdad | D-39 |
+| **Los nombres con tilde se leen bien** | D-39 |
+| **La carpeta `__MACOSX` y los ocultos se descartan** | D-39 |
+| Se sacan enteros, comprimidos y sin comprimir | D-39 |
+| Un comentario largo al final no despista | D-39 |
+| **Con más de 65.535 ficheros se leen todos** | D-39 |
+| **Y un zip marcado como de más de 4 GB también** | D-39 |
+| Un zip con contraseña se detecta y se dice | D-39 |
+| Lo que no es un zip se dice, no se revienta | D-39 |
+
+`paquete.mjs` prueba lo de después: no que el zip se abra, sino que un cómic se
+lea y que una colección entre entera.
+
+| Comprueba | Requisito |
+|---|---|
+| Un CBZ entra, cuenta sus páginas y nace marcado como cómic | D-39 |
+| **Se abre y se dibuja como un PDF** | D-39 |
+| **Y sus páginas salen en el orden en que las leería una persona** | D-39 · D-36 |
+| En un escaneado se dice que no hay texto que seleccionar | D-18 |
+| **Un zip trae todos los libros que lleva dentro** | D-39 |
+| La carpeta de dentro les da nombre de serie, y el orden se conserva | D-39 |
+| El mismo zip dos veces no duplica nada | R24 |
+| Un zip sin nada que sirva lo dice con palabras | R8 |
+| Y con un CBR dentro explica por qué no puede | D-39 |
+
+Lo que **no** cubren: un cómic real de 300 MB. Los de prueba son imágenes de
+cuarenta píxeles, así que lo que no se mide aquí es cuánto tarda en descomprimir
+y dibujar una página escaneada de verdad.
 
 ## Qué comprueban `reloj.mjs` y `cola.mjs`
 
