@@ -1,5 +1,5 @@
 import type { Libro } from './tipos'
-import { anadirLibro, buscarPorHash, pedirPermanencia } from './almacen'
+import { anadirLibro, buscarPorHash, enGigas, espacio, pedirPermanencia } from './almacen'
 import { contarPaginas, formatoDe } from './cuaderno'
 import type { Formato } from './cuaderno'
 import { ErrorZip, esBasura, extension, listar, pareceZip, sacar } from './zip'
@@ -177,11 +177,15 @@ async function meter(
     return { estado: 'anadido', libro }
   } catch (e) {
     // Traer una colección entera es justo cuando se acaba el sitio, y el
-    // mensaje del navegador para eso no lo entiende nadie.
+    // mensaje del navegador para eso no lo entiende nadie. Se dice con palabras
+    // y con el número, que es lo único que permite decidir qué hacer.
     const sinSitio = e instanceof DOMException && /quota|space/i.test(`${e.name} ${e.message}`)
-    const motivo = sinSitio
-      ? 'se acabó el espacio en este aparato'
-      : e instanceof Error ? e.message : 'no se pudo leer el archivo'
+    if (sinSitio) {
+      const hay = await espacio()
+      const cuanto = hay ? ` (${enGigas(hay.usado)} usados de ${enGigas(hay.tope)})` : ''
+      return { estado: 'error', nombre, motivo: `se acabó el espacio de la app${cuanto}` }
+    }
+    const motivo = e instanceof Error ? e.message : 'no se pudo leer el archivo'
     return { estado: 'error', nombre, motivo }
   }
 }
@@ -299,6 +303,10 @@ async function abrirCaja(
  * devuelve una lista porque un solo archivo puede traer doce libros.
  */
 export async function importar(archivo: File, avisar?: (m: Marcha) => void): Promise<Resultado[]> {
+  // Se pide sitio permanente **antes** de escribir nada: en el teléfono, un
+  // almacén que el sistema puede desalojar recibe bastante menos cuota, y con
+  // una colección entera esa diferencia decide cuántos tomos caben.
+  await pedirPermanencia()
   const ext = extension(archivo.name)
   if (ES_RAR.test(ext)) {
     avisar?.({ hecho: 0, total: 1, nombre: archivo.name })

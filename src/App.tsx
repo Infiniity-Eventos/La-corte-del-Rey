@@ -148,6 +148,15 @@ export default function App() {
   const [importando, setImportando] = useState(false)
   /** Por dónde va lo que se está trayendo. Un zip pueden ser veinte libros. */
   const [marcha, setMarcha] = useState<Marcha | null>(null)
+  /**
+   * Lo que salió mal al traer, y por qué.
+   *
+   * No se va solo como los demás avisos. Cuando de doce tomos entran cuatro,
+   * saber cuáles no y por qué es lo único que sirve, y tres segundos de aviso
+   * no alcanzan para leerlo — menos aún si estabas mirando otra cosa mientras
+   * la importación tardaba.
+   */
+  const [resumen, setResumen] = useState<{ texto: string; motivos: [string, number][] } | null>(null)
   const [nota, setNota] = useState<string | null>(null)
   const [arrancando, setArrancando] = useState(true)
 
@@ -218,14 +227,16 @@ export default function App() {
     let repetidos = 0
     let fallos = 0
     let ultimo: Libro | null = null
-    let motivo = ''
+    // Los fallos se agrupan por motivo: «8 no se pudieron abrir» no dice nada;
+    // «8: se acabó el espacio» dice qué hacer.
+    const porMotivo = new Map<string, number>()
     for (const archivo of Array.from(archivos)) {
       // Un archivo puede traer muchos libros: un zip de una colección entera es
       // una sola cosa que eliges y veinte que entran.
       for (const r of await traerDeFuera(archivo, setMarcha)) {
         if (r.estado === 'anadido') { nuevos++; ultimo = r.libro }
         else if (r.estado === 'repetido') repetidos++
-        else { fallos++; motivo = r.motivo }
+        else { fallos++; porMotivo.set(r.motivo, (porMotivo.get(r.motivo) ?? 0) + 1) }
       }
     }
     await refrescar()
@@ -236,11 +247,18 @@ export default function App() {
     if (nuevos) partes.push(`${nuevos} ${nuevos === 1 ? 'libro añadido' : 'libros añadidos'}`)
     // R24 / P37: avisar y no duplicar.
     if (repetidos) partes.push(`${repetidos} ya ${repetidos === 1 ? 'estaba' : 'estaban'} en la estantería`)
-    // Con un solo fallo se dice por qué: «no hay ningún PDF ni CBZ dentro» es
-    // una respuesta; «1 no se pudo abrir» deja a cualquiera adivinando.
-    if (fallos === 1) partes.push(`1 no se pudo abrir: ${motivo}`)
-    else if (fallos) partes.push(`${fallos} no se pudieron abrir`)
-    setNota(partes.join(' · ') || null)
+    if (fallos) partes.push(`${fallos} no ${fallos === 1 ? 'entró' : 'entraron'}`)
+    const texto = partes.join(' · ')
+
+    // Si algo falló, el resumen se queda hasta que lo cierres, con el porqué.
+    if (fallos) {
+      setResumen({
+        texto,
+        motivos: [...porMotivo.entries()].sort((a, b) => b[1] - a[1]),
+      })
+    } else {
+      setNota(texto || null)
+    }
 
     // El título sale del nombre del archivo, que casi siempre es un desastre.
     // En P42 pediste control total, así que si has traído uno solo, la ficha se
@@ -584,6 +602,19 @@ export default function App() {
               <p>Se está copiando a este aparato.</p>
             )}
           </div>
+        </div>
+      )}
+      {resumen && (
+        <div className="resumen" role="status">
+          <div className="resumen-top">
+            <span className="resumen-tit">{resumen.texto}</span>
+            <button className="icono" onClick={() => setResumen(null)} aria-label="Cerrar">×</button>
+          </div>
+          <ul className="resumen-lista">
+            {resumen.motivos.map(([m, cuantos]) => (
+              <li key={m}><span className="mono">{cuantos}</span> {m}</li>
+            ))}
+          </ul>
         </div>
       )}
       {nota && <div className="aviso" style={{ bottom: '1.4rem' }}><span>{nota}</span></div>}

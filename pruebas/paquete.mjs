@@ -36,7 +36,16 @@ const traer = async (...nombres) => {
   await page.setInputFiles('input[type=file]', nombres.map(n => `${SC}/${n}`))
   await page.waitForSelector('.importando', { state: 'detached', timeout: 40000 })
   await page.waitForTimeout(500)
-  return (await page.textContent('.aviso span').catch(() => '')) ?? ''
+  // Cuando todo va bien es un aviso que se va solo; cuando algo falla es un
+  // resumen que se queda, con el porqué. Se lee lo que haya y se cierra, que si
+  // no tapa lo de debajo.
+  const dicho = ((await page.textContent('.aviso span').catch(() => '')) ?? '')
+    + ((await page.textContent('.resumen').catch(() => '')) ?? '')
+  if (await page.locator('.resumen').count()) {
+    await page.click('.resumen .icono')
+    await page.waitForTimeout(200)
+  }
+  return dicho
 }
 const folio = async () => (await page.textContent('.folio')).trim()
 /** Salir del lector, enseñando la interfaz antes si estaba escondida. */
@@ -188,13 +197,24 @@ await page.click('.biblio-top .icono.volver')
 await page.waitForSelector('.rejilla .libro')
 
 /* --- Lo que no lleva nada --- */
-const vacio = await traer('Vacio.zip')
+// Antes de leerlo, se comprueba que el resumen se queda quieto: un fallo que
+// desaparece en tres segundos no se llega a leer.
+await page.setInputFiles('input[type=file]', `${SC}/Vacio.zip`)
+await page.waitForSelector('.resumen', { timeout: 20000 })
+await page.waitForTimeout(4500)
+paso('**el resumen de lo que falló no se va solo**', (await page.locator('.resumen').count()) === 1,
+  'con doce tomos, saber cuáles no entraron es lo único que sirve')
+const vacio = (await page.textContent('.resumen')) ?? ''
 paso('**un zip sin nada dentro lo dice con palabras**',
-  vacio.includes('no hay ningún PDF ni CBZ'), vacio)
+  vacio.includes('no hay ningún PDF ni CBZ'), vacio.replace(/\s+/g, ' ').trim())
+paso('y dice cuántos por cada motivo', vacio.includes('1'), vacio.replace(/\s+/g, ' ').trim())
+await page.click('.resumen .icono')
+await page.waitForTimeout(300)
+paso('y se cierra cuando lo cierras', (await page.locator('.resumen').count()) === 0)
 
 const roto = await traer('Solo_rar.zip')
 paso('y un CBR que no hay por dónde cogerlo se dice, sin tumbar nada',
-  roto.includes('no se pudo'), roto)
+  roto.includes('no tiene ninguna imagen'), roto.replace(/\s+/g, ' ').trim())
 
 // Se ve todo en el selector, así que elegir una foto por error es fácil.
 const foto = await traer('portada.png')

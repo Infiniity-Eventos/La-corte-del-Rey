@@ -17,7 +17,7 @@ node pruebas/comic.mjs        # 29 comprobaciones · tamaños mezclados, zoom, p
 node pruebas/nube.mjs         # 14 comprobaciones · hito 4, la nube sin cuenta
 node pruebas/atras.mjs        # 18 comprobaciones · el botón de atrás del teléfono
 node pruebas/compartir.mjs    # 15 comprobaciones · abrir un PDF desde fuera de la app
-node pruebas/paquete.mjs      # 37 comprobaciones · cómics en CBZ y CBR, y zips con colecciones dentro
+node pruebas/paquete.mjs      # 40 comprobaciones · cómics en CBZ y CBR, y zips con colecciones dentro
 node pruebas/serie.mjs        # 38 comprobaciones · las series: la tapa, el orden y leer sin parar
 node pruebas/capturas.mjs     # capturas de cada estado
 
@@ -323,6 +323,7 @@ lea y que una colección entre entera.
 | **Y uno en RAR de verdad se convierte al traerlo** | D-40 |
 | Convertirlo dos veces no crea otro libro | D-40 |
 | Un CBR sin nada dentro se dice, sin tumbar nada | R8 |
+| **El resumen de lo que falló no se va solo**, y agrupa por motivo | D-41 |
 | **El selector no filtra por tipo**, que en Android escondía los zip | D-39 |
 | Una foto elegida por error no se cuela, y se dice en una frase | R8 |
 

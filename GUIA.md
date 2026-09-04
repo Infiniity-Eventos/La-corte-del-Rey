@@ -318,6 +318,23 @@ técnicas que descartan opciones desde el primer día. Implican, como mínimo:
   Google: `apagon/LEEME.md` y `guia/paginas/apagon.html`.
 - **Origen:** P69, y T13.
 
+### D-41 · Cuando algo no entra, se dice cuál y por qué
+- **Decisión:** el resultado de una importación que falló **no se va solo**: se
+  queda un resumen, agrupado por motivo, hasta que lo cierras. Y cuando el
+  motivo es el espacio, se dice cuánto queda.
+- **Por qué:** de doce tomos entraron cuatro y el aviso decía «8 no se pudieron
+  abrir» — sin motivo, y durante tres segundos. Con una colección grande eso es
+  peor que no decir nada: parece que la app elige al azar. Lo único que sirve es
+  **cuáles no y por qué**, y eso no se lee en tres segundos, menos aún si
+  estabas mirando otra cosa mientras la importación tardaba.
+- **El sitio se pide antes de escribir, no después.** El navegador no da todo el
+  disco: da una cuota, y a un almacén que el sistema puede desalojar le da
+  bastante menos. Con una colección entera esa diferencia decide cuántos tomos
+  caben, así que `persist()` se pide al empezar a traer y no al acabar.
+- **En Ajustes se ve cuánto hay usado y cuánto queda.** Con novelas nunca hizo
+  falta; con cómics, un solo tomo son trescientos megas.
+- **Origen:** de doce tomos entraron cuatro, 2026-09-04.
+
 ### D-40 · Los CBR entran: se convierten al traerlos
 - **Decisión:** un `.cbr` se abre. Si por dentro es un zip —y muchos lo son, con
   la extensión sin cambiar— entra tal cual; si es RAR de verdad, **se convierte a

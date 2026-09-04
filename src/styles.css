@@ -743,6 +743,30 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; justif
 }
 .espera-dice { flex: 1; min-width: 0; opacity: .6; }
 
+/* El resumen de una importación que no salió del todo bien.
+   No se va solo: cuando de doce tomos entran cuatro, lo único que sirve es
+   saber cuáles no y por qué, y eso no se lee en tres segundos. */
+.resumen {
+  position: fixed; left: 1rem; right: 1rem; bottom: 1.4rem; z-index: 40;
+  background: var(--tinta); color: var(--vitela-alta);
+  border-radius: var(--r); padding: .7rem .85rem;
+  box-shadow: 0 6px 24px rgba(46, 40, 34, .22);
+  animation: sube-panel 200ms var(--curva);
+}
+.resumen-top { display: flex; align-items: flex-start; gap: var(--e2); }
+.resumen-tit { flex: 1; font-size: .92rem; font-weight: 600; }
+.resumen .icono { color: inherit; opacity: .7; }
+.resumen-lista {
+  list-style: none; margin: .5rem 0 0; padding: 0;
+  display: flex; flex-direction: column; gap: .25rem;
+  font-size: .82rem; opacity: .8;
+}
+.resumen-lista .mono {
+  display: inline-block; min-width: 1.4rem; opacity: .7;
+}
+
+.espacio-cifra { margin-bottom: .35rem; font-size: .82rem; }
+
 /* La cola: lo que se está traduciendo por detrás y lo que ya está.
    Son tiras finas y no paneles a propósito: una traducción que tarda no puede
    tapar la página que estás leyendo mientras llega. */

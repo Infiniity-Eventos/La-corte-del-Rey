@@ -116,6 +116,31 @@ export async function pedirPermanencia(): Promise<boolean> {
   }
 }
 
+/**
+ * Cuánto sitio hay y cuánto se lleva usado.
+ *
+ * El navegador no da todo el disco: da una parte, y cuando se acaba, escribir
+ * falla. Con una colección de cómics eso deja de ser teórico —un tomo son
+ * trescientos megas— y hay que poder decirlo antes y después.
+ */
+export async function espacio(): Promise<{ usado: number; tope: number } | null> {
+  try {
+    if (!navigator.storage?.estimate) return null
+    const e = await navigator.storage.estimate()
+    if (typeof e.quota !== 'number' || typeof e.usage !== 'number') return null
+    return { usado: e.usage, tope: e.quota }
+  } catch {
+    return null
+  }
+}
+
+/** En gigas con un decimal, que es como se piensa en el tamaño de un cómic. */
+export function enGigas(bytes: number): string {
+  return bytes >= 1024 ** 3
+    ? `${(bytes / 1024 ** 3).toFixed(1)} GB`
+    : `${Math.max(1, Math.round(bytes / 1024 ** 2))} MB`
+}
+
 /* --------------------------------- Libros -------------------------------- */
 
 /**

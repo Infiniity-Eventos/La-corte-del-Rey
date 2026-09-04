@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { explicar, probarClave } from '../lib/traductor'
+import { enGigas, espacio } from '../lib/almacen'
 import type { Quien } from '../lib/nube'
 import { IDIOMAS } from '../lib/tipos'
 import type { Ajustes as LosAjustes, Paso } from '../lib/tipos'
@@ -37,6 +38,14 @@ export function Ajustes({
   ajustes, onCambiarAjustes, clave, onGuardar, onTutorial, onCerrar, quien, estadoNube,
   ocupada, onEntrar, onSalir, onSincronizar,
 }: Props) {
+  /** Cuánto sitio hay. Se lee al abrir los ajustes y no antes: es una pregunta
+      que solo se hace aquí. */
+  const [sitio, setSitio] = useState<{ usado: number; tope: number } | null>(null)
+  useEffect(() => {
+    let vivo = true
+    void espacio().then(e => { if (vivo) setSitio(e) })
+    return () => { vivo = false }
+  }, [])
   const [valor, setValor] = useState(clave)
   const [visible, setVisible] = useState(false)
   const [probando, setProbando] = useState(false)
@@ -257,6 +266,20 @@ export function Ajustes({
           La clave de Gemini es la excepción: esa no viaja nunca, ni siquiera con la
           sesión abierta.
         </p>
+        {/* Cuánto sitio queda. Con novelas no importa; con cómics sí — un tomo
+            son trescientos megas, y el navegador no da todo el disco. */}
+        {sitio && (
+          <>
+            <p className="tarjeta-txt mono espacio-cifra">
+              {enGigas(sitio.usado)} usados de {enGigas(sitio.tope)}
+            </p>
+            <span className="barra"><i style={{ width: `${Math.min(100, (sitio.usado / sitio.tope) * 100)}%` }} /></span>
+            <p className="tarjeta-nota">
+              Lo que el navegador le presta a la app. Cuando se llena, los libros
+              nuevos dejan de entrar y te lo dice al traerlos.
+            </p>
+          </>
+        )}
       </section>
     </div>
   )
