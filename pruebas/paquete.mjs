@@ -25,6 +25,7 @@ page.on('pageerror', e => errores.push(`pageerror: ${e.message}`))
 page.on('console', m => { if (m.type() === 'error') errores.push(`console: ${m.text()}`) })
 
 const LIBROS = '.rejilla .portada:not(.hueca)'
+const T = '.campo input[placeholder="Cómo se llama"]'
 /**
  * Traer archivos y quedarse con lo que la app cuenta al terminar.
  *
@@ -137,15 +138,50 @@ paso('un zip con un PDF y un CBZ mete los dos', mezcla.includes('2 libros'), mez
 paso('sin carpeta dentro, la serie se llama como el zip',
   (await page.locator('.libro.pila:has-text("Mezcla")').count()) === 1)
 
+/* --- Un CBR de verdad: RAR, no un zip con el nombre cambiado --- */
+const rar = await traer('Tomo_rar.cbr')
+paso('**un CBR en RAR de verdad entra**', rar.includes('1 libro añadido'), rar)
+await page.waitForSelector('.ficha', { timeout: 30000 })
+paso('con sus páginas contadas', (await page.textContent('.ficha-datos')).includes('3 pág.'),
+  (await page.textContent('.ficha-datos')).trim())
+paso('y sin arrastrar el .cbr en el título', !(await page.inputValue(T)).includes('.cbr'),
+  await page.inputValue(T))
+await page.click('.ficha-pie .btn:last-child')
+await page.waitForSelector('.rejilla .libro', { timeout: 10000 })
+
+await page.click('.rejilla .libro:has(.portada-tit:text-is("Tomo rar")) .libro-abrir')
+await page.waitForSelector('.hoja.debajo canvas', { timeout: 25000 })
+await page.waitForTimeout(700)
+paso('se abre y se dibuja como cualquier otro', (await folio()) === '1 / 3')
+await page.evaluate(() => document.activeElement?.blur?.())
+await page.keyboard.press('ArrowRight')
+await page.waitForTimeout(1200)
+const dosRar = await hoja()
+paso('**y sus páginas quedan en el orden bueno**', dosRar.w > dosRar.h,
+  `${dosRar.w}×${dosRar.h} · ordenado como texto, la segunda sería «10.png», que es alta`)
+await salir()
+
+// Convertir dos veces el mismo CBR tiene que dar el mismo cómic, byte a byte:
+// si no, cada vez entraría como uno nuevo.
+const otraVezRar = await traer('Tomo_rar.cbr')
+paso('**convertir el mismo CBR dos veces no crea otro libro**',
+  otraVezRar.includes('ya estaba'), otraVezRar)
+
+/* --- Una colección con un RAR dentro --- */
+const conRarDentro = await traer('Con_rar.zip')
+paso('un zip con un RAR dentro los mete todos', conRarDentro.includes('2 libros añadidos'), conRarDentro)
+paso('y quedan juntos en su serie',
+  (await page.locator('.libro.pila:has-text("Serie X")').count()) === 1)
+
 /* --- Como llegan de verdad: .cbr y .cbz mezclados --- */
 const mixto = await traer('Mixto.zip')
-paso('**un .cbr que por dentro es un zip entra igual**', mixto.includes('2 libros añadidos'), mixto,)
-paso('y del que sí es RAR se dice que falta', mixto.includes('1 va en RAR'), mixto)
+paso('**un .cbr que por dentro es un zip entra igual**', mixto.includes('3 libros añadidos'), mixto)
+paso('y el que sí es RAR se convierte al traerlo', !mixto.includes('no se pudo'), mixto)
 await page.click('.libro.pila:has-text("Rick y Morty") .libro-abrir')
 await page.waitForSelector('.serie-tit', { timeout: 8000 })
 const rym = (await page.locator(`${LIBROS} .portada-tit`).allTextContents()).map(t => t.trim())
-paso('los dos que entraron quedan en su serie y en orden',
-  rym.length === 2 && /v02/i.test(rym[0]) && /v03/i.test(rym[1]), rym.join(' · '))
+paso('los tres quedan en su serie y en orden',
+  rym.length === 3 && /v01/i.test(rym[0]) && /v03/i.test(rym[2]), rym.join(' · '))
 paso('y sin arrastrar la extensión en el título', !rym.some(t => /\.(cbr|cbz)/i.test(t)),
   rym.join(' · '))
 await page.click('.biblio-top .icono.volver')
@@ -156,8 +192,9 @@ const vacio = await traer('Vacio.zip')
 paso('**un zip sin nada dentro lo dice con palabras**',
   vacio.includes('no hay ningún PDF ni CBZ'), vacio)
 
-const conRar = await traer('Solo_rar.zip')
-paso('y con un CBR dentro explica por qué no puede', conRar.includes('RAR'), conRar)
+const roto = await traer('Solo_rar.zip')
+paso('y un CBR que no hay por dónde cogerlo se dice, sin tumbar nada',
+  roto.includes('no se pudo'), roto)
 
 // Se ve todo en el selector, así que elegir una foto por error es fácil.
 const foto = await traer('portada.png')

@@ -238,3 +238,96 @@ export function extension(nombre: string): string {
   const punto = hoja.lastIndexOf('.')
   return punto > 0 ? hoja.slice(punto + 1).toLowerCase() : ''
 }
+
+/* ------------------------------ Escribir ------------------------------- */
+
+/**
+ * Tabla del CRC32, la que pide el formato zip.
+ *
+ * Se construye la primera vez que se usa. Escribir un zip es cosa de los `.cbr`
+ * convertidos, y quien no tenga ninguno no paga ni la tabla.
+ */
+let tabla: Uint32Array | null = null
+function tablaCrc(): Uint32Array {
+  if (tabla) return tabla
+  const t = new Uint32Array(256)
+  for (let n = 0; n < 256; n++) {
+    let c = n
+    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1
+    t[n] = c >>> 0
+  }
+  tabla = t
+  return t
+}
+
+export function crc32(datos: Uint8Array): number {
+  const t = tablaCrc()
+  let c = 0xffffffff
+  for (let i = 0; i < datos.length; i++) c = t[(c ^ datos[i]) & 0xff] ^ (c >>> 8)
+  return (c ^ 0xffffffff) >>> 0
+}
+
+/**
+ * Un fichero que va a entrar en el zip.
+ *
+ * El CRC y el tamaño se dan hechos a propósito: quien extrae las páginas de un
+ * RAR las tiene en la mano en ese momento, y volver a leerlas después —ya
+ * convertidas en Blob— sería leerse el tomo entero dos veces.
+ */
+export interface Aporte {
+  nombre: string
+  datos: Blob
+  crc: number
+  tamano: number
+}
+
+function u32(n: number): Uint8Array<ArrayBuffer> {
+  const b = new Uint8Array(new ArrayBuffer(4))
+  new DataView(b.buffer).setUint32(0, n >>> 0, true)
+  return b
+}
+function u16(n: number): Uint8Array<ArrayBuffer> {
+  const b = new Uint8Array(new ArrayBuffer(2))
+  new DataView(b.buffer).setUint16(0, n & 0xffff, true)
+  return b
+}
+
+/**
+ * Escribir un zip, con todo guardado tal cual.
+ *
+ * Sin comprimir a propósito: lo que se mete aquí son páginas de cómic, que ya
+ * son JPEG o PNG. Comprimirlas otra vez tarda mucho y no quita ni un uno por
+ * ciento — y encima obliga a tener cada página entera en memoria.
+ *
+ * Existe para una sola cosa: convertir un `.cbr` en algo que la app sepa leer
+ * sola, y guardarlo así de una vez. Convertir cada vez que se abre el tomo
+ * sería repetir el trabajo caro doscientas veces.
+ */
+export function escribir(partes: Aporte[]): Blob {
+  const trozos: BlobPart[] = []
+  const central: BlobPart[] = []
+  let donde = 0
+
+  for (const p of partes) {
+    const nombre = new TextEncoder().encode(p.nombre) as Uint8Array<ArrayBuffer>
+    // La bandera 0x0800 promete que el nombre va en UTF-8. Sin ella, un nombre
+    // con tilde se lee mal en cualquier otro programa que abra el archivo.
+    const comun = [
+      u16(20), u16(0x0800), u16(0), u16(0), u16(0),
+      u32(p.crc), u32(p.tamano), u32(p.tamano), u16(nombre.length),
+    ]
+    trozos.push(u32(FIRMA_LOCAL), ...comun, u16(0), nombre, p.datos)
+
+    central.push(
+      u32(FIRMA_CENTRAL), u16(20), ...comun, u16(0), u16(0), u16(0), u16(0), u32(0), u32(donde), nombre,
+    )
+    donde += 30 + nombre.length + p.tamano
+  }
+
+  const largoCentral = central.reduce((n, t) => n + (t as Uint8Array).length, 0)
+  const fin = [
+    u32(FIRMA_FINAL), u16(0), u16(0), u16(partes.length), u16(partes.length),
+    u32(largoCentral), u32(donde), u16(0),
+  ]
+  return new Blob([...trozos, ...central, ...fin], { type: 'application/vnd.comicbook+zip' })
+}

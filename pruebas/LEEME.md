@@ -17,7 +17,7 @@ node pruebas/comic.mjs        # 29 comprobaciones · tamaños mezclados, zoom, p
 node pruebas/nube.mjs         # 14 comprobaciones · hito 4, la nube sin cuenta
 node pruebas/atras.mjs        # 18 comprobaciones · el botón de atrás del teléfono
 node pruebas/compartir.mjs    # 15 comprobaciones · abrir un PDF desde fuera de la app
-node pruebas/paquete.mjs      # 29 comprobaciones · cómics en CBZ y zips con colecciones dentro
+node pruebas/paquete.mjs      # 37 comprobaciones · cómics en CBZ y CBR, y zips con colecciones dentro
 node pruebas/serie.mjs        # 38 comprobaciones · las series: la tapa, el orden y leer sin parar
 node pruebas/capturas.mjs     # capturas de cada estado
 
@@ -29,7 +29,7 @@ node pruebas/estante.mjs      # 19 comprobaciones · el catálogo de la casa
 node pruebas/kana.mjs         # 19 comprobaciones · el teclado japonés
 node pruebas/series.mjs       # 35 comprobaciones · el orden de una serie y dónde ibas
 node pruebas/reloj.mjs        # 14 comprobaciones · que ninguna espera pueda ser eterna
-node pruebas/zip.mjs          # 28 comprobaciones · el lector de zip, byte a byte
+node pruebas/zip.mjs          # 34 comprobaciones · leer y escribir zip, byte a byte
 
 # Contra la app publicada
 node pruebas/en-vivo.mjs      # 15 comprobaciones sobre la app en su dirección real
@@ -47,11 +47,12 @@ Los archivos de prueba se generan aquí mismo:
 
 ```bash
 python3 pruebas/gen_pdf.py 6 /tmp/Cronica_de_una_prueba.pdf
-python3 pruebas/hacer-paquetes.py /tmp     # los CBZ y los zips
+python3 pruebas/hacer-paquetes.py /tmp     # los CBZ, los CBR y los zips
 ```
 
-`gen_pdf.py` escribe el PDF byte a byte y `hacer-paquetes.py` los PNG también,
-sin ninguna librería. Cada PDF lleva su nombre escrito dentro: si no, dos
+`gen_pdf.py` escribe el PDF byte a byte, `hacer-paquetes.py` los PNG, y
+`rar5.py` **un RAR entero a mano**: no hay forma libre de crear uno, y sin él no
+se podría comprobar de verdad que la app abre un `.cbr`. Cada PDF lleva su nombre escrito dentro: si no, dos
 archivos con el mismo número de páginas salen byte a byte idénticos y Vellum los
 toma por repetidos — cosa que, dicho sea de paso, demuestra que la detección de
 repetidos funciona.
@@ -301,6 +302,8 @@ un PDF vacío o medio tomo.
 | Lo que no es un zip se dice, no se revienta | D-39 |
 | **Abrir un zip no lo lee entero** — se mide con un Blob que cuenta bytes | D-39 |
 | **Y sacar un fichero guardado tal cual no lee su contenido** | D-39 |
+| Se puede **escribir** un zip, y **otro programa lo abre** | D-40 |
+| El CRC32 es el mismo que calcula zlib | D-40 |
 
 `paquete.mjs` prueba lo de después: no que el zip se abra, sino que un cómic se
 lea y que una colección entre entera.
@@ -317,7 +320,9 @@ lea y que una colección entre entera.
 | Un zip sin nada que sirva lo dice con palabras | R8 |
 | Y con un CBR dentro explica por qué no puede | D-39 |
 | **Un `.cbr` que por dentro es un zip entra igual** | D-39 |
-| Y del que sí es RAR se dice que falta | D-39 |
+| **Y uno en RAR de verdad se convierte al traerlo** | D-40 |
+| Convertirlo dos veces no crea otro libro | D-40 |
+| Un CBR sin nada dentro se dice, sin tumbar nada | R8 |
 | **El selector no filtra por tipo**, que en Android escondía los zip | D-39 |
 | Una foto elegida por error no se cuela, y se dice en una frase | R8 |
 

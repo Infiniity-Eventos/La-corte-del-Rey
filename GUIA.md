@@ -318,6 +318,35 @@ técnicas que descartan opciones desde el primer día. Implican, como mínimo:
   Google: `apagon/LEEME.md` y `guia/paginas/apagon.html`.
 - **Origen:** P69, y T13.
 
+### D-40 · Los CBR entran: se convierten al traerlos
+- **Decisión:** un `.cbr` se abre. Si por dentro es un zip —y muchos lo son, con
+  la extensión sin cambiar— entra tal cual; si es RAR de verdad, **se convierte a
+  CBZ al traerlo** y se guarda ya convertido.
+- **Por qué hay que convertir y no leer:** RAR se descomprime en cadena, así que
+  no se puede sacar la página 40 sin pasar por las 39 anteriores. Leer así un
+  tomo obligaría a tenerlo entero en memoria mientras dure la lectura, o a
+  descomprimirlo otra vez en cada página. Convertido una vez, leerlo después es
+  leer un zip: las páginas se sacan de una en una y sin descomprimir nada.
+- **Es la primera dependencia de la app para un formato**, y entra con dos
+  condiciones que la hacen aceptable frente a R19: **libarchive compilado a
+  WebAssembly** (MIT, 600 KB) que **solo se descarga al traer un `.cbr`** —no
+  entra en la caché de instalación, se guarda en la de uso— y que se usa una
+  vez por tomo, nunca al leer.
+- **La conversión va en un hilo aparte.** Con trescientos megas dentro, hacerlo
+  en el hilo de la interfaz la congelaría durante toda la operación; y si la
+  memoria no llega, muere el hilo y no la pestaña, que es la diferencia entre un
+  tomo que falla y una app que se cierra.
+- **Convertir dos veces el mismo CBR da el mismo cómic byte a byte**, así que
+  vuelve a entrar como repetido y no se duplica. El escritor de zip no mete
+  fechas ni nada que cambie entre una vez y otra.
+- **El zip que se escribe va sin comprimir**, porque dentro van JPEG y PNG:
+  comprimirlos otra vez tarda mucho y no quita ni un uno por ciento.
+- **Se comprueba con un RAR de verdad.** No hay forma libre de crear uno —ni
+  WinRAR ni 7-Zip lo permiten—, así que las pruebas fabrican el suyo escribiendo
+  el formato a mano (`pruebas/rar5.py`). Sin eso, «la app abre CBR» sería una
+  frase sin comprobar.
+- **Origen:** pedido en el uso, 2026-09-04: media colección venía en `.cbr`.
+
 ### D-39 · Entran cómics en CBZ, y zips con lo que sea dentro
 - **Decisión:** Vellum abre **PDF y CBZ**, y acepta un **zip**: lo abre, mira lo
   que trae y mete todos los PDF y CBZ que encuentre, cada uno como su libro.
@@ -346,10 +375,9 @@ técnicas que descartan opciones desde el primer día. Implican, como mínimo:
   El SHA-256 de todo obliga a tenerlo todo en memoria, que es justo lo que no
   puede pasar. Por encima de 64 MB se resume solo eso, con una marca delante
   para que las dos formas nunca se confundan.
-- **Un `.cbr` se mira por dentro antes de rechazarlo.** Debería ser RAR —cerrado,
-  y ningún navegador lo abre— pero buena parte de los que circulan son zips con
-  la extensión de antes, y esos entran perfectamente. Solo se rechaza lo que de
-  verdad es RAR, y diciendo cuántos son.
+- **Un `.cbr` se mira por dentro antes de decidir qué es.** Buena parte de los
+  que circulan son zips con la extensión de antes y entran tal cual; los que son
+  RAR de verdad se convierten (D-40).
 - **Se lee el directorio del final, no las cabeceras de cada fichero.** No es un
   detalle: los zip creados «al vuelo» dejan el tamaño a cero en cada cabecera y
   solo lo escriben en esa tabla. Leyendo lo primero, media colección saldría
@@ -369,9 +397,6 @@ técnicas que descartan opciones desde el primer día. Implican, como mínimo:
   aparecían por ningún lado. Enseñar de más y explicar lo que no sirve es mejor
   que esconder lo que sí: quien elige una foto por error recibe una frase que lo
   dice, en vez del error crudo de pdf.js.
-- **El CBR no entra y se dice por qué:** va comprimido en RAR, que es cerrado y
-  no viene en ningún navegador. Sin ese aviso acabaría en pdf.js dando un error
-  que no explica nada.
 - **Cada formato se descarga cuando se abre uno.** pdf.js pesa medio megabyte:
   quien solo lee cómics ya no lo baja.
 - **Origen:** pedido en el uso, 2026-09-04.
@@ -856,7 +881,7 @@ El orden lo fijó P80: **leer antes que nada**.
 | **5 · Portadas** | Buscar portada en Google Imágenes y subir la imagen (D-31; la versión generada se revocó) | **hecho** · 12 comprobaciones en `pruebas/` |
 | **6 · La casa** | Catálogo común, estrella por perfil, clave de Gemini por perfil | **hecho** · 22 comprobaciones · falta montar `casa/miembros` a mano |
 | **8 · Series** | Enlazar los números de una obra, seguir leyendo, orden a mano, saltar de tomo sin parar | **hecho** · 73 comprobaciones en `pruebas/` |
-| **9 · CBZ y zips** | Leer cómics en CBZ y traer colecciones enteras comprimidas | **hecho** · 46 comprobaciones en `pruebas/` |
+| **9 · CBZ, CBR y zips** | Leer cómics en CBZ, convertir los CBR y traer colecciones enteras comprimidas | **hecho** · 71 comprobaciones en `pruebas/` |
 | 7 · El apagón | Corte de facturación en 1 dólar | **escrito y probado**, sin montar (D-22) |
 
 Las respuestas están en `guia/respuestas/`. El prompt del icono, en `guia/prompts/`.

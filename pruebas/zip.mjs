@@ -15,7 +15,7 @@ import { join } from 'node:path'
 const dir = mkdtempSync(join(tmpdir(), 'vellum-'))
 const salida = join(dir, 'zip.mjs')
 execSync(`npx esbuild src/lib/zip.ts --bundle --format=esm --outfile=${salida}`, { stdio: 'pipe' })
-const { ErrorZip, esBasura, extension, listar, pareceZip, sacar } = await import(salida)
+const { ErrorZip, crc32, esBasura, escribir, extension, listar, pareceZip, sacar } = await import(salida)
 
 let rojos = 0
 const paso = (n, ok, extra = '') => {
@@ -208,6 +208,32 @@ paso('sacando bien lo de dentro', (await texto(await sacar(desbordado, dz[0]))).
 let roto = null
 try { await listar(new Blob(['esto no es un zip ni de lejos'])) } catch (x) { roto = x }
 paso('lo que no es un zip se dice, no se revienta', roto instanceof ErrorZip, roto?.message)
+
+/* --- Y escribirlo, que es como entra un .cbr convertido --- */
+const bytes = t => new TextEncoder().encode(t)
+// El valor lo dice zlib, no nosotros: comprobar nuestra cuenta contra nuestra
+// cuenta no comprueba nada.
+paso('el CRC32 es el mismo que calcula zlib', crc32(bytes('hola mundo')) === 0xacdf4206,
+  `0x${crc32(bytes('hola mundo')).toString(16)}`)
+
+const paginas = [
+  { nombre: '01.png', datos: new Blob([bytes('primera página')]), crc: crc32(bytes('primera página')), tamano: bytes('primera página').length },
+  { nombre: 'Crónica 02.png', datos: new Blob([bytes('segunda')]), crc: crc32(bytes('segunda')), tamano: bytes('segunda').length },
+]
+const hecho = escribir(paginas)
+const leido = await listar(hecho)
+paso('lo que se escribe se vuelve a leer', leido.length === 2, leido.map(e => e.nombre).join(' · '))
+paso('con los nombres con tilde intactos', leido[1].nombre === 'Crónica 02.png')
+paso('y el contenido entero', (await (await sacar(hecho, leido[0])).text()) === 'primera página')
+
+// Y sobre todo: que lo entienda otro programa. Un zip que solo abre quien lo
+// escribió no es un zip, es un formato propio con el nombre cambiado.
+const fuera = join(dir, 'escrito.zip')
+writeFileSync(fuera, new Uint8Array(await hecho.arrayBuffer()))
+const dictamen = execSync(`python3 -c "import zipfile,sys; z=zipfile.ZipFile(sys.argv[1]); print(z.testzip() or 'bien', '|', ','.join(z.namelist()), '|', z.read('01.png').decode())" ${fuera}`)
+  .toString().trim()
+paso('**y otro programa lo abre sin quejarse**', dictamen.startsWith('bien'), dictamen)
+paso('con sus nombres y su contenido', dictamen.includes('Crónica 02.png') && dictamen.includes('primera página'))
 
 console.log(rojos ? `\n${rojos} fallo(s)` : '\nTodo en orden.')
 process.exitCode = rojos ? 1 : 0

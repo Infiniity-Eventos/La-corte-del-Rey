@@ -3,7 +3,6 @@ import { anadirLibro, buscarPorHash, pedirPermanencia } from './almacen'
 import { contarPaginas, formatoDe } from './cuaderno'
 import type { Formato } from './cuaderno'
 import { ErrorZip, esBasura, extension, listar, pareceZip, sacar } from './zip'
-import type { Entrada } from './zip'
 
 /**
  * Traer libros de fuera.
@@ -80,7 +79,27 @@ const ES_CAJA = /^zip$/
  * el contenido y solo se rechaza lo que de verdad es RAR.
  */
 const ES_RAR = /^cbr$/
-const AVISO_RAR = 'va comprimido en RAR de verdad, y eso no lo abre ningún navegador. Convertido a CBZ entra sin problema'
+/**
+ * Un CBR de verdad: se convierte a CBZ al traerlo y se guarda ya convertido.
+ *
+ * El descompresor de RAR pesa 600 KB y se descarga aquí, la primera vez que
+ * hace falta. Convertir una vez y guardar el resultado es lo que hace que ese
+ * precio se pague una sola vez y no cada vez que abres el tomo.
+ */
+async function convertir(archivo: Blob): Promise<{ cbz: Blob } | { motivo: string }> {
+  try {
+    const { convertirCbr } = await import('./rar')
+    const r = await convertirCbr(archivo)
+    return r.ok ? { cbz: r.cbz } : { motivo: r.motivo }
+  } catch {
+    return { motivo: 'no se pudo cargar el descompresor de RAR' }
+  }
+}
+
+/** El nombre que le queda a un CBR una vez convertido. */
+function yaConvertido(nombre: string): string {
+  return nombre.replace(/\.cbr$/i, '.cbz')
+}
 
 /**
  * La carpeta que comparten todos, si comparten alguna.
@@ -185,6 +204,23 @@ async function parecePdf(archivo: Blob): Promise<boolean> {
   return false
 }
 
+/**
+ * Meter un archivo, convirtiéndolo antes si hace falta.
+ *
+ * Es donde se decide qué es un `.cbr`: si por dentro es un zip, es un cómic y
+ * ya está; si es RAR de verdad, se convierte. Lo mismo vale para un archivo
+ * traído a mano y para uno sacado de un zip.
+ */
+async function entrar(archivo: Blob, nombre: string, extras: Partial<Libro> = {}): Promise<Resultado> {
+  if (!ES_RAR.test(extension(nombre))) return meter(archivo, nombre, extras)
+
+  if (await pareceZip(archivo)) return meter(archivo, nombre, { ...extras, formato: 'cbz' })
+
+  const r = await convertir(archivo)
+  if ('motivo' in r) return { estado: 'error', nombre, motivo: r.motivo }
+  return meter(r.cbz, yaConvertido(nombre), { ...extras, formato: 'cbz' })
+}
+
 /** Cuántas cajas dentro de cajas se abren. Más que esto ya es alguien jugando. */
 const FONDO = 3
 
@@ -213,28 +249,15 @@ async function abrirCaja(
     .filter(e => !esBasura(e.nombre) && e.tamano > 0)
     .filter(e => SIRVE.test(extension(e.nombre)) || (fondo > 0 && ES_CAJA.test(extension(e.nombre))))
 
-  // Los que dicen ser RAR se miran uno a uno: los que por dentro son zip entran
-  // como cómics, y solo se cuentan los que de verdad no se pueden abrir.
+  // Los `.cbr` entran igual que lo demás: los que por dentro son zip —que son
+  // muchos, con la extensión sin cambiar— se abren tal cual, y los que son RAR
+  // de verdad se convierten al traerlos.
   const dudosos = dentro.filter(e => !esBasura(e.nombre) && e.tamano > 0 && ES_RAR.test(extension(e.nombre)))
-  const rescatados: Entrada[] = []
-  let rares = 0
-  for (const e of dudosos) {
-    try {
-      if (await pareceZip(await sacar(archivo, e))) rescatados.push(e)
-      else rares++
-    } catch {
-      rares++
-    }
-  }
-  utiles.push(...rescatados)
+  utiles.push(...dudosos)
   utiles.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es', { numeric: true, sensitivity: 'base' }))
 
   if (utiles.length === 0) {
-    return [{
-      estado: 'error',
-      nombre: nombreCaja,
-      motivo: rares > 0 ? AVISO_RAR : 'no hay ningún PDF ni CBZ dentro',
-    }]
+    return [{ estado: 'error', nombre: nombreCaja, motivo: 'no hay ningún PDF ni CBZ dentro' }]
   }
 
   // La serie se decide antes de meter nada: es la carpeta que comparten todos
@@ -247,13 +270,6 @@ async function abrirCaja(
   contador.total += utiles.length - 1
   const salida: Resultado[] = []
   let puesto = 0
-  if (rares > 0) {
-    salida.push({
-      estado: 'error',
-      nombre: nombreCaja,
-      motivo: `${rares} ${rares === 1 ? 'va' : 'van'} en RAR (.cbr) y no se ${rares === 1 ? 'puede' : 'pueden'} abrir aquí`,
-    })
-  }
 
   for (const entrada of utiles) {
     avisar?.({ hecho: contador.hecho, total: contador.total, nombre: entrada.nombre.split('/').pop() ?? entrada.nombre })
@@ -264,10 +280,7 @@ async function abrirCaja(
       if (ES_CAJA.test(extension(entrada.nombre))) {
         salida.push(...(await abrirCaja(dentroDe, entrada.nombre, avisar, contador, fondo - 1)))
       } else {
-        // Un `.cbr` que llega hasta aquí ya se ha comprobado que es un zip.
-        const suyo: Partial<Libro> = ES_RAR.test(extension(entrada.nombre)) ? { formato: 'cbz' } : {}
-        if (serie) { suyo.serie = serie; suyo.orden = puesto++ }
-        salida.push(await meter(dentroDe, entrada.nombre, suyo))
+        salida.push(await entrar(dentroDe, entrada.nombre, serie ? { serie, orden: puesto++ } : {}))
       }
     } catch (e) {
       salida.push({
@@ -288,10 +301,8 @@ async function abrirCaja(
 export async function importar(archivo: File, avisar?: (m: Marcha) => void): Promise<Resultado[]> {
   const ext = extension(archivo.name)
   if (ES_RAR.test(ext)) {
-    if (!(await pareceZip(archivo))) {
-      return [{ estado: 'error', nombre: archivo.name, motivo: AVISO_RAR }]
-    }
-    return [await meter(archivo, archivo.name, { formato: 'cbz' })]
+    avisar?.({ hecho: 0, total: 1, nombre: archivo.name })
+    return [await entrar(archivo, archivo.name)]
   }
 
   // Nunca se lee el archivo entero: aquí se miran cuatro bytes. Traerse a

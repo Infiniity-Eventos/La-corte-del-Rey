@@ -166,6 +166,24 @@ export default defineConfig({
         // escribir a mano el service worker entero: la caché sin conexión que
         // genera el empaquetador costó dejarla bien y no se toca.
         importScripts: ['compartir-sw.js'],
+        /*
+         * El descompresor de RAR no entra en la caché de instalación.
+         *
+         * Son 600 KB de WebAssembly que solo hacen falta si traes un `.cbr`, y
+         * meterlos ahí se los descargaría todo el mundo para nada. Se guardan
+         * la primera vez que se usan, y a partir de ahí también sin conexión.
+         */
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }: { url: URL }) => url.pathname.endsWith('.wasm'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'vellum-descompresores',
+              expiration: { maxEntries: 4 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+        ],
       },
     }),
   ],
