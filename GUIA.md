@@ -318,6 +318,25 @@ técnicas que descartan opciones desde el primer día. Implican, como mínimo:
   Google: `apagon/LEEME.md` y `guia/paginas/apagon.html`.
 - **Origen:** P69, y T13.
 
+### D-42 · Un libro borrado se puede volver a traer
+- **Decisión:** si traes un archivo cuyo libro habías borrado, **vuelve**: se
+  levanta la lápida y se reescribe el archivo, conservando su identidad, su
+  título y sus etiquetas.
+- **Por qué:** borrar deja una lápida con la fecha para que la nube no lo
+  resucite (D-21). Pero la lápida guarda también el hash, y el hash es lo que
+  detecta un repetido (R24) — así que el libro desaparecía de la estantería y a
+  la vez **bloqueaba volver a traerlo, para siempre**. La app decía «ya estaba
+  en la estantería» señalando algo que no estaba en ninguna parte.
+- **Conserva su identidad, no crea otro.** Si volviera con un id nuevo, la
+  lápida del viejo seguiría viajando y en la siguiente sincronización se lo
+  llevaría por delante otra vez.
+- **Es exactamente el mismo fallo que D-24 arregló en el vocabulario**, un mes
+  antes, y en el mismo sitio: una lápida que hace bien su trabajo hacia la nube
+  y estorba hacia dentro. **Cada vez que algo se borra en falso hay que
+  preguntarse quién más mira ese registro.**
+- **Origen:** «no me deja subirlos, que porque ya están en la estantería», con
+  la estantería vacía. 2026-09-04.
+
 ### D-41 · Cuando algo no entra, se dice cuál y por qué
 - **Decisión:** el resultado de una importación que falló **no se va solo**: se
   queda un resumen, agrupado por motivo, hasta que lo cierras. Y cuando el
@@ -1138,6 +1157,12 @@ construir lo que viene:
   síntoma no se ve —nada se rompe— hasta que un día atrás no hace nada y hay que
   pulsarlo tres veces. **Cuando algo apila estado, la comprobación que importa
   no es la del camino de ida.**
+- **Una lápida hace bien su trabajo hacia fuera y estorba hacia dentro.** Borrar
+  sin borrar del todo es lo correcto para sincronizar, y dos veces —el
+  vocabulario en D-24, los libros en D-42— ha dejado el mismo agujero: el
+  registro sigue ahí y **alguien más lo mira**. La segunda vez costó once tomos
+  irrecuperables. Cuando algo se marque como borrado en vez de borrarse, hay que
+  ir a buscar quién más consulta ese registro, no esperar a que aparezca.
 - **Una compilación que falla no borra la anterior.** El servidor sigue
   sirviendo el paquete de antes y las pruebas pasan **contra él**: verde sin
   haber probado nada. Pasó dos veces en la misma tarde, y las dos justo mientras

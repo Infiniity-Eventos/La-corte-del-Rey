@@ -147,6 +147,39 @@ paso('un zip con un PDF y un CBZ mete los dos', mezcla.includes('2 libros'), mez
 paso('sin carpeta dentro, la serie se llama como el zip',
   (await page.locator('.libro.pila:has-text("Mezcla")').count()) === 1)
 
+/* --- Borrar y volver a traer: la lápida no puede bloquearlo --- */
+// Al borrar queda una lápida con el hash, para que la nube no lo resucite. Esa
+// lápida bloqueaba volver a traer el archivo: el libro no se veía y la app
+// decía «ya estaba en la estantería», sin forma de salir de ahí.
+// Puede estar en la rejilla o arriba, en «seguir leyendo»: se le dejó a medias
+// unas líneas más arriba.
+const suyo = ':is(.seguir, .libro):has(.portada-tit:text-is("Tomo solo"))'
+await page.locator(`${suyo} .mas`).first().click()
+await page.waitForSelector('.ficha')
+await page.click('.ficha-pie .btn.fantasma')
+await page.click('.ficha-pie .btn.peligro')
+await page.waitForTimeout(800)
+paso('un cómic se quita de la estantería',
+  (await page.locator('.portada-tit:text-is("Tomo solo")').count()) === 0)
+
+const vuelve = await traer('Tomo_solo.cbz')
+paso('**y volver a traerlo lo devuelve**', vuelve.includes('1 libro añadido'), vuelve)
+// Solo en la estantería: la ficha se abre sola al traer uno suelto y enseña su
+// portada, que cuenta como otra aparición del título.
+paso('y está otra vez en la estantería',
+  (await page.locator(':is(.rejilla, .seguir) .portada-tit:text-is("Tomo solo")').count()) === 1,
+  `${await page.locator('.portada-tit:text-is("Tomo solo")').count()} en pantalla`)
+if (await page.locator('.ficha').count()) {
+  await page.click('.ficha-pie .btn:last-child')
+  await page.waitForTimeout(400)
+}
+await page.locator(`${suyo} :is(.seguir-abrir, .libro-abrir)`).first().click()
+await page.waitForSelector('.hoja.debajo canvas', { timeout: 25000 })
+await page.waitForTimeout(600)
+paso('**y se abre: el archivo volvió, no solo la ficha**', (await folio()).endsWith('/ 3'),
+  await folio())
+await salir()
+
 /* --- Un CBR de verdad: RAR, no un zip con el nombre cambiado --- */
 const rar = await traer('Tomo_rar.cbr')
 paso('**un CBR en RAR de verdad entra**', rar.includes('1 libro añadido'), rar)

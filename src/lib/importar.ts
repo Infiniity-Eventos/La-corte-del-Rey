@@ -140,9 +140,13 @@ async function meter(
 ): Promise<Resultado> {
   try {
     const hash = await huella(archivo)
-    // R24 / P37: avisar y no duplicar.
     const ya = await buscarPorHash(hash)
-    if (ya) return { estado: 'repetido', libro: ya }
+    // R24 / P37: avisar y no duplicar. Pero **solo si sigue estando**: al borrar
+    // un libro queda una lápida —con su hash— para que la nube no lo resucite,
+    // y esa lápida bloqueaba volver a traerlo para siempre. El libro no se veía
+    // por ningún lado y la app decía «ya estaba en la estantería».
+    if (ya && !ya.borrado) return { estado: 'repetido', libro: ya }
+    const vuelve = ya?.borrado ? ya : null
 
     // El formato lo puede saber quien llama mejor que el nombre: un `.cbr` que
     // por dentro es un zip es un cómic, se llame como se llame.
@@ -151,18 +155,24 @@ async function meter(
     if (paginas === 0) throw new Error('no tiene ninguna página')
 
     const ahora = Date.now()
-    const id = crypto.randomUUID()
+    // Uno que vuelve conserva su identidad: así la nube ve que resucitó, y no
+    // un libro nuevo que se pisa con la lápida del viejo en la siguiente
+    // sincronización. Y conserva el nombre que tú le habías puesto.
+    const id = vuelve?.id ?? crypto.randomUUID()
     const libro: Libro = {
       id,
       hash,
-      titulo: tituloDesdeNombre(nombre.split('/').pop() ?? nombre),
+      titulo: vuelve?.titulo ?? tituloDesdeNombre(nombre.split('/').pop() ?? nombre),
       // Un CBZ es un cómic por definición: nadie guarda una novela en imágenes.
       tipo: formato === 'cbz' ? 'comic' : 'libro',
       formato,
-      etiquetas: [],
+      etiquetas: vuelve?.etiquetas ?? [],
       paginas,
       bytes: archivo.size,
-      archivo: `${id}.${formato}`,
+      archivo: vuelve?.archivo ?? `${id}.${formato}`,
+      // Se levanta la lápida a propósito, y en el propio libro: si se quedara
+      // puesta, volvería a desaparecer en la siguiente sincronización.
+      borrado: false,
       nombreOriginal: nombre,
       // Lo que traes tú nace en tu estantería: si lo subiste, lo querías.
       estrella: true,
